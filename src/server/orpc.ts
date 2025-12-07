@@ -19,8 +19,8 @@ export const os_context = async (): Promise<Context> => {
 };
 
 export const t = os.$context<Context>();
-export const pub = t;
-export const authed = t.use(async ({ context, next }) => {
+export const publicProcedure = t;
+export const protectedProcedure = t.use(async ({ context, next }) => {
   if (!context.user || !context.session) {
     throw new ORPCError("UNAUTHORIZED");
   }

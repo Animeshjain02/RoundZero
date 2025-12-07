@@ -1,12 +1,7 @@
-import { z } from "zod";
-import { pub } from "../orpc";
+import { exampleRouter } from "./example/example";
 
 export const appRouter = {
-  hello: pub
-    .input(z.object({ name: z.string() }))
-    .handler(async ({ input }) => {
-      return `Hello, ${input.name}!`;
-    }),
+  example: exampleRouter,
 };
 
 export type AppRouter = typeof appRouter;
