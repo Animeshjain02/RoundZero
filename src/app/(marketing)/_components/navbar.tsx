@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Target } from "lucide-react";
 import { ModeToggle } from "@/components/ui/theme-toggle";
 
 export function Navbar() {
   return (
-    <nav className="sticky top-0 px-20 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <nav className="sticky top-0 sm:px-20 px-6 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2 font-bold text-xl">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -41,11 +41,20 @@ export function Navbar() {
           <ModeToggle />
           <Link
             href="/sign-in"
-            className="text-sm font-medium hover:underline underline-offset-4"
+            className={buttonVariants({
+              variant: "ghost",
+            })}
           >
             Sign In
           </Link>
-          <Button>Start Practice - Free</Button>
+          <Link
+            href="/dashboard"
+            className={buttonVariants({
+              variant: "default",
+            })}
+          >
+            Start Practice - Free
+          </Link>
         </div>
 
         {/* Mobile Menu */}
@@ -56,7 +65,7 @@ export function Navbar() {
             </Button>
           </SheetTrigger>
           <SheetContent side="right">
-            <div className="flex flex-col gap-4 mt-8">
+            <div className="flex flex-col gap-4 mt-8 px-6">
               <Link href="#features" className="text-lg font-medium">
                 Features
               </Link>
