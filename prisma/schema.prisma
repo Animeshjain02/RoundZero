@@ -5,37 +5,47 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 model User {
-  id            String    @id
+  id            String   @id @default(uuid())
   name          String
   email         String
   emailVerified Boolean
   image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
-  sessions      Session[]
-  accounts      Account[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  credits  Int     @default(3)
+  tier     String  @default("FREE")
+  stripeId String?
+
+  sessions Session[]
+  accounts Account[]
+
+  resumes    Resume[]
+  interviews Interview[]
 
   @@unique([email])
   @@map("user")
 }
 
 model Session {
-  id        String   @id
+  id        String   @id @default(uuid())
   userId    String
   token     String
   expiresAt DateTime
   ipAddress String?
   userAgent String?
-  createdAt DateTime
-  updatedAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([token])
@@ -43,7 +53,7 @@ model Session {
 }
 
 model Account {
-  id                    String    @id
+  id                    String    @id @default(uuid())
   userId                String
   accountId             String
   providerId            String
@@ -61,12 +71,104 @@ model Account {
 }
 
 model Verification {
-  id         String    @id
+  id         String   @id @default(uuid())
   identifier String
   value      String
   expiresAt  DateTime
-  createdAt  DateTime?
-  updatedAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@map("verification")
+}
+
+model Resume {
+  id      String  @id @default(uuid())
+  userId  String
+  title   String
+  content String
+  fileUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  interviews Interview[]
+
+  @@index([userId])
+  @@map("resume")
+}
+
+enum InterviewStatus {
+  SETUP
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model Interview {
+  id       String  @id @default(uuid())
+  userId   String
+  resumeId String?
+
+  status InterviewStatus @default(SETUP)
+
+  jobTitle       String
+  jobDescription String?
+  resumeText     String?
+
+  jdEmbedding Unsupported("vector(768)")?
+
+  startedAt   DateTime  @default(now())
+  endedAt     DateTime?
+  durationSec Int       @default(0)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume      Resume?   @relation(fields: [resumeId], references: [id])
+  messages    Message[]
+  report      Report?
+
+  @@index([userId])
+  @@map("interview")
+}
+
+enum Role {
+  system
+  user
+  assistant
+}
+
+model Message {
+  id          String  @id @default(uuid())
+  interviewId String
+  role        Role
+  content     String
+  audioUrl    String?
+  codeSnippet String?
+  language    String?
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+  @@map("message")
+}
+
+model Report {
+  id          String @id @default(uuid())
+  interviewId String @unique
+
+  overallScore Int
+  summary      String
+
+  categoryScores Json
+
+  strengths  String[]
+  weaknesses String[]
+
+  createdAt DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@map("report")
 }
