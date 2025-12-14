@@ -1,5 +1,5 @@
+import { Code2, FileText, Mic } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Mic, Code2 } from "lucide-react";
 
 export function HowItWorks() {
   return (

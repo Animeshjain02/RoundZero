@@ -111,16 +111,27 @@ enum InterviewStatus {
   FAILED
 }
 
+enum InterviewType {
+  TECHNICAL
+  BEHAVIORAL
+  SYSTEM_DESIGN
+}
+
 model Interview {
   id       String  @id @default(uuid())
   userId   String
   resumeId String?
 
   status InterviewStatus @default(SETUP)
+  type   InterviewType   @default(TECHNICAL)
+
+  techStack       String?
+  experienceLevel String  @default("MID")
 
   jobTitle       String
   jobDescription String?
   resumeText     String?
+  includeDSA     Boolean @default(false)
 
   jdEmbedding Unsupported("vector(768)")?
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Play, Pause } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function AudioSamples() {
   const [playing, setPlaying] = useState<string | null>(null);

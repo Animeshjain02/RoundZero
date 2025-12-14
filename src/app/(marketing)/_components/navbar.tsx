@@ -1,7 +1,7 @@
+import { Menu, Target } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Target } from "lucide-react";
 import { ModeToggle } from "@/components/ui/theme-toggle";
 
 export function Navbar() {

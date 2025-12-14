@@ -1,5 +1,9 @@
 "use client";
 
+import { Loader } from "lucide-react";
+import { useTransition } from "react";
+import { toast } from "sonner";
+import { GitHubIcon, GoogleIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,10 +13,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { authClient } from "@/lib/auth-client";
-import { GitHubIcon, GoogleIcon } from "@/components/icons";
-import { Loader } from "lucide-react";
-import { useTransition } from "react";
-import { toast } from "sonner";
 
 export default function LoginForm() {
   const [githubPending, startGithubTransition] = useTransition();
