@@ -5,12 +5,15 @@ import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import type { AppRouter } from "@/server/routers/app";
+import { env } from "@/config/env";
 
 const link = new RPCLink({
-  url:
-    typeof window !== "undefined" ? window.location.origin + "/api/orpc" : "",
-  headers: {
-    // Add any headers if needed
+  url: `${env.NEXT_PUBLIC_APP_URL}/api/orpc`,
+  fetch(url, options) {
+    return fetch(url, {
+      ...options,
+      credentials: "include",
+    });
   },
 });
 
