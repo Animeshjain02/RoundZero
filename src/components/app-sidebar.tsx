@@ -4,7 +4,6 @@ import {
   BookOpen,
   ChevronUp,
   Code2,
-  CreditCard,
   Home,
   LayoutDashboard,
   LogOut,
@@ -12,6 +11,7 @@ import {
   PenTool,
   Plus,
   Settings,
+  Sparkles,
   Target,
   User2,
 } from "lucide-react";
@@ -41,6 +41,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { authClient } from "@/lib/auth-client";
+import { useSignOut } from "@/hooks/use-signout";
 
 // Menu configuration
 const menuGroups = [
@@ -89,6 +90,7 @@ const menuGroups = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { data: session } = authClient.useSession();
+  const signOut = useSignOut();
 
   return (
     <Sidebar collapsible="icon" variant="sidebar">
@@ -96,14 +98,14 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <div className="flex items-center gap-2 px-1 py-1.5 transition-[width,height,padding]">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <Target className="size-4" />
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+                <Target className="size-5" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold text-lg tracking-tight">
+                <span className="truncate font-bold text-lg tracking-tight">
                   RoundZero
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="truncate text-xs font-medium text-muted-foreground">
                   AI Interviewer
                 </span>
               </div>
@@ -114,18 +116,24 @@ export function AppSidebar() {
 
       <SidebarContent>
         {/* Quick Action Button */}
-        <div className="px-2 py-2 group-data-[collapsible=icon]:hidden">
-          <Button asChild className="w-full justify-start gap-2" size="sm">
+        <div className="px-3 py-3 group-data-[collapsible=icon]:hidden">
+          <Button
+            asChild
+            className="w-full justify-start gap-2 bg-linear-to-r from-primary to-primary/90 shadow-md transition-all hover:shadow-lg hover:from-primary/90 hover:to-primary"
+            size="sm"
+          >
             <Link href="/dashboard/interview/create">
               <Plus className="size-4" />
-              <span>New Interview</span>
+              <span className="font-semibold">New Interview</span>
             </Link>
           </Button>
         </div>
 
         {menuGroups.map((group) => (
           <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {group.label}
+            </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => {
@@ -141,6 +149,7 @@ export function AppSidebar() {
                         asChild
                         isActive={isActive}
                         tooltip={item.title}
+                        className="transition-colors hover:bg-muted/50 data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-medium"
                       >
                         <Link href={item.url}>
                           <item.icon />
@@ -154,6 +163,9 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+
+        {/* Upgrade / Premium Promotion (Can include later) */}
+        <div className="group-data-[collapsible=icon]:hidden mt-auto px-4 pb-4"></div>
       </SidebarContent>
 
       <SidebarFooter>
@@ -165,29 +177,29 @@ export function AppSidebar() {
                   size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
-                  <Avatar className="h-8 w-8 rounded-lg">
+                  <Avatar className="h-8 w-8 rounded-lg border">
                     <AvatarImage
                       src={session?.user?.image || ""}
                       alt={session?.user?.name || ""}
                     />
-                    <AvatarFallback className="rounded-lg">
+                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
                       <User2 className="size-4" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
+                    <span className="truncate font-semibold text-foreground">
                       {session?.user?.name || "User"}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
                       {session?.user?.email || ""}
                     </span>
                   </div>
-                  <ChevronUp className="ml-auto size-4" />
+                  <ChevronUp className="ml-auto size-4 text-muted-foreground" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border bg-popover p-1 shadow-lg"
               >
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
@@ -204,7 +216,7 @@ export function AppSidebar() {
                       <span className="truncate font-semibold">
                         {session?.user?.name || "User"}
                       </span>
-                      <span className="truncate text-xs">
+                      <span className="truncate text-xs text-muted-foreground">
                         {session?.user?.email || ""}
                       </span>
                     </div>
@@ -212,27 +224,30 @@ export function AppSidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild className="rounded-lg">
                     <Link href="/">
                       <Home className="mr-2 size-4" />
                       <span>Home</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild className="rounded-lg">
                     <Link href="/dashboard/settings">
                       <Settings className="mr-2 size-4" />
                       <span>Settings</span>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem asChild className="rounded-lg">
                     <Link href="/dashboard/billing">
-                      <CreditCard className="mr-2 size-4" />
+                      <Sparkles className="mr-2 size-4 text-primary" />
                       <span>Billing</span>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => authClient.signOut()}>
+                <DropdownMenuItem
+                  onClick={signOut}
+                  className="rounded-lg text-destructive focus:text-destructive cursor-pointer"
+                >
                   <LogOut className="mr-2 size-4" />
                   <span>Sign out</span>
                 </DropdownMenuItem>
