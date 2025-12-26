@@ -1,8 +1,8 @@
 "use client";
 
-import { Pause, Play, Volume2, Headphones } from "lucide-react";
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Headphones, Pause, Play, Volume2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
 const samples = [
@@ -59,7 +59,7 @@ function AudioWaveform({
       {bars.map((height, i) => (
         <motion.div
           key={i}
-          className={`w-1 rounded-full ${isPlaying ? `bg-gradient-to-t ${gradient}` : "bg-muted-foreground/20"}`}
+          className={`w-1 rounded-full ${isPlaying ? `bg-linear-to-t ${gradient}` : "bg-muted-foreground/20"}`}
           animate={{ height: isPlaying ? height : 4 }}
           transition={{ duration: 0.1, ease: "easeOut" }}
         />
@@ -83,7 +83,7 @@ export function AudioSamples() {
   return (
     <section id="demo" className="py-24 lg:py-32 relative overflow-hidden">
       {/* Divider */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -102,7 +102,7 @@ export function AudioSamples() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             Hear the
-            <span className="ml-2 mt-2 bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+            <span className="ml-2 mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
               difference
             </span>
           </h2>
@@ -125,7 +125,7 @@ export function AudioSamples() {
               <div className="relative rounded-3xl border border-border/50 bg-card/30 backdrop-blur-sm p-8 hover:border-border hover:bg-card/50 transition-all duration-500 text-center overflow-hidden shimmer-border">
                 {/* Background gradient */}
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${sample.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-linear-to-br ${sample.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
                 />
 
                 <div className="relative">
@@ -134,8 +134,8 @@ export function AudioSamples() {
                     onClick={() => togglePlay(sample.id)}
                     className={`relative h-20 w-20 rounded-full mx-auto mb-6 flex items-center justify-center transition-all duration-500 ${
                       playing === sample.id
-                        ? `bg-gradient-to-br ${sample.gradient} shadow-2xl scale-110`
-                        : `bg-gradient-to-br ${sample.gradient} shadow-xl hover:scale-105 hover:shadow-2xl`
+                        ? `bg-linear-to-br ${sample.gradient} shadow-2xl scale-110`
+                        : `bg-linear-to-br ${sample.gradient} shadow-xl hover:scale-105 hover:shadow-2xl`
                     }`}
                   >
                     {playing === sample.id ? (
@@ -148,7 +148,7 @@ export function AudioSamples() {
                     {playing === sample.id && (
                       <>
                         <span
-                          className={`absolute inset-0 rounded-full bg-gradient-to-br ${sample.gradient} animate-ping opacity-20`}
+                          className={`absolute inset-0 rounded-full bg-linear-to-br ${sample.gradient} animate-ping opacity-20`}
                         />
                         <span
                           className={`absolute -inset-2 rounded-full border-2 border-current opacity-20 animate-pulse`}

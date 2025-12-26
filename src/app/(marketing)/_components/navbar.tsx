@@ -8,14 +8,14 @@ import { ModeToggle } from "@/components/ui/theme-toggle";
 
 export function Navbar() {
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link
             href="/"
             className="flex items-center gap-2.5 font-bold text-xl"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-violet-600 text-primary-foreground shadow-lg shadow-primary/20">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-primary via-primary to-violet-600 text-primary-foreground shadow-lg shadow-primary/20">
               <Target className="h-5 w-5" />
             </div>
             <span className="tracking-tight">RoundZero</span>

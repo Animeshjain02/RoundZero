@@ -1,17 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import { motion } from "framer-motion";
-import { Badge } from "@/components/ui/badge";
 import {
+  AlertTriangle,
   BarChart3,
   CheckCircle2,
   MessageSquare,
+  Sparkles,
   Target,
   TrendingUp,
-  AlertTriangle,
-  Sparkles,
 } from "lucide-react";
+import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
 
 const feedbackItems = [
   {
@@ -44,7 +44,7 @@ export function SampleReport() {
   return (
     <section className="py-24 lg:py-32 relative overflow-hidden">
       {/* Divider */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
@@ -65,7 +65,7 @@ export function SampleReport() {
 
             <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
               Feedback that
-              <span className="block mt-2 bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+              <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
                 actually helps
               </span>
             </h2>
@@ -88,14 +88,14 @@ export function SampleReport() {
                   <div className="flex items-start gap-5 p-5 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:border-border hover:bg-card/50 transition-all duration-300 shimmer-border overflow-hidden">
                     {/* Background gradient */}
                     <div
-                      className={`absolute inset-0 bg-gradient-to-r ${item.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+                      className={`absolute inset-0 bg-linear-to-r ${item.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
                     />
 
                     <div
-                      className={`relative h-14 w-14 rounded-2xl bg-gradient-to-br ${item.bgGradient} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}
+                      className={`relative h-14 w-14 rounded-2xl bg-linear-to-br ${item.bgGradient} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}
                     >
                       <item.icon
-                        className={`h-7 w-7 bg-gradient-to-br ${item.gradient}`}
+                        className={`h-7 w-7 bg-linear-to-br ${item.gradient}`}
                         style={{
                           color: "transparent",
                           backgroundClip: "text",
@@ -126,10 +126,10 @@ export function SampleReport() {
             transition={{ delay: 0.2, duration: 0.6 }}
           >
             {/* Glow */}
-            <div className="absolute -inset-8 bg-gradient-to-r from-primary/20 via-violet-500/20 to-primary/20 blur-3xl opacity-30 animate-glow" />
+            <div className="absolute -inset-8 bg-linear-to-r from-primary/20 via-violet-500/20 to-primary/20 blur-3xl opacity-30 animate-glow" />
 
             {/* Card frame */}
-            <div className="relative rounded-3xl p-px bg-gradient-to-b from-border/80 via-border/40 to-transparent overflow-hidden">
+            <div className="relative rounded-3xl p-px bg-linear-to-b from-border/80 via-border/40 to-transparent overflow-hidden">
               <div className="rounded-3xl bg-background/80 backdrop-blur-xl overflow-hidden shadow-2xl">
                 <Image
                   src="/images/scorecard.png"
@@ -175,7 +175,7 @@ export function SampleReport() {
               viewport={{ once: true }}
               transition={{ delay: 0.7, duration: 0.5 }}
             >
-              <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-5 shadow-2xl shadow-emerald-500/20 text-white">
+              <div className="rounded-2xl bg-linear-to-br from-emerald-500 to-teal-600 p-5 shadow-2xl shadow-emerald-500/20 text-white">
                 <div className="flex items-center gap-3">
                   <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
                     <CheckCircle2 className="h-6 w-6" />

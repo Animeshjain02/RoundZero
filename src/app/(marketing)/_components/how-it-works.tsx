@@ -1,14 +1,14 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
+  ArrowRight,
+  Brain,
   Code2,
   FileText,
   Mic,
-  Brain,
-  ArrowRight,
   Sparkles,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 
 const features = [
@@ -75,7 +75,7 @@ export function HowItWorks() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             Four steps to interview
-            <span className="block mt-2 bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+            <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
               confidence
             </span>
           </h2>
@@ -98,22 +98,22 @@ export function HowItWorks() {
             >
               <div className="relative h-full rounded-3xl border border-border/50 bg-card/30 backdrop-blur-sm p-8 lg:p-10 hover:border-border hover:bg-card/50 transition-all duration-500 overflow-hidden shimmer-border">
                 {/* Step number watermark */}
-                <div className="absolute top-6 right-6 lg:top-8 lg:right-8 text-7xl lg:text-8xl font-bold text-muted-foreground/[0.06] select-none">
+                <div className="absolute top-6 right-6 lg:top-8 lg:right-8 text-7xl lg:text-8xl font-bold text-muted-foreground/6 select-none">
                   {feature.step}
                 </div>
 
                 {/* Gradient background on hover */}
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${feature.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-linear-to-br ${feature.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
                 />
 
                 <div className="relative">
                   {/* Icon */}
                   <div
-                    className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${feature.bgGradient} mb-6 group-hover:scale-110 transition-transform duration-300`}
+                    className={`inline-flex p-4 rounded-2xl bg-linear-to-br ${feature.bgGradient} mb-6 group-hover:scale-110 transition-transform duration-300`}
                   >
                     <feature.icon
-                      className={`h-7 w-7 bg-gradient-to-br ${feature.gradient} [&>*]:fill-current`}
+                      className={`h-7 w-7 bg-linear-to-br ${feature.gradient} *:fill-current`}
                       style={{
                         color: "transparent",
                         backgroundClip: "text",

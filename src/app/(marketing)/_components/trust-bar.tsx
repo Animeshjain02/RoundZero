@@ -42,8 +42,8 @@ export function TrustBar() {
   return (
     <section className="py-20 lg:py-28 relative overflow-hidden">
       {/* Subtle divider lines */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Company logos */}
@@ -60,8 +60,8 @@ export function TrustBar() {
 
           <div className="relative">
             {/* Fade edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-background to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-background to-transparent z-10" />
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-linear-to-r from-background to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-linear-to-l from-background to-transparent z-10" />
 
             <div className="flex justify-center items-center gap-8 md:gap-12 lg:gap-16 flex-wrap">
               {companies.map((company, i) => (
@@ -95,12 +95,12 @@ export function TrustBar() {
               <div className="relative p-8 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:border-border hover:bg-card/50 transition-all duration-500 shimmer-border overflow-hidden">
                 {/* Background gradient on hover */}
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-linear-to-br ${stat.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`}
                 />
 
                 <div className="relative">
                   <div
-                    className={`inline-flex p-3 rounded-xl bg-gradient-to-br ${stat.gradient} bg-opacity-10 mb-4`}
+                    className={`inline-flex p-3 rounded-xl bg-linear-to-br ${stat.gradient} bg-opacity-10 mb-4`}
                   >
                     <stat.icon className="h-6 w-6 text-foreground" />
                   </div>

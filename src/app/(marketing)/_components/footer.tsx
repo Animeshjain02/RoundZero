@@ -1,15 +1,15 @@
 "use client";
 
+import { motion } from "framer-motion";
 import {
   ArrowRight,
+  Github,
+  Linkedin,
+  Mail,
   Target,
   Twitter,
-  Linkedin,
-  Github,
-  Mail,
 } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -51,10 +51,10 @@ export function Footer() {
       {/* CTA Section */}
       <div className="py-24 lg:py-32 relative">
         {/* Divider */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
         {/* Background glow */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent" />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
           <motion.div
@@ -66,7 +66,7 @@ export function Footer() {
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
               Ready to ace your
-              <span className="block mt-2 bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+              <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
                 next interview?
               </span>
             </h2>
@@ -104,7 +104,7 @@ export function Footer() {
                 href="/"
                 className="flex items-center gap-2.5 font-bold text-xl mb-6"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-violet-600 text-primary-foreground shadow-lg shadow-primary/20">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary via-primary to-violet-600 text-primary-foreground shadow-lg shadow-primary/20">
                   <Target className="h-5 w-5" />
                 </div>
                 <span>RoundZero</span>

@@ -31,7 +31,7 @@ export default function Home() {
       </div>
 
       <Navbar />
-      <main className="relative z-[1]">
+      <main className="relative z-1">
         <Hero />
         <TrustBar />
         <HowItWorks />

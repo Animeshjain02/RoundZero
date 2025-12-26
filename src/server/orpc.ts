@@ -1,7 +1,7 @@
 import { ORPCError, os } from "@orpc/server";
 import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
 import { tryCatch } from "@/hooks/try-catch";
+import { auth } from "@/lib/auth";
 
 export type Context = {
   user?: typeof auth.$Infer.Session.user;

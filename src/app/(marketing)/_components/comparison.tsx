@@ -1,7 +1,7 @@
 "use client";
 
-import { Check, X, Minus, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
+import { Check, Minus, Trophy, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const comparisonData = [
@@ -76,7 +76,7 @@ export function Comparison() {
   return (
     <section className="py-24 lg:py-32 relative overflow-hidden">
       {/* Subtle top divider */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -95,7 +95,7 @@ export function Comparison() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             The smarter way to
-            <span className="block mt-2 bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+            <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
               prepare
             </span>
           </h2>
@@ -124,7 +124,7 @@ export function Comparison() {
                   <th className="py-6 px-6 text-center text-sm font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                     LeetCode
                   </th>
-                  <th className="py-6 px-6 text-center w-[180px] bg-gradient-to-b from-primary/10 to-transparent">
+                  <th className="py-6 px-6 text-center w-[180px] bg-linear-to-b from-primary/10 to-transparent">
                     <Badge className="bg-primary text-primary-foreground shadow-lg shadow-primary/20">
                       RoundZero
                     </Badge>
@@ -148,7 +148,7 @@ export function Comparison() {
                     <td className="py-5 px-6 text-center">
                       <StatusIcon status={row.leetcode} />
                     </td>
-                    <td className="py-5 px-6 text-center bg-gradient-to-b from-primary/5 to-transparent">
+                    <td className="py-5 px-6 text-center bg-linear-to-b from-primary/5 to-transparent">
                       <StatusIcon status={row.roundzero} />
                     </td>
                   </motion.tr>

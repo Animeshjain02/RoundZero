@@ -1,7 +1,7 @@
 "use client";
 
-import { Quote, Star, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { MessageCircle, Quote, Star } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
@@ -42,7 +42,7 @@ export function Testimonials() {
   return (
     <section className="py-24 lg:py-32 relative overflow-hidden">
       {/* Divider */}
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -62,7 +62,7 @@ export function Testimonials() {
             </Badge>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight">
               Loved by candidates at{" "}
-              <span className="ml-1 mt-2 bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+              <span className="ml-1 mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
                 top companies
               </span>
             </h2>
@@ -118,7 +118,7 @@ export function Testimonials() {
                 <div className="flex items-center gap-4 pt-6 border-t border-border/50">
                   <Avatar className="h-14 w-14 border-2 border-background ring-2 ring-primary/10">
                     <AvatarFallback
-                      className={`bg-gradient-to-br ${item.gradient} text-white font-bold text-lg`}
+                      className={`bg-linear-to-br ${item.gradient} text-white font-bold text-lg`}
                     >
                       {item.name
                         .split(" ")

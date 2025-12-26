@@ -40,8 +40,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
 import { useSignOut } from "@/hooks/use-signout";
+import { authClient } from "@/lib/auth-client";
 
 // Menu configuration
 const menuGroups = [

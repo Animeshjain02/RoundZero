@@ -1,13 +1,13 @@
 "use client";
 
+import { Loader2, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { type FileRejection, useDropzone } from "react-dropzone";
-import { Card, CardContent } from "../ui/card";
-import { cn } from "@/lib/utils";
-import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { Loader2, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
 
 export function ResumeUploader() {
   const [file, setFile] = useState(
