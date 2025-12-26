@@ -1,98 +1,227 @@
-import { Target } from "lucide-react";
+"use client";
+
+import {
+  ArrowRight,
+  Target,
+  Twitter,
+  Linkedin,
+  Github,
+  Mail,
+} from "lucide-react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+const footerLinks = {
+  product: [
+    { label: "Features", href: "#features" },
+    { label: "Pricing", href: "#pricing" },
+    { label: "Demo", href: "#demo" },
+    { label: "Changelog", href: "#" },
+  ],
+  company: [
+    { label: "About", href: "#" },
+    { label: "Blog", href: "#" },
+    { label: "Careers", href: "#" },
+    { label: "Press Kit", href: "#" },
+  ],
+  resources: [
+    { label: "Documentation", href: "#" },
+    { label: "Help Center", href: "#" },
+    { label: "Community", href: "#" },
+    { label: "Contact", href: "#" },
+  ],
+  legal: [
+    { label: "Privacy Policy", href: "#" },
+    { label: "Terms of Service", href: "#" },
+    { label: "Cookie Policy", href: "#" },
+  ],
+};
+
+const socialLinks = [
+  { icon: Twitter, href: "#", label: "Twitter" },
+  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: Github, href: "#", label: "GitHub" },
+];
 
 export function Footer() {
   return (
-    <footer className="bg-muted/20 border-t border-border/40 pt-16 pb-8">
-      <div className="container">
-        <div className="flex flex-col items-center text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 max-w-2xl tracking-tight">
-            Stop practicing on real recruiters.
-          </h2>
-          <Button
-            size="lg"
-            className="h-14 px-10 text-lg shadow-xl hover:shadow-2xl hover:shadow-primary/20 transition-all hover:-translate-y-1"
+    <footer className="relative overflow-hidden">
+      {/* CTA Section */}
+      <div className="py-24 lg:py-32 relative">
+        {/* Divider */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+
+        {/* Background glow */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
+          <motion.div
+            className="text-center max-w-4xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
           >
-            Start Your First Round Now
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 text-left w-full max-w-4xl mx-auto">
-          <div>
-            <div className="flex items-center gap-2 font-bold text-lg mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Target className="h-5 w-5" />
-              </div>
-              <span>RoundZero</span>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              The brutally honest AI interviewer that helps you land your dream
-              job.
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
+              Ready to ace your
+              <span className="block mt-2 bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                next interview?
+              </span>
+            </h2>
+            <p className="text-lg lg:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+              Join thousands of candidates who've transformed their interview
+              performance with RoundZero.
             </p>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 text-foreground/90">Product</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>
-                <Link href="#" className="hover:text-primary transition-colors">
-                  Features
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-primary transition-colors">
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-primary transition-colors">
-                  Demo
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 text-foreground/90">Company</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>
-                <Link href="#" className="hover:text-primary transition-colors">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-primary transition-colors">
-                  Blog
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-primary transition-colors">
-                  Careers
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4 text-foreground/90">Legal</h4>
-            <ul className="space-y-3 text-sm text-muted-foreground">
-              <li>
-                <Link href="#" className="hover:text-primary transition-colors">
-                  Privacy
-                </Link>
-              </li>
-              <li>
-                <Link href="#" className="hover:text-primary transition-colors">
-                  Terms
-                </Link>
-              </li>
-            </ul>
-          </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button
+                size="lg"
+                className="h-14 px-8 text-base font-semibold shadow-2xl shadow-primary/30 hover:shadow-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 group"
+              >
+                Start practicing for free
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-14 px-8 text-base font-semibold border-border/50 hover:border-border"
+              >
+                Schedule a demo
+              </Button>
+            </div>
+          </motion.div>
         </div>
+      </div>
 
-        <div className="border-t border-border/40 pt-8 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} RoundZero. All rights reserved.
+      {/* Main Footer */}
+      <div className="py-16 lg:py-20 border-t border-border/50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-8 lg:gap-12">
+            {/* Brand */}
+            <div className="col-span-2">
+              <Link
+                href="/"
+                className="flex items-center gap-2.5 font-bold text-xl mb-6"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-violet-600 text-primary-foreground shadow-lg shadow-primary/20">
+                  <Target className="h-5 w-5" />
+                </div>
+                <span>RoundZero</span>
+              </Link>
+              <p className="text-sm text-muted-foreground mb-6 max-w-xs leading-relaxed">
+                The AI-powered interview preparation platform that helps you
+                land your dream job.
+              </p>
+
+              {/* Newsletter */}
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">
+                  Subscribe to our newsletter
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="h-11 bg-background/50 border-border/50 focus:border-primary"
+                  />
+                  <Button size="sm" className="h-11 px-4 shrink-0">
+                    <Mail className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  No spam. Unsubscribe anytime.
+                </p>
+              </div>
+            </div>
+
+            {/* Product */}
+            <div>
+              <h4 className="font-semibold mb-4">Product</h4>
+              <ul className="space-y-3">
+                {footerLinks.product.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h4 className="font-semibold mb-4">Company</h4>
+              <ul className="space-y-3">
+                {footerLinks.company.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h4 className="font-semibold mb-4">Resources</h4>
+              <ul className="space-y-3">
+                {footerLinks.resources.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-3">
+                {footerLinks.legal.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-12 mt-12 border-t border-border/50">
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} RoundZero. All rights reserved.
+            </p>
+            <div className="flex items-center gap-2">
+              {socialLinks.map((social) => (
+                <Link
+                  key={social.label}
+                  href={social.href}
+                  className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-300"
+                  aria-label={social.label}
+                >
+                  <social.icon className="h-4 w-4" />
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </footer>
