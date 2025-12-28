@@ -2,8 +2,8 @@
 
 import { ArrowUpRight, ChevronRight, Code2, Target, Users } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface QuickAction {
   title: string;

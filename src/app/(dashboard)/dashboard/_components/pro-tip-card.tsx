@@ -1,9 +1,9 @@
 "use client";
 
-import { Zap, X } from "lucide-react";
+import { X, Zap } from "lucide-react";
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export interface ProTip {
   id: string | number;

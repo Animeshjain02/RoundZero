@@ -103,7 +103,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/dashboard" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Target className="h-4 w-4" />
               </div>

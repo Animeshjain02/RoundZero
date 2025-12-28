@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  WelcomeHeader,
-  StatsCards,
+  ProTipCard,
   QuickStart,
   RecentInterviews,
-  SkillProgress,
   RecommendedPractice,
-  ProTipCard,
+  SkillProgress,
+  StatsCards,
+  WelcomeHeader,
 } from "./index";
 
 interface User {
