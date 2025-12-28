@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { ResumeUploader } from "@/components/file-uploader/Uploader";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -47,7 +48,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { orpcClient } from "@/lib/orpc-client";
-import { cn } from "@/lib/utils";
 import {
   type CreateInterviewSchemaType,
   createInterviewSchema,
@@ -55,8 +55,9 @@ import {
 
 export default function CreateInterviewPage() {
   const [isPending, startTransition] = useTransition();
-  const [isParsing, setIsParsing] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
+  const [resumeKey, setResumeKey] = useState<string | null>(null);
+  const [resumeFilename, setResumeFilename] = useState<string | null>(null);
+
   const router = useRouter();
 
   // 1. Setup Form
@@ -74,7 +75,12 @@ export default function CreateInterviewPage() {
 
   // 2. Mutations
   const { mutate: createInterview } = useMutation({
-    mutationFn: async (values: CreateInterviewSchemaType) => {
+    mutationFn: async (
+      values: CreateInterviewSchemaType & {
+        resumeKey?: string;
+        resumeFilename?: string;
+      },
+    ) => {
       return await orpcClient.interview.create(values);
     },
     onSuccess: (data: { interviewId: string }) => {
@@ -87,9 +93,9 @@ export default function CreateInterviewPage() {
     },
   });
 
-  const { mutate: parseResume } = useMutation({
+  const { mutate: parseResume, isPending: isParsing } = useMutation({
     mutationFn: async (values: {
-      resume: { filename: string; base64: string };
+      resume: { filename: string; key: string };
     }) => {
       return await orpcClient.interview.parseResume(values);
     },
@@ -99,57 +105,32 @@ export default function CreateInterviewPage() {
     },
     onError: (error: Error) => {
       toast.error("Failed to parse resume: " + error.message);
+      setResumeKey(null);
+      setResumeFilename(null);
     },
   });
 
   function onSubmit(values: CreateInterviewSchemaType) {
     startTransition(async () => {
-      createInterview(values);
+      createInterview({
+        ...values,
+        resumeKey: resumeKey || undefined,
+        resumeFilename: resumeFilename || undefined,
+      });
     });
   }
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      processFile(e.dataTransfer.files[0]);
-    }
-  }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      processFile(e.target.files[0]);
-    }
+  const onResumeUpload = (key: string, file: File) => {
+    setResumeKey(key);
+    setResumeFilename(file.name);
+    parseResume({ resume: { filename: file.name, key: key } });
   };
 
-  const processFile = async (file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("File size must be less than 5MB");
-      return;
-    }
-
-    setIsParsing(true);
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const base64 = event.target?.result as string;
-      const base64Data = base64.split(",")[1];
-      await parseResume({
-        resume: { filename: file.name, base64: base64Data },
-      });
-      setIsParsing(false);
-    };
-    reader.readAsDataURL(file);
+  const onResumeRemove = (key: string) => {
+    setResumeKey(null);
+    setResumeFilename(null);
+    form.setValue("resumeText", "");
+    toast.info("Resume removed");
   };
 
   const resumeText = form.watch("resumeText");
@@ -201,13 +182,21 @@ export default function CreateInterviewPage() {
                 {/* Tech Stack */}
                 <div className="space-y-2">
                   <FormLabel>Tech Stack / Focus Area</FormLabel>
-                  <Input placeholder="e.g. React, Next.js, Node.js, AWS" />
+                  <Input
+                    placeholder="e.g. React, Next.js, Node.js, AWS"
+                    onChange={(e) => form.setValue("techStack", e.target.value)}
+                  />
                 </div>
 
                 {/* Experience Level */}
                 <div className="space-y-2">
                   <FormLabel>Years of Experience</FormLabel>
-                  <Select defaultValue="mid">
+                  <Select
+                    defaultValue="mid"
+                    onValueChange={(val) =>
+                      form.setValue("experienceLevel", val as any)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
@@ -236,81 +225,33 @@ export default function CreateInterviewPage() {
                     <FormItem>
                       <FormControl>
                         <div className="space-y-4">
-                          {!field.value ? (
-                            <div
-                              className={cn(
-                                "relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-xl transition-all duration-200 ease-in-out",
-                                dragActive
-                                  ? "border-primary bg-primary/5"
-                                  : "border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/50",
-                              )}
-                              onDragEnter={handleDrag}
-                              onDragLeave={handleDrag}
-                              onDragOver={handleDrag}
-                              onDrop={handleDrop}
-                            >
-                              <label
-                                htmlFor="resume-upload"
-                                className="flex flex-col items-center justify-center w-full h-full cursor-pointer"
-                              >
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                  <div className="p-3 bg-background rounded-full shadow-sm mb-4">
-                                    <UploadCloud className="w-6 h-6 text-primary" />
-                                  </div>
-                                  <p className="mb-2 text-sm text-foreground font-medium">
-                                    <span className="font-semibold text-primary">
-                                      Click to upload
-                                    </span>{" "}
-                                    or drag and drop
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    PDF, DOCX (Max 5MB)
-                                  </p>
-                                </div>
-                                <input
-                                  id="resume-upload"
-                                  type="file"
-                                  className="hidden"
-                                  accept=".pdf,.docx,.doc,.txt"
-                                  onChange={handleFileChange}
-                                  disabled={isParsing}
-                                />
-                              </label>
-                              {isParsing && (
-                                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-xl z-10">
-                                  <div className="flex flex-col items-center gap-2">
-                                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                                    <p className="text-sm font-medium">
-                                      Parsing resume...
-                                    </p>
-                                  </div>
-                                </div>
-                              )}
+                          <ResumeUploader
+                            onUploadComplete={onResumeUpload}
+                            onRemove={onResumeRemove}
+                          />
+
+                          {isParsing && (
+                            <div className="flex items-center gap-2 text-primary animate-pulse">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <p className="text-sm font-medium">
+                                Parsing resume content...
+                              </p>
                             </div>
-                          ) : (
-                            <div className="flex items-center justify-between p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-green-500/20 rounded-full">
-                                  <FileText className="h-4 w-4 text-green-600" />
-                                </div>
-                                <div>
-                                  <p className="text-sm font-medium text-green-700">
-                                    Resume Context Loaded
-                                  </p>
-                                  <p className="text-xs text-green-600/80">
-                                    The AI has read your resume.
-                                  </p>
-                                </div>
+                          )}
+
+                          {field.value && !isParsing && (
+                            <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                              <div className="p-2 bg-green-500/20 rounded-full">
+                                <FileText className="h-4 w-4 text-green-600" />
                               </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="text-green-700 hover:text-green-800 hover:bg-green-500/20"
-                                onClick={() => form.setValue("resumeText", "")}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
+                              <div>
+                                <p className="text-sm font-medium text-green-700">
+                                  Resume Parsed Successfully
+                                </p>
+                                <p className="text-xs text-green-600/80">
+                                  The AI has read your resume and is ready.
+                                </p>
+                              </div>
                             </div>
                           )}
                         </div>

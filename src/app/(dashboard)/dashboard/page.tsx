@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   });
 
   if (!session?.user) {
-    redirect("/sign-in");
+    redirect("/sign-in?error=session");
   }
 
   return <DashboardContent user={session.user} />;

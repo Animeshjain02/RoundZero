@@ -29,7 +29,7 @@ export const contract = {
 
   parseResume: protectedProcedure
     .route({
-      description: "Parse resume content",
+      description: "Parse resume content from S3",
       method: "POST",
       path: "/interview/parse-resume",
       summary: "Parse Resume",
@@ -39,7 +39,7 @@ export const contract = {
       z.object({
         resume: z.object({
           filename: z.string().min(1),
-          base64: z.string().min(1),
+          key: z.string().min(1),
         }),
       }),
     )
@@ -61,6 +61,8 @@ export const contract = {
         includeDSA: z.boolean(),
         experienceLevel: z.enum(["junior", "mid", "senior"]),
         techStack: z.string().optional(),
+        resumeKey: z.string().optional(),
+        resumeFilename: z.string().optional(),
       }),
     )
     .output(z.object({ interviewId: z.string() })),

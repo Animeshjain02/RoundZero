@@ -4,6 +4,8 @@ import { appRouter } from "@/server/routers/app";
 
 const handler = new RPCHandler(appRouter);
 
+export const maxDuration = 60; // 60 seconds
+
 async function handleRequest(request: Request) {
   const context = await os_context();
   const { response, matched } = await handler.handle(request, {

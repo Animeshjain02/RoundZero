@@ -5,7 +5,7 @@ const protectedPaths = ["/dashboard"];
 // unauthenticated users can access
 const authPaths = ["/sign-in"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if the path is protected or auth-only
@@ -33,6 +33,9 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users from auth routes to dashboard
   if (isAuthPath && sessionCookie) {
+    if (request.nextUrl.searchParams.get("error") === "session") {
+      return NextResponse.next();
+    }
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

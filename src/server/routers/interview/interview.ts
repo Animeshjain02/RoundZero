@@ -45,18 +45,30 @@ export const interviewRouter = {
 
   parseResume: contract.parseResume.handler(async ({ input }) => {
     const { resume } = input;
-    const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
+    const { S3 } = await import("@/lib/s3Client");
+    const { GetObjectCommand } = await import("@aws-sdk/client-s3");
+    // const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-    // decode base64 to Buffer
+    // Fetch file from S3
     let buffer: Buffer;
     try {
-      buffer = Buffer.from(resume.base64, "base64");
-    } catch (error) {
-      throw new Error("Failed to decode base64");
-    }
+      const command = new GetObjectCommand({
+        Bucket: process.env.S3_BUCKET_NAME!,
+        Key: resume.key,
+      });
 
-    if (buffer.length > MAX_FILE_BYTES) {
-      throw new Error("File size should be less than 5 MB.");
+      const response = await S3.send(command);
+
+      if (!response.Body) {
+        throw new Error("Failed to download file from S3");
+      }
+
+      // stream to buffer
+      const byteArray = await response.Body.transformToByteArray();
+      buffer = Buffer.from(byteArray);
+    } catch (error) {
+      console.error("S3 Download Error:", error);
+      throw new Error("Failed to download resume from storage");
     }
 
     const text = await extractResumeText(resume.filename, buffer);
@@ -73,10 +85,30 @@ export const interviewRouter = {
       includeDSA,
       techStack,
       experienceLevel,
+      resumeKey,
+      resumeFilename,
     } = input;
 
     if (!user?.id) {
       throw new Error("Unauthorized");
+    }
+
+    let resumeId: string | undefined;
+
+    if (resumeKey && resumeFilename) {
+      try {
+        const createdResume = await db.resume.create({
+          data: {
+            userId: user.id,
+            title: resumeFilename,
+            content: resumeText,
+            fileUrl: `https://${process.env.S3_BUCKET_NAME}.t3.storage.dev/${resumeKey}`, // Construct URL or store key
+          },
+        });
+        resumeId = createdResume.id;
+      } catch (error) {
+        console.error("Failed to create resume record:", error);
+      }
     }
 
     const interview = await db.interview.create({
@@ -89,6 +121,7 @@ export const interviewRouter = {
         experienceLevel,
         includeDSA,
         status: "SETUP",
+        resumeId: resumeId,
       },
       select: {
         id: true,

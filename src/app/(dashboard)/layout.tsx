@@ -20,7 +20,7 @@ export default async function DashboardLayout({
   });
 
   if (!session) {
-    redirect("/sign-in");
+    redirect("/sign-in?error=session");
   }
 
   return (

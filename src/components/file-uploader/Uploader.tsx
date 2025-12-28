@@ -9,8 +9,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../ui/card";
 
-export function ResumeUploader() {
-  const [file, setFile] = useState(
+export function ResumeUploader({
+  onUploadComplete,
+  onRemove,
+}: {
+  onUploadComplete: (key: string, file: File) => void;
+  onRemove: (key: string) => void;
+}) {
+  const [file, setFile] = useState<
     Array<{
       id: string;
       file: File;
@@ -20,8 +26,8 @@ export function ResumeUploader() {
       isDeleting: boolean;
       error: boolean;
       objectUrl?: string;
-    }>,
-  );
+    }>
+  >([]);
 
   const removeFile = async (fileId: string) => {
     try {
@@ -30,6 +36,9 @@ export function ResumeUploader() {
       if (fileToRemove) {
         if (fileToRemove.objectUrl) {
           URL.revokeObjectURL(fileToRemove.objectUrl);
+        }
+        if (fileToRemove.key) {
+          onRemove(fileToRemove.key);
         }
       }
 
@@ -72,11 +81,19 @@ export function ResumeUploader() {
     }
   };
 
-  const uploadFile = async (file: File) => {
-    console.log(file);
-    setFile((prevFile) =>
-      prevFile.map((f) => (f.file === file ? { ...f, uploading: true } : f)),
-    );
+  const uploadFile = async (fileToUpload: File) => {
+    const fileId = uuidv4();
+    const newFileState = {
+      id: fileId,
+      file: fileToUpload,
+      uploading: true,
+      progress: 0,
+      isDeleting: false,
+      error: false,
+      objectUrl: URL.createObjectURL(fileToUpload),
+    };
+
+    setFile([newFileState]); // Replace existing file
 
     try {
       const preSignedUrlResponse = await fetch("/api/s3/upload", {
@@ -85,9 +102,9 @@ export function ResumeUploader() {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          size: file.size,
+          fileName: fileToUpload.name,
+          contentType: fileToUpload.type,
+          size: fileToUpload.size,
         }),
       });
 
@@ -96,7 +113,7 @@ export function ResumeUploader() {
 
         setFile((prevFile) =>
           prevFile.map((f) =>
-            f.file === file
+            f.id === fileId
               ? { ...f, uploading: false, progress: 0, error: true }
               : f,
           ),
@@ -115,7 +132,7 @@ export function ResumeUploader() {
             const percentageCompleted = (event.loaded / event.total) * 100;
             setFile((prevFile) =>
               prevFile.map((f) =>
-                f.file === file
+                f.id === fileId
                   ? {
                       ...f,
                       progress: Math.round(percentageCompleted),
@@ -131,7 +148,7 @@ export function ResumeUploader() {
           if (xhr.status === 200 || xhr.status === 204) {
             setFile((prevFile) =>
               prevFile.map((f) =>
-                f.file === file
+                f.id === fileId
                   ? {
                       ...f,
                       progress: 100,
@@ -143,7 +160,7 @@ export function ResumeUploader() {
             );
 
             toast.success("File uploaded successfully");
-
+            onUploadComplete(key, fileToUpload);
             resolve();
           } else {
             reject(new Error("Failed to upload file"));
@@ -155,15 +172,15 @@ export function ResumeUploader() {
         };
 
         xhr.open("PUT", preSignedUrl);
-        xhr.setRequestHeader("Content-Type", file.type);
-        xhr.send(file);
+        xhr.setRequestHeader("Content-Type", fileToUpload.type);
+        xhr.send(fileToUpload);
       });
     } catch (error) {
       toast.error("Failed to upload file");
 
       setFile((prevFile) =>
         prevFile.map((f) =>
-          f.file === file
+          f.id === fileId
             ? {
                 ...f,
                 progress: 0,
@@ -178,25 +195,11 @@ export function ResumeUploader() {
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
-      setFile((prevFiles) => [
-        ...prevFiles,
-        ...acceptedFiles.map((file) => ({
-          id: uuidv4(),
-          file: file,
-          uploading: false,
-          progress: 0,
-          isDeleting: false,
-          error: false,
-          objectUrl: URL.createObjectURL(file),
-        })),
-      ]);
+      uploadFile(acceptedFiles[0]);
     }
-
-    uploadFile(acceptedFiles[0]);
   }, []);
 
   const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
-    // console.log(fileRejections);
     if (fileRejections.length > 0) {
       const tooManyFiles = fileRejections.find(
         (fileRejection) => fileRejection.errors[0].code === "too-many-files",
@@ -231,74 +234,80 @@ export function ResumeUploader() {
 
   return (
     <>
-      <Card
-        className={cn(
-          "relative border-2 border-dashed transition-colors duration-200 ease-in-out w-full h-64",
-          isDragActive
-            ? "border-primary bg-primary/10 border-solid"
-            : "border-border hover:border-primary",
-        )}
-        {...getRootProps()}
-      >
-        <CardContent className="flex flex-col items-center justify-center h-full w-full">
-          <input {...getInputProps()} />
-          {isDragActive ? (
-            <p>Drop the files here ...</p>
-          ) : (
-            <div className="flex flex-col items-center justify-center w-full h-full gay-y-3">
-              <p>Drag 'n' drop some files here, or click to select files</p>
-              <Button>Select Files</Button>
-            </div>
+      {file.length === 0 ? (
+        <Card
+          className={cn(
+            "relative border-2 border-dashed transition-colors duration-200 ease-in-out w-full h-48",
+            isDragActive
+              ? "border-primary bg-primary/10 border-solid"
+              : "border-border hover:border-primary",
           )}
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-        {file.map((file) => (
-          <div key={file.id} className="flex flex-col gap-1">
-            <div className="relative aspect-square rounded-lg overflow-hidden">
-              <img
-                src={file.objectUrl}
-                alt={file.file.name}
-                className="w-full h-full object-cover"
-              />
-
-              <Button
-                variant={"destructive"}
-                size={"icon"}
-                onClick={() => removeFile(file.id)}
-                className="absolute top-2 right-2"
-                disabled={file.uploading || file.isDeleting}
-              >
-                {file.isDeleting ? (
-                  <Loader2 className="animate-spin size-4" />
+          {...getRootProps()}
+        >
+          <CardContent className="flex flex-col items-center justify-center h-full w-full">
+            <input {...getInputProps()} />
+            {isDragActive ? (
+              <p>Drop the file here ...</p>
+            ) : (
+              <div className="flex flex-col items-center justify-center w-full h-full gap-y-3">
+                <p>Drag 'n' drop a file here, or click to select</p>
+                <Button type="button">Select File</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {file.map((fileItem) => (
+            <div key={fileItem.id} className="flex flex-col gap-1">
+              <div className="relative aspect-video rounded-lg overflow-hidden border group">
+                {fileItem.file.type.includes("image") ? (
+                  <img
+                    src={fileItem.objectUrl}
+                    alt={fileItem.file.name}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <Trash2 className="size-4" />
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-4">
+                    <p className="text-sm font-medium text-center text-muted-foreground break-all">
+                      {fileItem.file.name}
+                    </p>
+                  </div>
                 )}
-              </Button>
-              {file.uploading && !file.isDeleting && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                  <p className="text-white font-medium text-lg">
-                    {file.progress}%
-                  </p>
-                </div>
-              )}
 
-              {file.error && (
-                <div className="absolute inset-0 bg-red-500/50 flex items-center justify-center">
-                  <p className="text-white font-medium text-lg">
-                    Failed to upload
-                  </p>
-                </div>
-              )}
+                <Button
+                  variant={"destructive"}
+                  size={"icon"}
+                  onClick={() => removeFile(fileItem.id)}
+                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  disabled={fileItem.uploading || fileItem.isDeleting}
+                >
+                  {fileItem.isDeleting ? (
+                    <Loader2 className="animate-spin size-4" />
+                  ) : (
+                    <Trash2 className="size-4" />
+                  )}
+                </Button>
+                {fileItem.uploading && !fileItem.isDeleting && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                    <p className="text-white font-medium text-lg">
+                      {fileItem.progress}%
+                    </p>
+                  </div>
+                )}
+
+                {fileItem.error && (
+                  <div className="absolute inset-0 bg-red-500/50 flex items-center justify-center z-20">
+                    <p className="text-white font-medium text-lg">
+                      Failed to upload
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-
-            <p className="text-sm text-muted-foreground truncate">
-              {file.file.name}
-            </p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
