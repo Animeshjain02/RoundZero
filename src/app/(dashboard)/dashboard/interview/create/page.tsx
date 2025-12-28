@@ -41,7 +41,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { orpcClient } from "@/lib/orpc-client";
 import {
@@ -186,9 +185,6 @@ export default function CreateInterviewPage() {
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-primary to-violet-600 flex items-center justify-center shadow-lg shadow-primary/25">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
                 <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
                   Create New Interview
                 </h1>
@@ -204,15 +200,6 @@ export default function CreateInterviewPage() {
               <Zap className="h-3.5 w-3.5 text-primary" />
               <span>AI-Powered</span>
             </Badge>
-          </div>
-
-          {/* Progress */}
-          <div className="mt-6 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Setup Progress</span>
-              <span className="font-medium">{Math.round(progressValue)}%</span>
-            </div>
-            <Progress value={progressValue} className="h-2" />
           </div>
         </div>
 

@@ -1,12 +1,26 @@
 "use client";
 
-import { Menu, Target } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, Settings, Target } from "lucide-react";
 import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ModeToggle } from "@/components/ui/theme-toggle";
+import { useSignOut } from "@/hooks/use-signout";
+import { authClient } from "@/lib/auth-client";
 
 export function Navbar() {
+  const { data: session } = authClient.useSession();
+  const signOut = useSignOut();
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-backdrop-filter:bg-background/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -39,25 +53,89 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
+            {session ? (
+              <div className="flex items-center justify-center gap-4">
+                <Link
+                  href="/dashboard"
+                  className={buttonVariants({
+                    variant: "default",
+                    className: "shadow-lg shadow-primary/20",
+                  })}
+                >
+                  Start a mock now
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative h-9 w-9 rounded-full"
+                    >
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage
+                          src={session.user.image || ""}
+                          alt={session.user.name || ""}
+                        />
+                        <AvatarFallback>
+                          {session.user.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {session.user.name}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {session.user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className={buttonVariants({
+                    variant: "ghost",
+                    className: "text-muted-foreground hover:text-foreground",
+                  })}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className={buttonVariants({
+                    variant: "default",
+                    className: "shadow-lg shadow-primary/20",
+                  })}
+                >
+                  Start a mock now
+                </Link>
+              </>
+            )}
             <ModeToggle />
-            <Link
-              href="/sign-in"
-              className={buttonVariants({
-                variant: "ghost",
-                className: "text-muted-foreground hover:text-foreground",
-              })}
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/dashboard"
-              className={buttonVariants({
-                variant: "default",
-                className: "shadow-lg shadow-primary/20",
-              })}
-            >
-              Start a mock now
-            </Link>
           </div>
 
           {/* Mobile Menu */}
@@ -92,13 +170,51 @@ export function Navbar() {
                   <span className="text-lg font-medium">Theme</span>
                   <ModeToggle />
                 </div>
-                <Link
-                  href="/sign-in"
-                  className="text-lg font-medium hover:text-primary transition-colors"
-                >
-                  Sign In
-                </Link>
-                <Button className="w-full mt-2">Start Practice - Free</Button>
+                {session ? (
+                  <>
+                    <div className="flex items-center gap-3 py-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={session.user.image || ""} />
+                        <AvatarFallback>
+                          {session.user.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {session.user.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {session.user.email}
+                        </span>
+                      </div>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                    >
+                      Dashboard
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="justify-start px-0 text-lg font-medium hover:bg-transparent hover:text-primary transition-colors"
+                      onClick={signOut}
+                    >
+                      Log out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/sign-in"
+                      className="text-lg font-medium hover:text-primary transition-colors"
+                    >
+                      Sign In
+                    </Link>
+                    <Button className="w-full mt-2" asChild>
+                      <Link href="/dashboard">Start Practice - Free</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </SheetContent>
           </Sheet>
