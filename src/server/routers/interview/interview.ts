@@ -21,6 +21,7 @@ export const interviewRouter = {
     try {
       buffer = Buffer.from(resume.base64, "base64");
     } catch (error) {
+      console.error("Base64 Decode Error:", error);
       throw new Error("Failed to decode base64");
     }
 
@@ -34,6 +35,7 @@ export const interviewRouter = {
     try {
       resumeText = await extractResumeText(resume.filename, buffer);
     } catch (error) {
+      console.error("Resume Text Extraction Error:", error);
       throw new Error("Failed to extract resume text");
     }
 

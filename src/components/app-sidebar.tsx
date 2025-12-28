@@ -4,6 +4,7 @@ import {
   BookOpen,
   ChevronUp,
   Code2,
+  CreditCard,
   Home,
   LayoutDashboard,
   LogOut,
@@ -13,7 +14,9 @@ import {
   Settings,
   Sparkles,
   Target,
+  TrendingUp,
   User2,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -28,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
 import {
   Sidebar,
   SidebarContent,
@@ -39,51 +43,44 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { useSignOut } from "@/hooks/use-signout";
 import { authClient } from "@/lib/auth-client";
 
-// Menu configuration
-const menuGroups = [
+const mainNavItems = [
   {
-    label: "Platform",
-    items: [
-      {
-        title: "Dashboard",
-        url: "/dashboard",
-        icon: LayoutDashboard,
-      },
-      {
-        title: "Interviews",
-        url: "/dashboard/interviews",
-        icon: MessageSquare,
-      },
-      {
-        title: "Settings",
-        url: "/dashboard/settings",
-        icon: Settings,
-      },
-    ],
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: LayoutDashboard,
   },
   {
-    label: "Practice & Learn",
-    items: [
-      {
-        title: "Coding Challenges",
-        url: "/dashboard/practice/coding",
-        icon: Code2,
-      },
-      {
-        title: "System Design",
-        url: "/dashboard/practice/design",
-        icon: PenTool,
-      },
-      {
-        title: "Mock Projects",
-        url: "/dashboard/practice/projects",
-        icon: BookOpen,
-      },
-    ],
+    title: "My Interviews",
+    url: "/dashboard/interviews",
+    icon: MessageSquare,
+  },
+  {
+    title: "Analytics",
+    url: "/dashboard/analytics",
+    icon: TrendingUp,
+  },
+];
+
+const practiceItems = [
+  {
+    title: "Coding",
+    url: "/dashboard/practice/coding",
+    icon: Code2,
+  },
+  {
+    title: "System Design",
+    url: "/dashboard/practice/design",
+    icon: PenTool,
+  },
+  {
+    title: "Behavioral",
+    url: "/dashboard/practice/behavioral",
+    icon: BookOpen,
   },
 ];
 
@@ -92,164 +89,200 @@ export function AppSidebar() {
   const { data: session } = authClient.useSession();
   const signOut = useSignOut();
 
+  const isActive = (url: string) => {
+    if (url === "/dashboard") return pathname === url;
+    return pathname.startsWith(url);
+  };
+
   return (
-    <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader>
+    <Sidebar
+      collapsible="icon"
+      variant="sidebar"
+      className="border-r border-border/50 overflow-hidden"
+    >
+      <SidebarHeader className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center gap-2 px-1 py-1.5 transition-[width,height,padding]">
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
-                <Target className="size-5" />
+            <Link href="/dashboard" className="flex items-center gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Target className="h-4 w-4" />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-bold text-lg tracking-tight">
-                  RoundZero
-                </span>
-                <span className="truncate text-xs font-medium text-muted-foreground">
-                  AI Interviewer
-                </span>
-              </div>
-            </div>
+              <span className="font-bold text-base group-data-[collapsible=icon]:hidden">
+                RoundZero
+              </span>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
-        {/* Quick Action Button */}
-        <div className="px-3 py-3 group-data-[collapsible=icon]:hidden">
+      <SidebarContent className="overflow-x-hidden">
+        {/* New Interview Button */}
+        <div className="px-3 pb-2 group-data-[collapsible=icon]:px-2">
           <Button
             asChild
-            className="w-full justify-start gap-2 bg-linear-to-r from-primary to-primary/90 shadow-md transition-all hover:shadow-lg hover:from-primary/90 hover:to-primary"
             size="sm"
+            className="w-full justify-start gap-2 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center"
           >
             <Link href="/dashboard/interview/create">
-              <Plus className="size-4" />
-              <span className="font-semibold">New Interview</span>
+              <Plus className="h-4 w-4 shrink-0" />
+              <span className="group-data-[collapsible=icon]:hidden">
+                New Interview
+              </span>
             </Link>
           </Button>
         </div>
 
-        {menuGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-              {group.label}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => {
-                  // Check for active state with better precision
-                  const isActive =
-                    pathname === item.url ||
-                    (pathname.startsWith(item.url + "/") &&
-                      item.url !== "/dashboard");
+        {/* Main Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider px-3">
+            Main
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-                  return (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                        className="transition-colors hover:bg-muted/50 data-[active=true]:bg-primary/10 data-[active=true]:text-primary data-[active=true]:font-medium"
-                      >
-                        <Link href={item.url}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        <SidebarSeparator />
 
-        {/* Upgrade / Premium Promotion (Can include later) */}
-        <div className="group-data-[collapsible=icon]:hidden mt-auto px-4 pb-4"></div>
+        {/* Practice Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider px-3">
+            Practice
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {practiceItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url}>
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
+
+        {/* Upgrade Card - Only show when expanded */}
+        <div className="mt-auto p-3 group-data-[collapsible=icon]:hidden">
+          <div className="rounded-lg border border-border/50 bg-muted/50 p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Upgrade to Pro</span>
+            </div>
+            <div className="space-y-1.5 mb-3">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>2/5 interviews</span>
+                <span>40%</span>
+              </div>
+              <Progress value={40} className="h-1" />
+            </div>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="w-full h-7 text-xs"
+              asChild
+            >
+              <Link href="/dashboard/billing">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Upgrade
+              </Link>
+            </Button>
+          </div>
+        </div>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="p-2 border-t border-border/50">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                >
-                  <Avatar className="h-8 w-8 rounded-lg border">
-                    <AvatarImage
-                      src={session?.user?.image || ""}
-                      alt={session?.user?.name || ""}
-                    />
-                    <AvatarFallback className="rounded-lg bg-primary/10 text-primary">
-                      <User2 className="size-4" />
+                <SidebarMenuButton size="lg" className="w-full">
+                  <Avatar className="h-7 w-7 shrink-0">
+                    <AvatarImage src={session?.user?.image || ""} />
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                      {session?.user?.name?.charAt(0) || (
+                        <User2 className="h-3 w-3" />
+                      )}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold text-foreground">
+                  <div className="flex flex-col items-start text-left min-w-0 group-data-[collapsible=icon]:hidden">
+                    <span className="text-sm font-medium truncate w-full">
                       {session?.user?.name || "User"}
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground truncate w-full">
                       {session?.user?.email || ""}
                     </span>
                   </div>
-                  <ChevronUp className="ml-auto size-4 text-muted-foreground" />
+                  <ChevronUp className="ml-auto h-4 w-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 side="top"
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl border bg-popover p-1 shadow-lg"
+                className="w-56 rounded-lg"
+                align="start"
               >
-                <DropdownMenuLabel className="p-0 font-normal">
-                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                    <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarImage
-                        src={session?.user?.image || ""}
-                        alt={session?.user?.name || ""}
-                      />
-                      <AvatarFallback className="rounded-lg">
-                        <User2 className="size-4" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {session?.user?.name || "User"}
-                      </span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {session?.user?.email || ""}
-                      </span>
-                    </div>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">
+                      {session?.user?.name || "User"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {session?.user?.email || ""}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
-                  <DropdownMenuItem asChild className="rounded-lg">
+                  <DropdownMenuItem asChild>
                     <Link href="/">
-                      <Home className="mr-2 size-4" />
-                      <span>Home</span>
+                      <Home className="mr-2 h-4 w-4" />
+                      Home
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-lg">
+                  <DropdownMenuItem asChild>
                     <Link href="/dashboard/settings">
-                      <Settings className="mr-2 size-4" />
-                      <span>Settings</span>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="rounded-lg">
+                  <DropdownMenuItem asChild>
                     <Link href="/dashboard/billing">
-                      <Sparkles className="mr-2 size-4 text-primary" />
-                      <span>Billing</span>
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Billing
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={signOut}
-                  className="rounded-lg text-destructive focus:text-destructive cursor-pointer"
+                  className="text-destructive focus:text-destructive"
                 >
-                  <LogOut className="mr-2 size-4" />
-                  <span>Sign out</span>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

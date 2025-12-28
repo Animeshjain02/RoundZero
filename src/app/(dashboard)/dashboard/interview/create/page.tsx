@@ -4,22 +4,24 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  ArrowRight,
+  Briefcase,
+  CheckCircle2,
   Code2,
   FileText,
   Loader2,
   PenTool,
-  PlusIcon,
   Sparkles,
-  UploadCloud,
+  Target,
   Users,
-  X,
+  Zap,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ResumeUploader } from "@/components/file-uploader/Uploader";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,28 +41,56 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { orpcClient } from "@/lib/orpc-client";
 import {
   type CreateInterviewSchemaType,
   createInterviewSchema,
 } from "@/lib/zodSchemas/createInterview";
 
+const interviewTypes = [
+  {
+    value: "TECHNICAL",
+    title: "Technical",
+    description: "DSA & Coding Challenges",
+    icon: Code2,
+    gradient: "from-blue-500 to-cyan-500",
+    bgGradient: "from-blue-500/10 to-cyan-500/10",
+  },
+  {
+    value: "SYSTEM_DESIGN",
+    title: "System Design",
+    description: "Architecture & Scalability",
+    icon: PenTool,
+    gradient: "from-violet-500 to-purple-500",
+    bgGradient: "from-violet-500/10 to-purple-500/10",
+  },
+  {
+    value: "BEHAVIORAL",
+    title: "Behavioral",
+    description: "Soft Skills & Leadership",
+    icon: Users,
+    gradient: "from-orange-500 to-amber-500",
+    bgGradient: "from-orange-500/10 to-amber-500/10",
+  },
+];
+
+const experienceLevels = [
+  { value: "junior", label: "Junior", description: "0-2 years", icon: "🌱" },
+  { value: "mid", label: "Mid-Level", description: "2-5 years", icon: "🚀" },
+  { value: "senior", label: "Senior", description: "5+ years", icon: "⭐" },
+];
+
 export default function CreateInterviewPage() {
   const [isPending, startTransition] = useTransition();
   const [resumeKey, setResumeKey] = useState<string | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
 
   const router = useRouter();
 
-  // 1. Setup Form
   const form = useForm({
     resolver: zodResolver(createInterviewSchema),
     defaultValues: {
@@ -73,7 +103,6 @@ export default function CreateInterviewPage() {
     },
   });
 
-  // 2. Mutations
   const { mutate: createInterview } = useMutation({
     mutationFn: async (
       values: CreateInterviewSchemaType & {
@@ -101,7 +130,7 @@ export default function CreateInterviewPage() {
     },
     onSuccess: (data: { text: string }) => {
       form.setValue("resumeText", data.text);
-      toast.success("Resume parsed: Context added to AI");
+      toast.success("Resume parsed successfully");
     },
     onError: (error: Error) => {
       toast.error("Failed to parse resume: " + error.message);
@@ -126,7 +155,7 @@ export default function CreateInterviewPage() {
     parseResume({ resume: { filename: file.name, key: key } });
   };
 
-  const onResumeRemove = (key: string) => {
+  const onResumeRemove = () => {
     setResumeKey(null);
     setResumeFilename(null);
     form.setValue("resumeText", "");
@@ -135,87 +164,264 @@ export default function CreateInterviewPage() {
 
   const resumeText = form.watch("resumeText");
   const watchType = form.watch("type");
+  const watchExperience = form.watch("experienceLevel");
+
+  const progressValue = (currentStep / totalSteps) * 100;
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            Create New Session <Sparkles className="size-5 text-primary" />
-          </h1>
-          <p className="text-muted-foreground">
-            Configure the AI persona and difficulty settings.
-          </p>
-        </div>
-      </div>
+    <div className="min-h-[calc(100vh-3.5rem)] bg-linear-to-b from-background to-muted/20">
+      <div className="max-w-4xl mx-auto py-8 px-4 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-4 -ml-2 text-muted-foreground hover:text-foreground"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
 
-      <div className="grid gap-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="h-10 w-10 rounded-xl bg-linear-to-br from-primary to-violet-600 flex items-center justify-center shadow-lg shadow-primary/25">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
+                  Create New Interview
+                </h1>
+              </div>
+              <p className="text-muted-foreground">
+                Configure your AI interviewer and start practicing
+              </p>
+            </div>
+            <Badge
+              variant="outline"
+              className="hidden sm:flex gap-1.5 px-3 py-1.5"
+            >
+              <Zap className="h-3.5 w-3.5 text-primary" />
+              <span>AI-Powered</span>
+            </Badge>
+          </div>
+
+          {/* Progress */}
+          <div className="mt-6 space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Setup Progress</span>
+              <span className="font-medium">{Math.round(progressValue)}%</span>
+            </div>
+            <Progress value={progressValue} className="h-2" />
+          </div>
+        </div>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Card>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            {/* Interview Type Selection */}
+            <Card className="border-border/50 shadow-sm">
               <CardHeader>
-                <CardTitle>Role Configuration</CardTitle>
-                <CardDescription>
-                  Tell the AI who you want to be interviewed as.
-                </CardDescription>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Target className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Interview Type</CardTitle>
+                    <CardDescription>
+                      Choose the type of interview you want to practice
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
-              <CardContent className="grid md:grid-cols-2 gap-6">
-                {/* Job Title */}
+              <CardContent>
                 <FormField
                   control={form.control}
-                  name="jobTitle"
+                  name="type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Target Role</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="e.g. Senior Frontend Engineer"
-                          {...field}
-                        />
+                        <RadioGroup
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            setCurrentStep(Math.max(currentStep, 1));
+                          }}
+                          defaultValue={field.value}
+                          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                        >
+                          {interviewTypes.map((type) => (
+                            <FormItem key={type.value}>
+                              <FormControl>
+                                <RadioGroupItem
+                                  value={type.value}
+                                  className="peer sr-only"
+                                />
+                              </FormControl>
+                              <FormLabel
+                                className={`flex flex-col items-center justify-center rounded-2xl border-2 border-border/50 p-6 cursor-pointer transition-all duration-300 hover:border-border hover:bg-accent/50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-linear-to-br ${type.bgGradient} h-full`}
+                              >
+                                <div
+                                  className={`h-14 w-14 rounded-2xl bg-linear-to-br ${type.gradient} flex items-center justify-center mb-4 shadow-lg`}
+                                >
+                                  <type.icon className="h-7 w-7 text-white" />
+                                </div>
+                                <span className="font-semibold text-lg">
+                                  {type.title}
+                                </span>
+                                <span className="text-xs text-muted-foreground text-center mt-1">
+                                  {type.description}
+                                </span>
+                              </FormLabel>
+                            </FormItem>
+                          ))}
+                        </RadioGroup>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Tech Stack */}
-                <div className="space-y-2">
-                  <FormLabel>Tech Stack / Focus Area</FormLabel>
-                  <Input
-                    placeholder="e.g. React, Next.js, Node.js, AWS"
-                    onChange={(e) => form.setValue("techStack", e.target.value)}
+                {watchType === "TECHNICAL" && (
+                  <div className="mt-6 pt-6 border-t border-border/50">
+                    <FormField
+                      control={form.control}
+                      name="includeDSA"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-xl border border-border/50 bg-muted/30 p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base font-medium">
+                              Include DSA Problems
+                            </FormLabel>
+                            <FormDescription>
+                              Add algorithmic coding challenges to your
+                              interview
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className="h-5 w-5"
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Role Configuration */}
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                    <Briefcase className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Role Details</CardTitle>
+                    <CardDescription>
+                      Tell us about the position you're preparing for
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="jobTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Target Role</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g. Senior Frontend Engineer"
+                            className="h-11"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              if (e.target.value)
+                                setCurrentStep(Math.max(currentStep, 2));
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="techStack"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tech Stack / Focus Area</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g. React, Node.js, AWS"
+                            className="h-11"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
                   />
                 </div>
 
                 {/* Experience Level */}
-                <div className="space-y-2">
-                  <FormLabel>Years of Experience</FormLabel>
-                  <Select
-                    defaultValue="mid"
-                    onValueChange={(val) =>
-                      form.setValue("experienceLevel", val as any)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="junior">Junior (0-2 Years)</SelectItem>
-                      <SelectItem value="mid">Mid-Level (2-5 Years)</SelectItem>
-                      <SelectItem value="senior">Senior (5+ Years)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="experienceLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Experience Level</FormLabel>
+                      <FormControl>
+                        <div className="grid grid-cols-3 gap-3">
+                          {experienceLevels.map((level) => (
+                            <button
+                              key={level.value}
+                              type="button"
+                              onClick={() => field.onChange(level.value)}
+                              className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all duration-200 ${
+                                field.value === level.value
+                                  ? "border-primary bg-primary/5"
+                                  : "border-border/50 hover:border-border hover:bg-accent/50"
+                              }`}
+                            >
+                              <span className="text-2xl mb-1">
+                                {level.icon}
+                              </span>
+                              <span className="font-medium text-sm">
+                                {level.label}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {level.description}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Resume Upload */}
+            <Card className="border-border/50 shadow-sm">
               <CardHeader>
-                <CardTitle>Context & Resume</CardTitle>
-                <CardDescription>
-                  Upload your resume to let the AI ask about your past projects.
-                </CardDescription>
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Resume Context</CardTitle>
+                    <CardDescription>
+                      Upload your resume for personalized questions
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <FormField
@@ -226,30 +432,38 @@ export default function CreateInterviewPage() {
                       <FormControl>
                         <div className="space-y-4">
                           <ResumeUploader
-                            onUploadComplete={onResumeUpload}
+                            onUploadComplete={(key, file) => {
+                              onResumeUpload(key, file);
+                              setCurrentStep(3);
+                            }}
                             onRemove={onResumeRemove}
                           />
 
                           {isParsing && (
-                            <div className="flex items-center gap-2 text-primary animate-pulse">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              <p className="text-sm font-medium">
-                                Parsing resume content...
-                              </p>
+                            <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                              <div>
+                                <p className="text-sm font-medium">
+                                  Analyzing your resume...
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  This may take a few seconds
+                                </p>
+                              </div>
                             </div>
                           )}
 
                           {field.value && !isParsing && (
-                            <div className="flex items-center gap-3 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
-                              <div className="p-2 bg-green-500/20 rounded-full">
-                                <FileText className="h-4 w-4 text-green-600" />
+                            <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                              <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-green-700">
-                                  Resume Parsed Successfully
+                                <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                                  Resume Analyzed Successfully
                                 </p>
-                                <p className="text-xs text-green-600/80">
-                                  The AI has read your resume and is ready.
+                                <p className="text-xs text-emerald-600/80 dark:text-emerald-500/80">
+                                  AI will ask questions based on your experience
                                 </p>
                               </div>
                             </div>
@@ -263,150 +477,32 @@ export default function CreateInterviewPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Interview Mode</CardTitle>
-                <CardDescription>
-                  Choose the type of interview you want to practice.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-                        >
-                          <FormItem>
-                            <FormControl>
-                              <RadioGroupItem
-                                value="TECHNICAL"
-                                className="peer sr-only"
-                              />
-                            </FormControl>
-                            <FormLabel className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all h-full">
-                              <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4">
-                                <Code2 className="size-6 text-blue-600 dark:text-blue-400" />
-                              </div>
-                              <div className="text-center space-y-1">
-                                <span className="font-semibold text-lg">
-                                  Technical
-                                </span>
-                                <p className="text-xs text-muted-foreground">
-                                  DSA & Coding Challenges
-                                </p>
-                              </div>
-                            </FormLabel>
-                          </FormItem>
-
-                          <FormItem>
-                            <FormControl>
-                              <RadioGroupItem
-                                value="SYSTEM_DESIGN"
-                                className="peer sr-only"
-                              />
-                            </FormControl>
-                            <FormLabel className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all h-full">
-                              <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full mb-4">
-                                <PenTool className="size-6 text-purple-600 dark:text-purple-400" />
-                              </div>
-                              <div className="text-center space-y-1">
-                                <span className="font-semibold text-lg">
-                                  System Design
-                                </span>
-                                <p className="text-xs text-muted-foreground">
-                                  Architecture & Diagramming
-                                </p>
-                              </div>
-                            </FormLabel>
-                          </FormItem>
-
-                          <FormItem>
-                            <FormControl>
-                              <RadioGroupItem
-                                value="BEHAVIORAL"
-                                className="peer sr-only"
-                              />
-                            </FormControl>
-                            <FormLabel className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-6 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all h-full">
-                              <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-full mb-4">
-                                <Users className="size-6 text-orange-600 dark:text-orange-400" />
-                              </div>
-                              <div className="text-center space-y-1">
-                                <span className="font-semibold text-lg">
-                                  Behavioral
-                                </span>
-                                <p className="text-xs text-muted-foreground">
-                                  Soft Skills & Leadership
-                                </p>
-                              </div>
-                            </FormLabel>
-                          </FormItem>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {watchType === "TECHNICAL" && (
-                  <div className="mt-6 pt-6 border-t animate-in fade-in slide-in-from-top-2">
-                    <FormField
-                      control={form.control}
-                      name="includeDSA"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 shadow-sm bg-muted/20">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Algorithmic Challenges
-                            </FormLabel>
-                            <FormDescription>
-                              Include specific DSA (Data Structures &
-                              Algorithms) problems?
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              className="size-5"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end gap-4">
+            {/* Submit */}
+            <div className="flex items-center justify-between pt-4">
               <Button
                 variant="outline"
                 type="button"
                 onClick={() => router.back()}
+                className="gap-2"
               >
+                <ArrowLeft className="h-4 w-4" />
                 Cancel
               </Button>
               <Button
                 type="submit"
                 size="lg"
-                className="w-full sm:w-auto"
+                className="gap-2 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
                 disabled={isPending || isParsing}
               >
                 {isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Session...
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating Session...
                   </>
                 ) : (
                   <>
-                    Start Interview <Sparkles className="ml-2 h-4 w-4" />
+                    Start Interview
+                    <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
