@@ -27,9 +27,15 @@ model User {
   tier     String  @default("FREE")
   stripeId String?
 
-  sessions Session[]
-  accounts Account[]
+  // analytics fields for quick stats
+  totalInterviews   Int @default(0)
+  totalPracticeTime Int @default(0) // in seconds
+  currentStreak     Int @default(0) // consecutive days
+  longestStreak     Int @default(0)
+  lastPracticeDate  DateTime?
 
+  sessions   Session[]
+  accounts   Account[]
   resumes    Resume[]
   interviews Interview[]
 
@@ -138,12 +144,17 @@ model Interview {
   startedAt   DateTime  @default(now())
   endedAt     DateTime?
   durationSec Int       @default(0)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resume      Resume?   @relation(fields: [resumeId], references: [id])
-  messages    Message[]
-  report      Report?
 
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resume   Resume?   @relation(fields: [resumeId], references: [id])
+  messages Message[]
+  report   Report?
+
+  // indexes for analytics queries
   @@index([userId])
+  @@index([userId, status])
+  @@index([userId, type])
+  @@index([userId, startedAt])
   @@map("interview")
 }
 
@@ -174,17 +185,31 @@ model Report {
   id          String @id @default(uuid())
   interviewId String @unique
 
-  overallScore Int
+  overallScore Int    // 0-100
   summary      String
+
+  // The json should follow like this:-
+  //   {
+  //   "communication": 85,
+  //   "problemSolving": 78,
+  //   "technicalKnowledge": 72,
+  //   "systemDesign": 65,
+  //   "codeQuality": 80,
+  //   "timeManagement": 70
+  // }
 
   categoryScores Json
 
   strengths  String[]
   weaknesses String[]
 
+  // gemini will generate the improvement suggestions
+  suggestions String[]
+
   createdAt DateTime @default(now())
 
   interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
 
+  @@index([interviewId])
   @@map("report")
 }
