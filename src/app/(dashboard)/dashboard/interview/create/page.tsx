@@ -11,7 +11,6 @@ import {
   FileText,
   Loader2,
   PenTool,
-  Sparkles,
   Target,
   Users,
   Zap,

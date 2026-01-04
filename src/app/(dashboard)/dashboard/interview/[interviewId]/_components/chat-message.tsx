@@ -1,0 +1,75 @@
+"use client";
+
+import { cn } from "@/lib/utils";
+import { Bot, User } from "lucide-react";
+
+export interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  isTyping?: boolean;
+}
+
+interface ChatMessageProps {
+  message: Message;
+}
+
+export function ChatMessage({ message }: ChatMessageProps) {
+  const isAssistant = message.role === "assistant";
+
+  return (
+    <div
+      className={cn(
+        "flex gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-300",
+        isAssistant ? "flex-row" : "flex-row-reverse"
+      )}
+    >
+      {/* Avatar */}
+      <div
+        className={cn(
+          "h-8 w-8 rounded-full shrink-0 flex items-center justify-center",
+          isAssistant
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted"
+        )}
+      >
+        {isAssistant ? (
+          <Bot className="h-4 w-4" />
+        ) : (
+          <User className="h-4 w-4" />
+        )}
+      </div>
+
+      {/* Message */}
+      <div
+        className={cn(
+          "flex flex-col gap-1 max-w-[85%]",
+          isAssistant ? "items-start" : "items-end"
+        )}
+      >
+        <div
+          className={cn(
+            "rounded-2xl px-4 py-2.5 text-sm",
+            isAssistant
+              ? "bg-muted rounded-tl-md"
+              : "bg-primary text-primary-foreground rounded-tr-md"
+          )}
+        >
+          {message.isTyping ? (
+            <div className="flex items-center gap-1 py-1 px-1">
+              <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+            </div>
+          ) : (
+            <p className="leading-relaxed">{message.content}</p>
+          )}
+        </div>
+        <span className="text-[10px] text-muted-foreground px-2">
+          {message.timestamp}
+        </span>
+      </div>
+    </div>
+  );
+}
