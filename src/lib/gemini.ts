@@ -1,46 +1,25 @@
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import {
-  generateObject,
-  generateText,
-  streamText,
-  type ModelMessage,
-} from 'ai';
-import { z } from 'zod';
-import { env } from '@/config/env';
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { type ModelMessage, generateObject, generateText, streamText } from "ai";
+import { z } from "zod";
+import { env } from "@/config/env";
 
+// Initialize Google AI client
 const google = createGoogleGenerativeAI({
   apiKey: env.GEMINI_API_KEY,
 });
 
-const model = google('gemini-2.0-flash-001');
+// Model configuration
+const MODEL_ID = "gemini-2.0-flash-001";
+const model = google(MODEL_ID);
 
-// Generate a single interview response
-export const generateInterviewResponse = async (
-  systemPrompt: string,
-  messages: ModelMessage[]
-) => {
-  const { text } = await generateText({
-    model,
-    system: systemPrompt,
-    messages,
-    temperature: 0.7,
-  });
-
-  return text;
-};
-
-// Stream an interview response for lower perceived latency
-export const streamInterviewResponse = async (
-  systemPrompt: string,
-  messages: ModelMessage[]
-) => {
-  return streamText({
-    model,
-    system: systemPrompt,
-    messages,
-    temperature: 0.7,
-  });
-};
+// Temperature settings for different use cases
+export const TEMPERATURE = {
+  CREATIVE: 0.9,
+  CONVERSATIONAL: 0.7,
+  BALANCED: 0.5,
+  PRECISE: 0.3,
+  DETERMINISTIC: 0.1,
+} as const;
 
 // Schema for the interview performance report
 export const reportSchema = z.object({
@@ -52,25 +31,62 @@ export const reportSchema = z.object({
     codeQuality: z.number().min(0).max(100),
     timeManagement: z.number().min(0).max(100),
   }),
-  strengths: z.array(z.string()),
-  weaknesses: z.array(z.string()),
-  suggestions: z.array(z.string()),
-  summary: z.string(),
+  strengths: z.array(z.string()).min(1),
+  weaknesses: z.array(z.string()).min(1),
+  suggestions: z.array(z.string()).min(1),
+  summary: z.string().min(1),
 });
 
 export type Report = z.infer<typeof reportSchema>;
 
+// Category scores type for type safety
+export type CategoryScores = Report["categoryScores"];
+
+// Message type for AI conversations
+export type AIMessage = ModelMessage;
+
+// Generate a single interview response
+export const generateInterviewResponse = async (
+  systemPrompt: string,
+  messages: AIMessage[],
+  temperature: number = TEMPERATURE.CONVERSATIONAL,
+): Promise<string> => {
+  const { text } = await generateText({
+    model,
+    system: systemPrompt,
+    messages,
+    temperature,
+  });
+
+  return text;
+};
+
+// Stream an interview response for lower perceived latency
+export const streamInterviewResponse = (
+  systemPrompt: string,
+  messages: AIMessage[],
+  temperature: number = TEMPERATURE.CONVERSATIONAL,
+) => {
+  return streamText({
+    model,
+    system: systemPrompt,
+    messages,
+    temperature,
+  });
+};
+
 // Generate a structured interview report
 export const generateReport = async (
   systemPrompt: string,
-  messages: ModelMessage[]
-) => {
+  messages: AIMessage[],
+  temperature: number = TEMPERATURE.PRECISE,
+): Promise<Report> => {
   const { object } = await generateObject({
     model,
     system: systemPrompt,
     messages,
     schema: reportSchema,
-    temperature: 0.3,
+    temperature,
   });
 
   return object;
