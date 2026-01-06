@@ -1,5 +1,16 @@
 "use client";
 
+import Editor from "@monaco-editor/react";
+import {
+  Check,
+  Copy,
+  Maximize2,
+  Minimize2,
+  Play,
+  RotateCcw,
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -15,17 +26,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import Editor from "@monaco-editor/react";
-import {
-  Check,
-  Copy,
-  Maximize2,
-  Minimize2,
-  Play,
-  RotateCcw,
-} from "lucide-react";
-import { useTheme } from "next-themes";
-import { useState } from "react";
 
 const LANGUAGES = [
   { value: "javascript", label: "JavaScript" },
@@ -111,18 +111,21 @@ interface CodeEditorProps {
   className?: string;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  onSubmit?: (code: string) => Promise<void>;
 }
 
 export function CodeEditor({
   className,
   isExpanded = false,
   onToggleExpand,
+  onSubmit,
 }: CodeEditorProps) {
   const { resolvedTheme } = useTheme();
   const [language, setLanguage] = useState("javascript");
   const [code, setCode] = useState(DEFAULT_CODE.javascript);
   const [copied, setCopied] = useState(false);
   const [output, setOutput] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
@@ -140,20 +143,33 @@ export function CodeEditor({
     setOutput(null);
   };
 
-  const handleRun = () => {
-    // Mock output for demo
-    setOutput("Running code...\n\n> Output will appear here");
+  const handleRun = async () => {
+    if (onSubmit) {
+      setIsSubmitting(true);
+      try {
+        setOutput("Submitting code to AI...");
+        await onSubmit(code);
+        setOutput("Submitted successfully.");
+      } catch (e) {
+        setOutput("Submission failed.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      setOutput("Running code...\n\n> Output will appear here");
+    }
   };
 
   return (
     <div
       className={cn(
         "flex flex-col bg-[#1e1e1e] rounded-xl overflow-hidden border border-border/50",
-        className
+        className,
       )}
     >
       {/* Toolbar */}
       <div className="flex items-center justify-between px-3 py-2 bg-[#252526] border-b border-[#3c3c3c]">
+        {/* ... (Existing select and undo/copy) ... */}
         <div className="flex items-center gap-3">
           <Select value={language} onValueChange={handleLanguageChange}>
             <SelectTrigger className="w-32 h-8 text-xs bg-[#3c3c3c] border-[#3c3c3c] text-white">
@@ -171,6 +187,7 @@ export function CodeEditor({
 
         <div className="flex items-center gap-1">
           <TooltipProvider delayDuration={0}>
+            {/* Buttons... */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -200,7 +217,9 @@ export function CodeEditor({
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{copied ? "Copied!" : "Copy code"}</TooltipContent>
+              <TooltipContent>
+                {copied ? "Copied!" : "Copy code"}
+              </TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -218,7 +237,9 @@ export function CodeEditor({
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{isExpanded ? "Minimize" : "Expand"}</TooltipContent>
+              <TooltipContent>
+                {isExpanded ? "Minimize" : "Expand"}
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
@@ -226,9 +247,10 @@ export function CodeEditor({
             size="sm"
             className="h-7 ml-2 gap-1.5 bg-green-600 hover:bg-green-700 text-white"
             onClick={handleRun}
+            disabled={isSubmitting}
           >
             <Play className="h-3 w-3" />
-            Run
+            {isSubmitting ? "Sending..." : "Submit"}
           </Button>
         </div>
       </div>

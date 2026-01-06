@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Volume2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AIAvatarProps {
   isSpeaking: boolean;
@@ -31,14 +31,14 @@ export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
             <div
               className={cn(
                 "absolute inset-0 rounded-full border-2 border-primary/40 animate-ping",
-                sizeClasses[size]
+                sizeClasses[size],
               )}
               style={{ animationDuration: "1.5s" }}
             />
             <div
               className={cn(
                 "absolute inset-0 rounded-full border border-primary/20 animate-ping",
-                sizeClasses[size]
+                sizeClasses[size],
               )}
               style={{ animationDuration: "2s", animationDelay: "0.5s" }}
             />
@@ -49,7 +49,7 @@ export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
         <div
           className={cn(
             "absolute inset-0 rounded-full bg-primary/20 blur-2xl transition-opacity duration-500",
-            isSpeaking ? "opacity-100" : "opacity-0"
+            isSpeaking ? "opacity-100" : "opacity-0",
           )}
         />
 
@@ -58,14 +58,14 @@ export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
           className={cn(
             "relative rounded-full bg-linear-to-br from-primary via-primary/90 to-primary/70 flex items-center justify-center shadow-xl transition-transform duration-300",
             sizeClasses[size],
-            isSpeaking && "scale-105"
+            isSpeaking && "scale-105",
           )}
         >
           {/* Inner circle with AI face */}
           <div
             className={cn(
               "rounded-full bg-linear-to-br from-primary-foreground/10 to-transparent flex items-center justify-center",
-              innerSizeClasses[size]
+              innerSizeClasses[size],
             )}
           >
             {/* Stylized AI face */}
@@ -75,15 +75,23 @@ export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
                 <div
                   className={cn(
                     "rounded-full bg-primary-foreground",
-                    size === "lg" ? "h-3 w-3" : size === "md" ? "h-2.5 w-2.5" : "h-2 w-2",
-                    isSpeaking && "animate-pulse"
+                    size === "lg"
+                      ? "h-3 w-3"
+                      : size === "md"
+                        ? "h-2.5 w-2.5"
+                        : "h-2 w-2",
+                    isSpeaking && "animate-pulse",
                   )}
                 />
                 <div
                   className={cn(
                     "rounded-full bg-primary-foreground",
-                    size === "lg" ? "h-3 w-3" : size === "md" ? "h-2.5 w-2.5" : "h-2 w-2",
-                    isSpeaking && "animate-pulse"
+                    size === "lg"
+                      ? "h-3 w-3"
+                      : size === "md"
+                        ? "h-2.5 w-2.5"
+                        : "h-2 w-2",
+                    isSpeaking && "animate-pulse",
                   )}
                 />
               </div>
@@ -92,7 +100,7 @@ export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
                 className={cn(
                   "rounded-full bg-primary-foreground/80 transition-all duration-200",
                   size === "lg" ? "w-6" : size === "md" ? "w-5" : "w-4",
-                  isSpeaking ? "h-3 animate-pulse" : "h-1"
+                  isSpeaking ? "h-3 animate-pulse" : "h-1",
                 )}
               />
             </div>
@@ -113,7 +121,7 @@ export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
         <p
           className={cn(
             "text-sm transition-colors",
-            isSpeaking ? "text-primary" : "text-muted-foreground"
+            isSpeaking ? "text-primary" : "text-muted-foreground",
           )}
         >
           {isSpeaking ? "Speaking..." : "AI Interviewer"}

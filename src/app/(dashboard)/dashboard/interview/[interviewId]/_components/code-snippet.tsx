@@ -1,5 +1,7 @@
 "use client";
 
+import { Check, Code2, Copy, Maximize2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -9,8 +11,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { Check, Code2, Copy, Maximize2 } from "lucide-react";
-import { useState } from "react";
 
 interface CodeSnippetProps {
   code: string;
@@ -39,7 +39,9 @@ export function CodeSnippet({
         <CardTitle className="text-xs font-medium flex items-center gap-2">
           <Code2 className="h-3.5 w-3.5 text-primary" />
           {title || "Code Snippet"}
-          <span className="text-muted-foreground font-normal">• {language}</span>
+          <span className="text-muted-foreground font-normal">
+            • {language}
+          </span>
         </CardTitle>
         <div className="flex items-center gap-1">
           <TooltipProvider>

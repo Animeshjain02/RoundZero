@@ -1,5 +1,7 @@
 "use client";
 
+import { Camera, CameraOff, Mic, MicOff, User } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -8,14 +10,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import {
-  Camera,
-  CameraOff,
-  Mic,
-  MicOff,
-  User,
-} from "lucide-react";
-import { useState } from "react";
 
 interface VideoFeedProps {
   userName: string;
@@ -34,12 +28,17 @@ export function VideoFeed({
   const [isMicOn, setIsMicOn] = useState(initialMicOn);
 
   return (
-    <div className={cn("relative group rounded-2xl overflow-hidden", compact ? "h-full" : "")}>
+    <div
+      className={cn(
+        "relative group rounded-2xl overflow-hidden",
+        compact ? "h-full" : "",
+      )}
+    >
       {/* Video Container */}
       <div
         className={cn(
           "relative w-full h-full bg-linear-to-br from-slate-900 to-slate-800 rounded-2xl overflow-hidden",
-          compact ? "aspect-auto" : "aspect-video"
+          compact ? "aspect-auto" : "aspect-video",
         )}
       >
         {isVideoOn ? (
@@ -59,7 +58,9 @@ export function VideoFeed({
             {/* Live indicator */}
             <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1">
               <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[10px] text-white font-medium uppercase tracking-wide">Live</span>
+              <span className="text-[10px] text-white font-medium uppercase tracking-wide">
+                Live
+              </span>
             </div>
           </>
         ) : (
@@ -80,7 +81,7 @@ export function VideoFeed({
         <div
           className={cn(
             "absolute bottom-3 right-3 h-7 w-7 rounded-full flex items-center justify-center",
-            isMicOn ? "bg-slate-800/80" : "bg-red-500/90"
+            isMicOn ? "bg-slate-800/80" : "bg-red-500/90",
           )}
         >
           {isMicOn ? (
@@ -128,7 +129,9 @@ export function VideoFeed({
                   )}
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{isVideoOn ? "Turn off camera" : "Turn on camera"}</TooltipContent>
+              <TooltipContent>
+                {isVideoOn ? "Turn off camera" : "Turn on camera"}
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
