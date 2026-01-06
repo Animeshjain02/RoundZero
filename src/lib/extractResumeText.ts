@@ -1,15 +1,14 @@
 import "server-only";
 import mammoth from "mammoth";
-
-const pdf = require("pdf-parse");
+import { extractText } from "unpdf";
 
 export async function extractResumeText(filename: string, buffer: Buffer) {
   const lowerCaseFileName = filename.toLowerCase();
 
   try {
     if (lowerCaseFileName.endsWith(".pdf")) {
-      const data = await pdf(buffer);
-      return (data.text || "").trim();
+      const { text } = await extractText(new Uint8Array(buffer));
+      return (Array.isArray(text) ? text.join("\n") : text || "").trim();
     }
     if (lowerCaseFileName.endsWith(".docx")) {
       const { value } = await mammoth.extractRawText({ buffer });

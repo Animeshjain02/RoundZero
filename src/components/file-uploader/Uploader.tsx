@@ -1,125 +1,43 @@
 "use client";
 
-import { Loader2, Trash2 } from "lucide-react";
+import { FileTextIcon, FileUpIcon, Loader2, XIcon, AlertCircleIcon } from "lucide-react";
 import { useCallback, useState } from "react";
-import { type FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
-import { cn } from "@/lib/utils";
+import { formatBytes, useFileUpload } from "@/hooks/use-file-upload";
 import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
 
-export function ResumeUploader({
-  onUploadComplete,
-  onRemove,
-}: {
+interface ResumeUploaderProps {
   onUploadComplete: (key: string, file: File) => void;
   onRemove: (key: string) => void;
-}) {
-  const [file, setFile] = useState<
-    Array<{
-      id: string;
-      file: File;
-      uploading: boolean;
-      progress: number;
-      key?: string;
-      isDeleting: boolean;
-      error: boolean;
-      objectUrl?: string;
-    }>
-  >([]);
+}
 
-  const removeFile = async (fileId: string) => {
-    try {
-      const fileToRemove = file.find((f) => f.id === fileId);
+export function ResumeUploader({ onUploadComplete, onRemove }: ResumeUploaderProps) {
+  const [uploadState, setUploadState] = useState<{
+    uploading: boolean;
+    progress: number;
+    key?: string;
+    error?: string;
+  }>({ uploading: false, progress: 0 });
 
-      if (fileToRemove) {
-        if (fileToRemove.objectUrl) {
-          URL.revokeObjectURL(fileToRemove.objectUrl);
-        }
-        if (fileToRemove.key) {
-          onRemove(fileToRemove.key);
-        }
-      }
+  const maxSize = 5 * 1024 * 1024; // 5MB
 
-      setFile((prevFile) =>
-        prevFile.map((f) => (f.id === fileId ? { ...f, isDeleting: true } : f)),
-      );
-
-      const deleteFileResponse = await fetch("/api/s3/delete", {
-        method: "DELETE",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          key: fileToRemove?.key,
-        }),
-      });
-
-      if (!deleteFileResponse.ok) {
-        toast.error("Failed to delete file");
-        setFile((prevFile) =>
-          prevFile.map((f) =>
-            f.id === fileId ? { ...f, isDeleting: false, error: true } : f,
-          ),
-        );
-
-        return;
-      }
-
-      toast.success("File deleted successfully");
-
-      setFile((prevFile) => prevFile.filter((f) => f.id !== fileId));
-    } catch (error) {
-      console.log(error);
-
-      setFile((prevFile) =>
-        prevFile.map((f) =>
-          f.id === fileId ? { ...f, isDeleting: false, error: true } : f,
-        ),
-      );
-    }
-  };
-
-  const uploadFile = async (fileToUpload: File) => {
-    const fileId = uuidv4();
-    const newFileState = {
-      id: fileId,
-      file: fileToUpload,
-      uploading: true,
-      progress: 0,
-      isDeleting: false,
-      error: false,
-      objectUrl: URL.createObjectURL(fileToUpload),
-    };
-
-    setFile([newFileState]); // Replace existing file
+  const uploadFile = useCallback(async (file: File) => {
+    setUploadState({ uploading: true, progress: 0 });
 
     try {
       const preSignedUrlResponse = await fetch("/api/s3/upload", {
         method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          fileName: fileToUpload.name,
-          contentType: fileToUpload.type,
-          size: fileToUpload.size,
+          fileName: file.name,
+          contentType: file.type,
+          size: file.size,
         }),
       });
 
       if (!preSignedUrlResponse.ok) {
-        toast.error("Failed to get presigned Url");
-
-        setFile((prevFile) =>
-          prevFile.map((f) =>
-            f.id === fileId
-              ? { ...f, uploading: false, progress: 0, error: true }
-              : f,
-          ),
-        );
-
-        return;
+        throw new Error("Failed to get presigned URL");
       }
 
       const { preSignedUrl, key } = await preSignedUrlResponse.json();
@@ -129,185 +47,169 @@ export function ResumeUploader({
 
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
-            const percentageCompleted = (event.loaded / event.total) * 100;
-            setFile((prevFile) =>
-              prevFile.map((f) =>
-                f.id === fileId
-                  ? {
-                      ...f,
-                      progress: Math.round(percentageCompleted),
-                      key: key,
-                    }
-                  : f,
-              ),
-            );
+            const progress = Math.round((event.loaded / event.total) * 100);
+            setUploadState((prev) => ({ ...prev, progress, key }));
           }
         };
 
         xhr.onload = () => {
           if (xhr.status === 200 || xhr.status === 204) {
-            setFile((prevFile) =>
-              prevFile.map((f) =>
-                f.id === fileId
-                  ? {
-                      ...f,
-                      progress: 100,
-                      uploading: false,
-                      error: false,
-                    }
-                  : f,
-              ),
-            );
-
+            setUploadState({ uploading: false, progress: 100, key });
             toast.success("File uploaded successfully");
-            onUploadComplete(key, fileToUpload);
+            onUploadComplete(key, file);
             resolve();
           } else {
-            reject(new Error("Failed to upload file"));
+            reject(new Error("Upload failed"));
           }
         };
 
-        xhr.onerror = () => {
-          reject(new Error("Failed to upload file"));
-        };
+        xhr.onerror = () => reject(new Error("Upload failed"));
 
         xhr.open("PUT", preSignedUrl);
-        xhr.setRequestHeader("Content-Type", fileToUpload.type);
-        xhr.send(fileToUpload);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
       });
     } catch (error) {
-      toast.error("Failed to upload file");
-
-      setFile((prevFile) =>
-        prevFile.map((f) =>
-          f.id === fileId
-            ? {
-                ...f,
-                progress: 0,
-                uploading: false,
-                error: true,
-              }
-            : f,
-        ),
-      );
+      const message = error instanceof Error ? error.message : "Upload failed";
+      setUploadState({ uploading: false, progress: 0, error: message });
+      toast.error(message);
     }
-  };
+  }, [onUploadComplete]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      uploadFile(acceptedFiles[0]);
+  const handleFilesAdded = useCallback((addedFiles: { file: File | { name: string } }[]) => {
+    const file = addedFiles[0]?.file;
+    if (file instanceof File) {
+      uploadFile(file);
     }
-  }, []);
+  }, [uploadFile]);
 
-  const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
-    if (fileRejections.length > 0) {
-      const tooManyFiles = fileRejections.find(
-        (fileRejection) => fileRejection.errors[0].code === "too-many-files",
-      );
-
-      const fileTooLarge = fileRejections.find(
-        (fileRejection) => fileRejection.errors[0].code === "file-too-large",
-      );
-
-      if (tooManyFiles) {
-        toast.error("You can upload only one file");
-      }
-
-      if (fileTooLarge) {
-        toast.error("File size must be less than 5MB");
-      }
-    }
-  }, []);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    onDropRejected,
-    maxFiles: 1,
-    maxSize: 5 * 1024 * 1024, // 5MB
-    accept: {
-      "application/pdf": [".pdf"],
-      "application/msword": [".doc", ".docx"],
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        [".docx"],
+  const [
+    { files, isDragging, errors },
+    {
+      handleDragEnter,
+      handleDragLeave,
+      handleDragOver,
+      handleDrop,
+      openFileDialog,
+      removeFile,
+      getInputProps,
     },
+  ] = useFileUpload({
+    maxFiles: 1,
+    maxSize,
+    accept: ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    multiple: false,
+    onFilesAdded: handleFilesAdded,
   });
 
+  const handleRemove = async (fileId: string) => {
+    if (uploadState.key) {
+      try {
+        await fetch("/api/s3/delete", {
+          method: "DELETE",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ key: uploadState.key }),
+        });
+        onRemove(uploadState.key);
+        toast.success("File removed");
+      } catch {
+        toast.error("Failed to remove file");
+      }
+    }
+    removeFile(fileId);
+    setUploadState({ uploading: false, progress: 0 });
+  };
+
   return (
-    <>
-      {file.length === 0 ? (
-        <Card
-          className={cn(
-            "relative border-2 border-dashed transition-colors duration-200 ease-in-out w-full h-48",
-            isDragActive
-              ? "border-primary bg-primary/10 border-solid"
-              : "border-border hover:border-primary",
-          )}
-          {...getRootProps()}
-        >
-          <CardContent className="flex flex-col items-center justify-center h-full w-full">
-            <input {...getInputProps()} />
-            {isDragActive ? (
-              <p>Drop the file here ...</p>
-            ) : (
-              <div className="flex flex-col items-center justify-center w-full h-full gap-y-3">
-                <p>Drag 'n' drop a file here, or click to select</p>
-                <Button type="button">Select File</Button>
+    <div className="flex flex-col gap-2">
+      {files.length === 0 ? (
+        <>
+          <div
+            className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-input border-dashed p-4 transition-colors hover:bg-accent/50 has-disabled:pointer-events-none has-[input:focus]:border-ring has-disabled:opacity-50 has-[input:focus]:ring-[3px] has-[input:focus]:ring-ring/50 data-[dragging=true]:bg-accent/50 cursor-pointer"
+            data-dragging={isDragging || undefined}
+            onClick={openFileDialog}
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            role="button"
+            tabIndex={-1}
+          >
+            <input {...getInputProps()} aria-label="Upload resume" className="sr-only" />
+            <div className="flex flex-col items-center justify-center text-center">
+              <div
+                aria-hidden="true"
+                className="mb-2 flex size-11 shrink-0 items-center justify-center rounded-full border bg-background"
+              >
+                <FileUpIcon className="size-4 opacity-60" />
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <p className="mb-1.5 font-medium text-sm">Upload your resume</p>
+              <p className="mb-2 text-muted-foreground text-xs">
+                Drag & drop or click to browse
+              </p>
+              <div className="flex flex-wrap justify-center gap-1 text-muted-foreground/70 text-xs">
+                <span>PDF, DOC, DOCX</span>
+                <span>∙</span>
+                <span>Up to {formatBytes(maxSize)}</span>
+              </div>
+            </div>
+          </div>
+
+          {errors.length > 0 && (
+            <div className="flex items-center gap-1 text-destructive text-xs" role="alert">
+              <AlertCircleIcon className="size-3 shrink-0" />
+              <span>{errors[0]}</span>
+            </div>
+          )}
+        </>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {file.map((fileItem) => (
-            <div key={fileItem.id} className="flex flex-col gap-1">
-              <div className="relative aspect-video rounded-lg overflow-hidden border group">
-                {fileItem.file.type.includes("image") ? (
-                  <img
-                    src={fileItem.objectUrl}
-                    alt={fileItem.file.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 p-4">
-                    <p className="text-sm font-medium text-center text-muted-foreground break-all">
-                      {fileItem.file.name}
-                    </p>
+        <div className="space-y-2">
+          {files.map((file) => (
+            <div
+              className="flex items-center justify-between gap-2 rounded-lg border bg-background p-3"
+              key={file.id}
+            >
+              <div className="flex items-center gap-3 overflow-hidden">
+                <div className="flex aspect-square size-10 shrink-0 items-center justify-center rounded border bg-muted/50">
+                  <FileTextIcon className="size-4 opacity-60" />
+                </div>
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <p className="truncate font-medium text-[13px]">
+                    {file.file instanceof File ? file.file.name : file.file.name}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {formatBytes(file.file instanceof File ? file.file.size : file.file.size)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {uploadState.uploading && (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="size-4 animate-spin text-primary" />
+                    <span className="text-xs text-muted-foreground">{uploadState.progress}%</span>
                   </div>
+                )}
+
+                {uploadState.error && (
+                  <span className="text-xs text-destructive">Failed</span>
                 )}
 
                 <Button
-                  variant={"destructive"}
-                  size={"icon"}
-                  onClick={() => removeFile(fileItem.id)}
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                  disabled={fileItem.uploading || fileItem.isDeleting}
+                  aria-label="Remove file"
+                  className="-me-1 size-8 text-muted-foreground/80 hover:bg-transparent hover:text-foreground"
+                  onClick={() => handleRemove(file.id)}
+                  size="icon"
+                  variant="ghost"
+                  disabled={uploadState.uploading}
                 >
-                  {fileItem.isDeleting ? (
-                    <Loader2 className="animate-spin size-4" />
-                  ) : (
-                    <Trash2 className="size-4" />
-                  )}
+                  <XIcon aria-hidden="true" className="size-4" />
                 </Button>
-                {fileItem.uploading && !fileItem.isDeleting && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
-                    <p className="text-white font-medium text-lg">
-                      {fileItem.progress}%
-                    </p>
-                  </div>
-                )}
-
-                {fileItem.error && (
-                  <div className="absolute inset-0 bg-red-500/50 flex items-center justify-center z-20">
-                    <p className="text-white font-medium text-lg">
-                      Failed to upload
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }

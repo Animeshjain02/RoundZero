@@ -8,7 +8,11 @@ interface TranscriptBubbleProps {
   isLive?: boolean;
 }
 
-export function TranscriptBubble({ text, speaker, isLive }: TranscriptBubbleProps) {
+export function TranscriptBubble({
+  text,
+  speaker,
+  isLive,
+}: TranscriptBubbleProps) {
   const isAI = speaker === "ai";
 
   return (
@@ -18,7 +22,7 @@ export function TranscriptBubble({ text, speaker, isLive }: TranscriptBubbleProp
         isAI
           ? "bg-primary/5 border border-primary/10"
           : "bg-muted/50 border border-border/50",
-        isLive && "ring-2 ring-primary/20"
+        isLive && "ring-2 ring-primary/20",
       )}
     >
       <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">
@@ -32,7 +36,9 @@ export function TranscriptBubble({ text, speaker, isLive }: TranscriptBubbleProp
       </p>
       <p className={cn("text-lg leading-relaxed", isLive && "text-foreground")}>
         "{text}"
-        {isLive && <span className="inline-block w-0.5 h-5 bg-primary ml-1 animate-pulse" />}
+        {isLive && (
+          <span className="inline-block w-0.5 h-5 bg-primary ml-1 animate-pulse" />
+        )}
       </p>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import React, {
+import {
   createContext,
   type ReactNode,
   useCallback,

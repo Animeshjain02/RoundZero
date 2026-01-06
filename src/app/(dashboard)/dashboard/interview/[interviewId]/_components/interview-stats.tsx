@@ -1,9 +1,8 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
 import { CheckCircle2, Circle, HelpCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface InterviewStatsProps {
   questionsAnswered: number;
@@ -66,7 +65,9 @@ export function InterviewStats({
           </Badge>
         ))}
         {techStack.length > 3 && (
-          <span className="text-xs text-muted-foreground">+{techStack.length - 3}</span>
+          <span className="text-xs text-muted-foreground">
+            +{techStack.length - 3}
+          </span>
         )}
       </div>
     </div>
