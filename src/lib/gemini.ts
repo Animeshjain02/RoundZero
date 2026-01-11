@@ -1,5 +1,10 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { type ModelMessage, generateObject, generateText, streamText } from "ai";
+import {
+  type ModelMessage,
+  generateObject,
+  generateText,
+  streamText,
+} from "ai";
 import { z } from "zod";
 import { env } from "@/config/env";
 

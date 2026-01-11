@@ -25,9 +25,14 @@ export interface InterviewMediaState {
   stopAllMedia: () => void;
 }
 
+export interface InterviewMediaOptions {
+  onSpeechEnd?: (finalTranscript: string) => void;
+}
+
 // Composite hook for managing all interview media functionality
 export const useInterviewMedia = (
   _interviewId: string,
+  options?: InterviewMediaOptions,
 ): InterviewMediaState => {
   // Track connection state in ref to avoid stale closures
   const connectionStateRef = useRef<ConnectionState>("disconnected");
@@ -35,7 +40,7 @@ export const useInterviewMedia = (
   // Audio playback
   const { playEncodedAudio, isPlaying, stop: stopAudio } = useAudioPlayer();
 
-  // Speech-to-text
+  // Speech-to-text with utterance end callback
   const {
     connect: connectSTT,
     disconnect: disconnectSTT,
@@ -43,7 +48,9 @@ export const useInterviewMedia = (
     connectionState,
     transcript,
     setTranscript,
-  } = useDeepgramSTT();
+  } = useDeepgramSTT({
+    onUtteranceEnd: options?.onSpeechEnd,
+  });
 
   // Keep ref in sync with state
   useEffect(() => {
@@ -78,7 +85,7 @@ export const useInterviewMedia = (
     }
   }, [isRecording, stopRecording, startRecording, connectionState, connectSTT]);
 
- // Stop all media streams and connections
+  // Stop all media streams and connections
   const stopAllMedia = useCallback(() => {
     stopAudio();
     stopRecording();

@@ -1,6 +1,12 @@
 "use client";
 
-import { FileTextIcon, FileUpIcon, Loader2, XIcon, AlertCircleIcon } from "lucide-react";
+import {
+  FileTextIcon,
+  FileUpIcon,
+  Loader2,
+  XIcon,
+  AlertCircleIcon,
+} from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -12,7 +18,10 @@ interface ResumeUploaderProps {
   onRemove: (key: string) => void;
 }
 
-export function ResumeUploader({ onUploadComplete, onRemove }: ResumeUploaderProps) {
+export function ResumeUploader({
+  onUploadComplete,
+  onRemove,
+}: ResumeUploaderProps) {
   const [uploadState, setUploadState] = useState<{
     uploading: boolean;
     progress: number;
@@ -22,66 +31,73 @@ export function ResumeUploader({ onUploadComplete, onRemove }: ResumeUploaderPro
 
   const maxSize = 5 * 1024 * 1024; // 5MB
 
-  const uploadFile = useCallback(async (file: File) => {
-    setUploadState({ uploading: true, progress: 0 });
+  const uploadFile = useCallback(
+    async (file: File) => {
+      setUploadState({ uploading: true, progress: 0 });
 
-    try {
-      const preSignedUrlResponse = await fetch("/api/s3/upload", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          fileName: file.name,
-          contentType: file.type,
-          size: file.size,
-        }),
-      });
+      try {
+        const preSignedUrlResponse = await fetch("/api/s3/upload", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            fileName: file.name,
+            contentType: file.type,
+            size: file.size,
+          }),
+        });
 
-      if (!preSignedUrlResponse.ok) {
-        throw new Error("Failed to get presigned URL");
+        if (!preSignedUrlResponse.ok) {
+          throw new Error("Failed to get presigned URL");
+        }
+
+        const { preSignedUrl, key } = await preSignedUrlResponse.json();
+
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const progress = Math.round((event.loaded / event.total) * 100);
+              setUploadState((prev) => ({ ...prev, progress, key }));
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status === 200 || xhr.status === 204) {
+              setUploadState({ uploading: false, progress: 100, key });
+              toast.success("File uploaded successfully");
+              onUploadComplete(key, file);
+              resolve();
+            } else {
+              reject(new Error("Upload failed"));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error("Upload failed"));
+
+          xhr.open("PUT", preSignedUrl);
+          xhr.setRequestHeader("Content-Type", file.type);
+          xhr.send(file);
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Upload failed";
+        setUploadState({ uploading: false, progress: 0, error: message });
+        toast.error(message);
       }
+    },
+    [onUploadComplete],
+  );
 
-      const { preSignedUrl, key } = await preSignedUrlResponse.json();
-
-      await new Promise<void>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const progress = Math.round((event.loaded / event.total) * 100);
-            setUploadState((prev) => ({ ...prev, progress, key }));
-          }
-        };
-
-        xhr.onload = () => {
-          if (xhr.status === 200 || xhr.status === 204) {
-            setUploadState({ uploading: false, progress: 100, key });
-            toast.success("File uploaded successfully");
-            onUploadComplete(key, file);
-            resolve();
-          } else {
-            reject(new Error("Upload failed"));
-          }
-        };
-
-        xhr.onerror = () => reject(new Error("Upload failed"));
-
-        xhr.open("PUT", preSignedUrl);
-        xhr.setRequestHeader("Content-Type", file.type);
-        xhr.send(file);
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Upload failed";
-      setUploadState({ uploading: false, progress: 0, error: message });
-      toast.error(message);
-    }
-  }, [onUploadComplete]);
-
-  const handleFilesAdded = useCallback((addedFiles: { file: File | { name: string } }[]) => {
-    const file = addedFiles[0]?.file;
-    if (file instanceof File) {
-      uploadFile(file);
-    }
-  }, [uploadFile]);
+  const handleFilesAdded = useCallback(
+    (addedFiles: { file: File | { name: string } }[]) => {
+      const file = addedFiles[0]?.file;
+      if (file instanceof File) {
+        uploadFile(file);
+      }
+    },
+    [uploadFile],
+  );
 
   const [
     { files, isDragging, errors },
@@ -97,7 +113,8 @@ export function ResumeUploader({ onUploadComplete, onRemove }: ResumeUploaderPro
   ] = useFileUpload({
     maxFiles: 1,
     maxSize,
-    accept: ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    accept:
+      ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     multiple: false,
     onFilesAdded: handleFilesAdded,
   });
@@ -135,7 +152,11 @@ export function ResumeUploader({ onUploadComplete, onRemove }: ResumeUploaderPro
             role="button"
             tabIndex={-1}
           >
-            <input {...getInputProps()} aria-label="Upload resume" className="sr-only" />
+            <input
+              {...getInputProps()}
+              aria-label="Upload resume"
+              className="sr-only"
+            />
             <div className="flex flex-col items-center justify-center text-center">
               <div
                 aria-hidden="true"
@@ -156,7 +177,10 @@ export function ResumeUploader({ onUploadComplete, onRemove }: ResumeUploaderPro
           </div>
 
           {errors.length > 0 && (
-            <div className="flex items-center gap-1 text-destructive text-xs" role="alert">
+            <div
+              className="flex items-center gap-1 text-destructive text-xs"
+              role="alert"
+            >
               <AlertCircleIcon className="size-3 shrink-0" />
               <span>{errors[0]}</span>
             </div>
@@ -175,10 +199,16 @@ export function ResumeUploader({ onUploadComplete, onRemove }: ResumeUploaderPro
                 </div>
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <p className="truncate font-medium text-[13px]">
-                    {file.file instanceof File ? file.file.name : file.file.name}
+                    {file.file instanceof File
+                      ? file.file.name
+                      : file.file.name}
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    {formatBytes(file.file instanceof File ? file.file.size : file.file.size)}
+                    {formatBytes(
+                      file.file instanceof File
+                        ? file.file.size
+                        : file.file.size,
+                    )}
                   </p>
                 </div>
               </div>
@@ -187,7 +217,9 @@ export function ResumeUploader({ onUploadComplete, onRemove }: ResumeUploaderPro
                 {uploadState.uploading && (
                   <div className="flex items-center gap-2">
                     <Loader2 className="size-4 animate-spin text-primary" />
-                    <span className="text-xs text-muted-foreground">{uploadState.progress}%</span>
+                    <span className="text-xs text-muted-foreground">
+                      {uploadState.progress}%
+                    </span>
                   </div>
                 )}
 

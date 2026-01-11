@@ -4,6 +4,7 @@ import {
   Camera,
   CameraOff,
   Hand,
+  Loader2,
   MessageSquare,
   Mic,
   MicOff,
@@ -42,6 +43,7 @@ interface ControlBarProps {
   isMicOn?: boolean;
   onToggleMic?: () => void;
   onEndInterview?: () => void;
+  isEnding?: boolean;
 }
 
 export function ControlBar({
@@ -50,6 +52,7 @@ export function ControlBar({
   isMicOn = false,
   onToggleMic,
   onEndInterview,
+  isEnding = false,
 }: ControlBarProps) {
   const [isPaused, setIsPaused] = useState(false); // Local pause state for now
   const [isVideoOn, setIsVideoOn] = useState(true);
@@ -186,12 +189,22 @@ export function ControlBar({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel disabled={isEnding}>
+                  Cancel
+                </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={onEndInterview}
                   className="bg-red-500 hover:bg-red-600"
+                  disabled={isEnding}
                 >
-                  End Interview
+                  {isEnding ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Ending...
+                    </>
+                  ) : (
+                    "End Interview"
+                  )}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

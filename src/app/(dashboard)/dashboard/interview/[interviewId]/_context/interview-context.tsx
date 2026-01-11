@@ -36,6 +36,7 @@ export interface InterviewContextType {
   status: InterviewStatus;
   interview: InterviewData | null | undefined;
   isLoading: boolean;
+  isEnding: boolean;
 
   // Actions
   startInterview: () => Promise<void>;
@@ -73,6 +74,26 @@ export const InterviewContextProvider = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<InterviewStatus>("SETUP");
   const isStartingRef = useRef(false);
+  // Ref to hold sendMessage for use in callbacks (solves ordering issue)
+  const sendMessageRef = useRef<
+    ((content: string, codeSnippet?: string) => Promise<void>) | undefined
+  >(undefined);
+  const isSendingRef = useRef(false);
+
+  // Handle speech end: auto-submit transcript to AI
+  const handleSpeechEnd = useCallback(async (finalTranscript: string) => {
+    const trimmed = finalTranscript.trim();
+    if (!trimmed || isSendingRef.current || !sendMessageRef.current) return;
+
+    try {
+      isSendingRef.current = true;
+      await sendMessageRef.current(trimmed);
+    } catch (error) {
+      console.error("[Interview Context] Auto-send error:", error);
+    } finally {
+      isSendingRef.current = false;
+    }
+  }, []);
 
   // Media management
   const {
@@ -85,25 +106,26 @@ export const InterviewContextProvider = ({
     connectionState,
     connectSTT,
     stopAllMedia,
-  } = useInterviewMedia(interviewId);
+  } = useInterviewMedia(interviewId, {
+    onSpeechEnd: handleSpeechEnd,
+  });
 
   // API mutations using
   const { mutateAsync: startInterviewMutation } = useMutation(
-    orpc.interview.start.mutationOptions(),
+    orpc.interview.start.mutationOptions()
   );
   const { mutateAsync: chatMutation } = useMutation(
-    orpc.interview.chat.mutationOptions(),
+    orpc.interview.chat.mutationOptions()
   );
-  const { mutateAsync: endInterviewMutation } = useMutation(
-    orpc.interview.end.mutationOptions(),
-  );
+  const { mutateAsync: endInterviewMutation, isPending: isEnding } =
+    useMutation(orpc.interview.end.mutationOptions());
 
   // Fetch interview data using
   const { data: interviewDataResult, isLoading } = useQuery(
     orpc.interview.getById.queryOptions({
       input: { id: interviewId },
       enabled: !!interviewId,
-    }),
+    })
   );
 
   // Initialize state from fetched data
@@ -128,7 +150,7 @@ export const InterviewContextProvider = ({
               content: m.content,
               audioUrl: m.audioUrl,
               createdAt: m.createdAt,
-            }),
+            })
           );
         setMessages(loadedMessages);
       }
@@ -234,8 +256,13 @@ export const InterviewContextProvider = ({
         toast.error("Failed to send message");
       }
     },
-    [interviewId, transcript, chatMutation, playEncodedAudio, setTranscript],
+    [interviewId, transcript, chatMutation, playEncodedAudio, setTranscript]
   );
+
+  // Keep sendMessageRef in sync for use in callbacks
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  }, [sendMessage]);
 
   // End the interview and generate report
   const endInterview = useCallback(
@@ -256,7 +283,7 @@ export const InterviewContextProvider = ({
         toast.error("Failed to end interview");
       }
     },
-    [interviewId, endInterviewMutation, router, stopAllMedia],
+    [interviewId, endInterviewMutation, router, stopAllMedia]
   );
 
   const value: InterviewContextType = {
@@ -268,6 +295,7 @@ export const InterviewContextProvider = ({
     status,
     interview: interviewDataResult?.interview,
     isLoading,
+    isEnding,
     startInterview,
     sendMessage,
     endInterview,
@@ -288,7 +316,7 @@ export const useInterview = (): InterviewContextType => {
   const context = useContext(InterviewContext);
   if (!context) {
     throw new Error(
-      "useInterview must be used within InterviewContextProvider",
+      "useInterview must be used within InterviewContextProvider"
     );
   }
   return context;

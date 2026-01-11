@@ -16,7 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ResumeUploader } from "@/components/file-uploader/Uploader";
@@ -81,7 +81,6 @@ const experienceLevels = [
 ];
 
 export default function CreateInterviewPage() {
-  const [isPending, startTransition] = useTransition();
   const [resumeKey, setResumeKey] = useState<string | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -101,7 +100,7 @@ export default function CreateInterviewPage() {
     },
   });
 
-  const { mutate: createInterview } = useMutation({
+  const { mutate: createInterview, isPending: isCreating } = useMutation({
     mutationFn: async (
       values: CreateInterviewSchemaType & {
         resumeKey?: string;
@@ -138,12 +137,10 @@ export default function CreateInterviewPage() {
   });
 
   function onSubmit(values: CreateInterviewSchemaType) {
-    startTransition(async () => {
-      createInterview({
-        ...values,
-        resumeKey: resumeKey || undefined,
-        resumeFilename: resumeFilename || undefined,
-      });
+    createInterview({
+      ...values,
+      resumeKey: resumeKey || undefined,
+      resumeFilename: resumeFilename || undefined,
     });
   }
 
@@ -478,9 +475,9 @@ export default function CreateInterviewPage() {
                 type="submit"
                 size="lg"
                 className="gap-2 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
-                disabled={isPending || isParsing}
+                disabled={isCreating || isParsing}
               >
-                {isPending ? (
+                {isCreating ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Creating Session...

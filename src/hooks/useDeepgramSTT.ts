@@ -33,8 +33,14 @@ export interface DeepgramSTTState {
   setIsListening: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+export interface DeepgramSTTOptions {
+  onUtteranceEnd?: (finalTranscript: string) => void;
+}
+
 // Hook to manage Deepgram WebSocket connection for Speech-to-Text
-export const useDeepgramSTT = (): DeepgramSTTState => {
+export const useDeepgramSTT = (
+  options?: DeepgramSTTOptions
+): DeepgramSTTState => {
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("disconnected");
   const [transcript, setTranscript] = useState<string>("");
@@ -44,6 +50,14 @@ export const useDeepgramSTT = (): DeepgramSTTState => {
   const connectionAttempts = useRef(0);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
+  // Track transcript in ref for use in event handlers (avoids stale closure)
+  const transcriptRef = useRef<string>("");
+  const onUtteranceEndRef = useRef(options?.onUtteranceEnd);
+
+  // Keep refs in sync
+  useEffect(() => {
+    onUtteranceEndRef.current = options?.onUtteranceEnd;
+  }, [options?.onUtteranceEnd]);
 
   // Fetch STT token
   const { refetch: fetchToken } = useQuery({
@@ -106,11 +120,16 @@ export const useDeepgramSTT = (): DeepgramSTTState => {
         const result = data.channel?.alternatives?.[0];
         if (result?.transcript) {
           setTranscript((prev) => {
+            let newTranscript = prev;
             // Only append final results to avoid duplicates
             if (data.is_final) {
-              return prev ? `${prev} ${result.transcript}` : result.transcript;
+              newTranscript = prev
+                ? `${prev} ${result.transcript}`
+                : result.transcript;
             }
-            return prev;
+            // Sync ref synchronously to avoid race conditions
+            transcriptRef.current = newTranscript;
+            return newTranscript;
           });
         }
       });
@@ -125,6 +144,18 @@ export const useDeepgramSTT = (): DeepgramSTTState => {
         if (!isMountedRef.current) return;
         console.error("[Deepgram STT] Error:", error);
         setConnectionState("disconnected");
+      });
+
+      // UtteranceEnd fires when user stops speaking (silence detected)
+      connection.on("UtteranceEnd", () => {
+        if (!isMountedRef.current) return;
+        const currentTranscript = transcriptRef.current.trim();
+        if (currentTranscript && onUtteranceEndRef.current) {
+          onUtteranceEndRef.current(currentTranscript);
+          // Clear transcript after sending to treat each utterance as a new turn
+          setTranscript("");
+          transcriptRef.current = "";
+        }
       });
 
       deepgramClientRef.current = connection;

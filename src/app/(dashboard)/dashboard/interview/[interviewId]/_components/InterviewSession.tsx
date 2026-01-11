@@ -28,6 +28,7 @@ export function InterviewSession() {
     startInterview,
     endInterview,
     isLoading,
+    isEnding,
   } = useInterview();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -189,6 +190,7 @@ export function InterviewSession() {
         isMicOn={isRecording}
         onToggleMic={toggleMic}
         onEndInterview={() => endInterview(elapsedTime)}
+        isEnding={isEnding}
       />
 
       {/* Chat sidebar */}
