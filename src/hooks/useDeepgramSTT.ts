@@ -41,11 +41,12 @@ export interface DeepgramSTTOptions {
 
 // Hook to manage Deepgram WebSocket connection for Speech-to-Text
 export const useDeepgramSTT = (
-  options?: DeepgramSTTOptions
+  options?: DeepgramSTTOptions,
 ): DeepgramSTTState => {
   const [connectionState, setConnectionState] =
     useState<ConnectionState>("disconnected");
   const [transcript, setTranscript] = useState<string>("");
+  const [interimTranscript, setInterimTranscript] = useState<string>("");
   const [isListening, setIsListening] = useState(false);
 
   const deepgramClientRef = useRef<ListenLiveClient | null>(null);
@@ -138,18 +139,20 @@ export const useDeepgramSTT = (
               return newTranscript;
             });
             // Clear interim
+            setInterimTranscript("");
             interimTranscriptRef.current = "";
           } else {
-            // Interim result - show but don't save
+            // Interim result - update state for live feedback
+            setInterimTranscript(result.transcript);
             interimTranscriptRef.current = result.transcript;
             onInterimTranscriptRef.current?.(result.transcript);
           }
         }
       });
 
-      connection.on("Close", () => {
+      connection.on("Close", (event) => {
         if (!isMountedRef.current) return;
-        console.log("[Deepgram STT] Disconnected");
+        console.log("[Deepgram STT] Disconnected", event);
         setConnectionState("disconnected");
         setIsListening(false);
       });
@@ -170,6 +173,7 @@ export const useDeepgramSTT = (
           onUtteranceEndRef.current(currentTranscript);
           // Clear transcript after sending to treat each utterance as a new turn
           setTranscript("");
+          setInterimTranscript("");
           transcriptRef.current = "";
           interimTranscriptRef.current = "";
         }
@@ -226,12 +230,16 @@ export const useDeepgramSTT = (
     };
   }, []);
 
+  // Combine confirmed and interim transcript for display
+  const displayTranscript =
+    transcript + (interimTranscript ? ` ${interimTranscript}` : "");
+
   return {
     connect,
     disconnect,
     sendAudio,
     connectionState,
-    transcript,
+    transcript: displayTranscript.trim(),
     setTranscript,
     isListening,
     setIsListening,

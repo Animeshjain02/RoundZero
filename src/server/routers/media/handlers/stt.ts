@@ -18,21 +18,31 @@ export const sttHandlers = {
           },
           body: JSON.stringify({
             comment: `Ephemeral key for user ${user.id}`,
-            scopes: ["usage:write"],
-            tags: ["web_client"],
-            time_to_live_in_seconds: 60,
+            scopes: ["listen:live"],
+            tags: ["web_client", "interview"],
+            time_to_live_in_seconds: 120,
           }),
         },
       );
 
       if (!response.ok) {
-        throw new Error(`Deepgram API error: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("Deepgram API response:", response.status, errorText);
+        throw new Error(
+          `Deepgram API error: ${response.status} - ${errorText}`,
+        );
       }
 
       const data = await response.json();
+
+      if (!data.key) {
+        console.error("No key in response:", data);
+        throw new Error("Deepgram did not return a key");
+      }
+
       return { token: data.key };
     } catch (error) {
-      console.error("[STT Token Error]", error);
+      console.error("Error generating STT token", error);
       throw new ORPCError("INTERNAL_SERVER_ERROR", {
         message: "Failed to generate STT token",
       });
