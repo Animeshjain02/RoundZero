@@ -43,6 +43,20 @@ export const managementHandlers = {
       } catch (error) {
         console.error("[Resume Creation Error]", error);
       }
+    } else if (input.resumeId) {
+      // Use existing resume - validate ownership
+      const existingResume = await interviewRepository.getResumeById(
+        input.resumeId,
+        user.id,
+      );
+
+      if (!existingResume) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "Invalid resume ID or access denied",
+        });
+      }
+
+      resumeId = input.resumeId;
     }
 
     const interview = await interviewRepository.createInterview({

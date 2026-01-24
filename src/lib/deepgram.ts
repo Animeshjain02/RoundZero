@@ -4,21 +4,26 @@ import { env } from "@/config/env";
 // Deepgram SDK client instance (singleton)
 export const deepgram = createClient(env.DEEPGRAM_API_KEY);
 
-// Voice options for TTS
+// Voice options for TTS - Aura voices (more natural sounding)
 export const TTS_VOICES = {
-  ASTERIA: "aura-asteria-en",
-  LUNA: "aura-luna-en",
-  STELLA: "aura-stella-en",
-  ATHENA: "aura-athena-en",
-  HERA: "aura-hera-en",
-  ORION: "aura-orion-en",
-  ARCAS: "aura-arcas-en",
-  PERSEUS: "aura-perseus-en",
-  ANGUS: "aura-angus-en",
-  ORPHEUS: "aura-orpheus-en",
-  HELIOS: "aura-helios-en",
-  ZEUS: "aura-zeus-en",
+  // Female voices
+  ASTERIA: "aura-asteria-en", // Warm, professional
+  LUNA: "aura-luna-en", // Soft, friendly
+  STELLA: "aura-stella-en", // Clear, articulate
+  ATHENA: "aura-athena-en", // Confident, authoritative
+  HERA: "aura-hera-en", // Mature, sophisticated
+  // Male voices
+  ORION: "aura-orion-en", // Deep, professional
+  ARCAS: "aura-arcas-en", // Friendly, conversational
+  PERSEUS: "aura-perseus-en", // Clear, energetic
+  ANGUS: "aura-angus-en", // Warm, approachable
+  ORPHEUS: "aura-orpheus-en", // Smooth, natural - RECOMMENDED for interviews
+  HELIOS: "aura-helios-en", // Bright, engaging
+  ZEUS: "aura-zeus-en", // Authoritative, commanding
 } as const;
+
+// Default voice for interview AI (Orpheus is most natural-sounding male voice)
+export const DEFAULT_INTERVIEW_VOICE = TTS_VOICES.ORPHEUS;
 
 export type TTSVoice = (typeof TTS_VOICES)[keyof typeof TTS_VOICES];
 
@@ -50,7 +55,7 @@ export interface TTSOptions {
 }
 
 const DEFAULT_TTS_OPTIONS: Required<TTSOptions> = {
-  voice: TTS_VOICES.ASTERIA,
+  voice: DEFAULT_INTERVIEW_VOICE,
   encoding: "linear16",
   container: "wav",
 };

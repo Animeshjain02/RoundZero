@@ -49,6 +49,9 @@ export interface InterviewContextType {
 
   // Transcripts
   transcript: string;
+  
+  // Connection state
+  connectionState: "disconnected" | "connecting" | "connected" | "failed";
 }
 
 const InterviewContext = createContext<InterviewContextType | null>(null);
@@ -87,9 +90,11 @@ export const InterviewContextProvider = ({
 
     try {
       isSendingRef.current = true;
+      console.log("[Interview Context] Sending user speech:", trimmed);
       await sendMessageRef.current(trimmed);
     } catch (error) {
       console.error("[Interview Context] Auto-send error:", error);
+      toast.error("Failed to send your response");
     } finally {
       isSendingRef.current = false;
     }
@@ -302,6 +307,7 @@ export const InterviewContextProvider = ({
     toggleMic,
     stopAllMedia,
     transcript,
+    connectionState,
   };
 
   return (

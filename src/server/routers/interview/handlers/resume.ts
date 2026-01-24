@@ -2,6 +2,7 @@ import { ORPCError } from "@orpc/client";
 import { extractResumeText } from "@/lib/extractResumeText";
 import { storageService } from "@/lib/storage";
 import { resumeContract } from "../contracts/resume";
+import { interviewRepository } from "../interview.repository";
 import {
   ALLOWED_RESUME_EXTENSIONS,
   FILE_LIMITS,
@@ -87,5 +88,14 @@ export const resumeHandlers = {
     }
 
     return { text };
+  }),
+
+  // List user's resumes
+  listResumes: resumeContract.listResumes.handler(async ({ context }) => {
+    const { user } = context;
+
+    const resumes = await interviewRepository.getResumesByUserId(user.id);
+
+    return resumes;
   }),
 };

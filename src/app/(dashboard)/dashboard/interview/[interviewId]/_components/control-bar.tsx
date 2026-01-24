@@ -12,7 +12,6 @@ import {
   PhoneOff,
   Play,
   Settings,
-  SkipForward,
   Volume2,
 } from "lucide-react";
 import { useState } from "react";

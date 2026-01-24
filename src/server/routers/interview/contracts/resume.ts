@@ -45,4 +45,25 @@ export const resumeContract = {
         text: z.string(),
       }),
     ),
+
+  // List user's resumes
+  listResumes: protectedProcedure
+    .route({
+      description: "List user's previously uploaded resumes",
+      method: "GET",
+      path: "/interview/resume/list",
+      summary: "List Resumes",
+      tags: ["Interview", "Resume"],
+    })
+    .input(z.object({}))
+    .output(
+      z.array(
+        z.object({
+          id: z.string(),
+          title: z.string(),
+          updatedAt: z.date(),
+          content: z.string(),
+        }),
+      ),
+    ),
 };

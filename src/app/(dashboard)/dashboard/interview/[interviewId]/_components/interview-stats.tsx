@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 interface InterviewStatsProps {
   questionsAnswered: number;
-  totalQuestions: number;
+  totalQuestions?: number;
   currentTopic: string;
   techStack: string[];
   className?: string;
@@ -19,29 +19,36 @@ export function InterviewStats({
   techStack,
   className,
 }: InterviewStatsProps) {
-  const progress = (questionsAnswered / totalQuestions) * 100;
-
   return (
     <div className={cn("flex items-center gap-6 text-sm", className)}>
       {/* Progress */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5">
-          {Array.from({ length: totalQuestions }).map((_, i) => (
-            <div key={i}>
-              {i < questionsAnswered ? (
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-              ) : i === questionsAnswered ? (
-                <HelpCircle className="h-4 w-4 text-primary animate-pulse" />
-              ) : (
-                <Circle className="h-4 w-4 text-muted-foreground/30" />
-              )}
-            </div>
-          ))}
+      {totalQuestions ? (
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalQuestions }).map((_, i) => (
+              <div key={i}>
+                {i < questionsAnswered ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                ) : i === questionsAnswered ? (
+                  <HelpCircle className="h-4 w-4 text-primary animate-pulse" />
+                ) : (
+                  <Circle className="h-4 w-4 text-muted-foreground/30" />
+                )}
+              </div>
+            ))}
+          </div>
+          <span className="text-muted-foreground">
+            {questionsAnswered}/{totalQuestions}
+          </span>
         </div>
-        <span className="text-muted-foreground">
-          {questionsAnswered}/{totalQuestions}
-        </span>
-      </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground">Questions Answered:</span>
+          <Badge variant="secondary" className="font-normal">
+            {questionsAnswered}
+          </Badge>
+        </div>
+      )}
 
       {/* Divider */}
       <div className="h-4 w-px bg-border" />

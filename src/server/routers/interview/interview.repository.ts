@@ -241,4 +241,25 @@ export const interviewRepository = {
       },
     });
   },
+
+  // Get all resumes by user ID
+  async getResumesByUserId(userId: string) {
+    return db.resume.findMany({
+      where: { userId },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        updatedAt: true,
+        content: true,
+      },
+    });
+  },
+
+  // Get single resume by ID and user ID
+  async getResumeById(id: string, userId: string) {
+    return db.resume.findFirst({
+      where: { id, userId },
+    });
+  },
 };

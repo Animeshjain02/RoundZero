@@ -16,8 +16,9 @@ const STT_CONFIG = {
   LANGUAGE: "en-US",
   SMART_FORMAT: true,
   INTERIM_RESULTS: true,
-  UTTERANCE_END_MS: 1000,
+  UTTERANCE_END_MS: 1500, // Increased for more natural pauses
   VAD_EVENTS: true,
+  ENDPOINTING: 300, // End of speech detection in ms
   MAX_RETRIES: 3,
   RETRY_DELAY_MS: 1000,
 } as const;
@@ -35,6 +36,7 @@ export interface DeepgramSTTState {
 
 export interface DeepgramSTTOptions {
   onUtteranceEnd?: (finalTranscript: string) => void;
+  onInterimTranscript?: (text: string) => void;
 }
 
 // Hook to manage Deepgram WebSocket connection for Speech-to-Text
@@ -53,11 +55,15 @@ export const useDeepgramSTT = (
   // Track transcript in ref for use in event handlers (avoids stale closure)
   const transcriptRef = useRef<string>("");
   const onUtteranceEndRef = useRef(options?.onUtteranceEnd);
+  const onInterimTranscriptRef = useRef(options?.onInterimTranscript);
+  // Track interim transcript separately
+  const interimTranscriptRef = useRef<string>("");
 
   // Keep refs in sync
   useEffect(() => {
     onUtteranceEndRef.current = options?.onUtteranceEnd;
-  }, [options?.onUtteranceEnd]);
+    onInterimTranscriptRef.current = options?.onInterimTranscript;
+  }, [options?.onUtteranceEnd, options?.onInterimTranscript]);
 
   // Fetch STT token
   const { refetch: fetchToken } = useQuery({
@@ -107,11 +113,14 @@ export const useDeepgramSTT = (
         interim_results: STT_CONFIG.INTERIM_RESULTS,
         utterance_end_ms: STT_CONFIG.UTTERANCE_END_MS,
         vad_events: STT_CONFIG.VAD_EVENTS,
+        endpointing: STT_CONFIG.ENDPOINTING,
       });
 
       connection.on("Open", () => {
         if (!isMountedRef.current) return;
+        console.log("[Deepgram STT] Connected");
         setConnectionState("connected");
+        setIsListening(true);
         connectionAttempts.current = 0;
       });
 
@@ -119,23 +128,28 @@ export const useDeepgramSTT = (
         if (!isMountedRef.current) return;
         const result = data.channel?.alternatives?.[0];
         if (result?.transcript) {
-          setTranscript((prev) => {
-            let newTranscript = prev;
-            // Only append final results to avoid duplicates
-            if (data.is_final) {
-              newTranscript = prev
+          if (data.is_final) {
+            // Final result - append to transcript
+            setTranscript((prev) => {
+              const newTranscript = prev
                 ? `${prev} ${result.transcript}`
                 : result.transcript;
-            }
-            // Sync ref synchronously to avoid race conditions
-            transcriptRef.current = newTranscript;
-            return newTranscript;
-          });
+              transcriptRef.current = newTranscript;
+              return newTranscript;
+            });
+            // Clear interim
+            interimTranscriptRef.current = "";
+          } else {
+            // Interim result - show but don't save
+            interimTranscriptRef.current = result.transcript;
+            onInterimTranscriptRef.current?.(result.transcript);
+          }
         }
       });
 
       connection.on("Close", () => {
         if (!isMountedRef.current) return;
+        console.log("[Deepgram STT] Disconnected");
         setConnectionState("disconnected");
         setIsListening(false);
       });
@@ -149,13 +163,22 @@ export const useDeepgramSTT = (
       // UtteranceEnd fires when user stops speaking (silence detected)
       connection.on("UtteranceEnd", () => {
         if (!isMountedRef.current) return;
+        console.log("[Deepgram STT] Utterance ended");
         const currentTranscript = transcriptRef.current.trim();
         if (currentTranscript && onUtteranceEndRef.current) {
+          console.log("[Deepgram STT] Sending transcript:", currentTranscript);
           onUtteranceEndRef.current(currentTranscript);
           // Clear transcript after sending to treat each utterance as a new turn
           setTranscript("");
           transcriptRef.current = "";
+          interimTranscriptRef.current = "";
         }
+      });
+
+      // SpeechStarted event for UI feedback
+      connection.on("SpeechStarted", () => {
+        if (!isMountedRef.current) return;
+        console.log("[Deepgram STT] Speech started");
       });
 
       deepgramClientRef.current = connection;

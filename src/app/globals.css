@@ -10,8 +10,11 @@
   --card-foreground: oklch(0.1408 0.0044 285.8229);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.1408 0.0044 285.8229);
-  --primary: oklch(0.5594 0.1662 253.642);
+  --primary: oklch(0.5236 0.1897 254.1628);
   --primary-foreground: oklch(1 0 0);
+  --tech-blue: #1560BD;
+  --accent-cyan: #15BCA9;
+  --accent-purple: #7C3AED;
   --secondary: oklch(0.9674 0.0013 286.3752);
   --secondary-foreground: oklch(0.2103 0.0059 285.8852);
   --muted: oklch(0.9674 0.0013 286.3752);
@@ -36,7 +39,9 @@
   --sidebar-accent-foreground: oklch(0.2103 0.0059 285.8852);
   --sidebar-border: oklch(0.8711 0.0055 286.286);
   --sidebar-ring: oklch(0.5594 0.1662 253.642);
-  --font-sans: Poppins, sans-serif;
+  --font-sans: "Space Grotesk", "Source Sans 3", sans-serif;
+  --font-body: "Source Sans 3", sans-serif;
+  --font-heading: "Space Grotesk", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
@@ -67,8 +72,11 @@
   --card-foreground: oklch(0.9851 0 0);
   --popover: oklch(0.1408 0.0044 285.8229);
   --popover-foreground: oklch(0.9851 0 0);
-  --primary: oklch(0.5594 0.1662 253.642);
+  --primary: oklch(0.5236 0.1897 254.1628);
   --primary-foreground: oklch(1 0 0);
+  --tech-blue: #1560BD;
+  --accent-cyan: #15BCA9;
+  --accent-purple: #7C3AED;
   --secondary: oklch(0.2739 0.0055 286.0326);
   --secondary-foreground: oklch(0.9851 0 0);
   --muted: oklch(0.2739 0.0055 286.0326);
@@ -93,11 +101,19 @@
   --sidebar-accent-foreground: oklch(0.9851 0 0);
   --sidebar-border: oklch(0.3703 0.0119 285.8054);
   --sidebar-ring: oklch(0.5594 0.1662 253.642);
-  --font-sans: Poppins, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --font-heading: "Inter", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-    "Courier New", monospace;
+
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
   --radius: 0.75rem;
   --shadow-x: 0;
   --shadow-y: 0;
@@ -148,8 +164,13 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-tech-blue: var(--tech-blue);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-purple: var(--accent-purple);
 
   --font-sans: var(--font-sans);
+  --font-body: var(--font-body);
+  --font-heading: var(--font-heading);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif);
 
@@ -174,7 +195,16 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
   }
 }
 
@@ -208,6 +238,7 @@
 
 /* 2. Floating - Smoother */
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0);
@@ -235,6 +266,7 @@
 
 /* 3. Glow Pulse - Subtle */
 @keyframes glow-pulse {
+
   0%,
   100% {
     opacity: 0.5;
@@ -280,12 +312,10 @@
   /* Replaces top/left/right/bottom */
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    hsl(var(--primary) / 0.5),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      hsl(var(--primary) / 0.5),
+      transparent);
   background-size: 200% 100%;
 
   /* Cross-browser mask support */
@@ -324,12 +354,10 @@
   /* Simplified expansion */
   width: 200%;
   height: 200%;
-  background: radial-gradient(
-    circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    hsl(var(--primary) / 0.1) 0%,
-    /* Increased opacity slightly for visibility */
-    transparent 50%
-  );
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+      hsl(var(--primary) / 0.1) 0%,
+      /* Increased opacity slightly for visibility */
+      transparent 50%);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s;
@@ -385,4 +413,56 @@
     linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
   mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
   /* Fade out at bottom */
+}
+
+/* 8. Mesh Gradient Background */
+.mesh-gradient {
+  background: radial-gradient(at 0% 0%,
+      hsl(var(--primary) / 0.08) 0px,
+      transparent 50%),
+    radial-gradient(at 100% 0%, hsl(262 83% 58% / 0.06) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, hsl(var(--primary) / 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsl(192 78% 62% / 0.04) 0px, transparent 50%);
+}
+
+/* 9. Bento Card Hover */
+.bento-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+}
+
+/* 10. Scale on Hover */
+@utility scale-hover {
+  transition: transform 0.3s ease;
+}
+
+.scale-hover:hover {
+  transform: scale(1.02);
+}
+
+/* 11. Typography Utilities */
+@utility heading-xl {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+@utility heading-lg {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@utility body-lg {
+  font-family: var(--font-body);
+  font-size: clamp(1.125rem, 1.5vw, 1.25rem);
+  font-weight: 300;
+  line-height: 1.6;
 }

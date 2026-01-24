@@ -11,6 +11,7 @@ export const createInterviewSchema = z.object({
     .default("TECHNICAL"),
   experienceLevel: z.enum(["junior", "mid", "senior"]).default("mid"),
   techStack: z.string().optional(),
+  resumeId: z.string().optional(),
 });
 
 export type CreateInterviewSchemaType = z.infer<typeof createInterviewSchema>;

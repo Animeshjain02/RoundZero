@@ -20,6 +20,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ResumeUploader } from "@/components/file-uploader/Uploader";
+import { ResumeSelectionDialog } from "./_components/ResumeSelectionDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -83,6 +84,7 @@ const experienceLevels = [
 export default function CreateInterviewPage() {
   const [resumeKey, setResumeKey] = useState<string | null>(null);
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
+  const [resumeId, setResumeId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
 
@@ -105,6 +107,7 @@ export default function CreateInterviewPage() {
       values: CreateInterviewSchemaType & {
         resumeKey?: string;
         resumeFilename?: string;
+        resumeId?: string;
       },
     ) => {
       return await orpcClient.interview.create(values);
@@ -141,6 +144,7 @@ export default function CreateInterviewPage() {
       ...values,
       resumeKey: resumeKey || undefined,
       resumeFilename: resumeFilename || undefined,
+      resumeId: resumeId || undefined,
     });
   }
 
@@ -153,8 +157,17 @@ export default function CreateInterviewPage() {
   const onResumeRemove = () => {
     setResumeKey(null);
     setResumeFilename(null);
+    setResumeId(null);
     form.setValue("resumeText", "");
     toast.info("Resume removed");
+  };
+
+  const onResumeSelect = (selectedResumeId: string, content: string) => {
+    setResumeId(selectedResumeId);
+    setResumeKey(null);
+    setResumeFilename(null);
+    form.setValue("resumeText", content);
+    setCurrentStep(3);
   };
 
   const resumeText = form.watch("resumeText");
@@ -394,16 +407,19 @@ export default function CreateInterviewPage() {
             {/* Resume Upload */}
             <Card className="border-border/50 shadow-sm">
               <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                    <FileText className="h-4 w-4 text-emerald-500" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                      <FileText className="h-4 w-4 text-emerald-500" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Resume Context</CardTitle>
+                      <CardDescription>
+                        Upload your resume for personalized questions
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">Resume Context</CardTitle>
-                    <CardDescription>
-                      Upload your resume for personalized questions
-                    </CardDescription>
-                  </div>
+                  <ResumeSelectionDialog onSelect={onResumeSelect} />
                 </div>
               </CardHeader>
               <CardContent>

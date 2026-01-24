@@ -1,6 +1,5 @@
 import { ORPCError } from "@orpc/client";
 import { env } from "@/config/env";
-import { deepgram } from "@/lib/deepgram";
 import { sttContract } from "../contracts/stt";
 
 export const sttHandlers = {
@@ -9,21 +8,29 @@ export const sttHandlers = {
     if (!user) throw new ORPCError("UNAUTHORIZED");
 
     try {
-      const keyResult = await deepgram.manage.createProjectKey(
-        env.DEEPGRAM_PROJECT_ID,
+      const response = await fetch(
+        `https://api.deepgram.com/v1/projects/${env.DEEPGRAM_PROJECT_ID}/keys`,
         {
-          comment: "Client STT session key",
-          scopes: ["usage:write"],
-          tags: ["client-stt"],
-          time_to_live_in_seconds: 300,
+          method: "POST",
+          headers: {
+            Authorization: `Token ${env.DEEPGRAM_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            comment: `Ephemeral key for user ${user.id}`,
+            scopes: ["usage:write"],
+            tags: ["web_client"],
+            time_to_live_in_seconds: 60,
+          }),
         },
       );
 
-      if (!keyResult?.result?.key) {
-        throw new Error("Failed to generate token: No key returned");
+      if (!response.ok) {
+        throw new Error(`Deepgram API error: ${response.statusText}`);
       }
 
-      return { token: keyResult.result.key };
+      const data = await response.json();
+      return { token: data.key };
     } catch (error) {
       console.error("[STT Token Error]", error);
       throw new ORPCError("INTERNAL_SERVER_ERROR", {

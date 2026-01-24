@@ -33,6 +33,7 @@ export const managementContract = {
         techStack: z.string().optional(),
         resumeKey: z.string().optional(),
         resumeFilename: z.string().optional(),
+        resumeId: z.string().optional(),
       }),
     )
     .output(

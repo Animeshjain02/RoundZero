@@ -225,6 +225,37 @@ export const sessionHandlers = {
     const history = await interviewRepository.getMessages(interview.id);
     const messages = toAIMessages(history);
 
+    // Check if there's enough conversation to generate a meaningful report
+    if (messages.length < 2) {
+      // Return a default report if not enough conversation
+      const defaultReport = {
+        overallScore: 0,
+        categoryScores: {
+          communication: 0,
+          problemSolving: 0,
+          technicalKnowledge: 0,
+          codeQuality: 0,
+          timeManagement: 0,
+        },
+        strengths: ["Interview was too short to evaluate"],
+        weaknesses: ["Not enough conversation to assess"],
+        suggestions: ["Complete a full interview session for detailed feedback"],
+        summary: "The interview session was too brief to generate a comprehensive evaluation. Please complete a full interview with multiple questions and answers for detailed feedback.",
+      };
+
+      await interviewRepository.createReport({
+        interviewId: interview.id,
+        overallScore: defaultReport.overallScore,
+        summary: defaultReport.summary,
+        categoryScores: defaultReport.categoryScores as CategoryScores,
+        strengths: defaultReport.strengths,
+        weaknesses: defaultReport.weaknesses,
+        suggestions: defaultReport.suggestions,
+      });
+
+      return { report: defaultReport };
+    }
+
     // Generate report
     const reportPrompt = buildReportPrompt();
 
@@ -233,9 +264,34 @@ export const sessionHandlers = {
       reportData = await generateReport(reportPrompt, messages);
     } catch (error) {
       console.error("[Report Generation Error]", error);
-      throw new ORPCError("INTERNAL_SERVER_ERROR", {
-        message: "Failed to generate report",
+      
+      // Fallback report on generation failure
+      const fallbackReport = {
+        overallScore: 50,
+        categoryScores: {
+          communication: 50,
+          problemSolving: 50,
+          technicalKnowledge: 50,
+          codeQuality: 50,
+          timeManagement: 50,
+        },
+        strengths: ["Participated in the interview"],
+        weaknesses: ["Unable to fully analyze performance"],
+        suggestions: ["Try another interview session for better feedback"],
+        summary: "We encountered an issue generating your detailed report. Based on your participation, we've provided a baseline score. Please try another interview for more accurate feedback.",
+      };
+
+      await interviewRepository.createReport({
+        interviewId: interview.id,
+        overallScore: fallbackReport.overallScore,
+        summary: fallbackReport.summary,
+        categoryScores: fallbackReport.categoryScores as CategoryScores,
+        strengths: fallbackReport.strengths,
+        weaknesses: fallbackReport.weaknesses,
+        suggestions: fallbackReport.suggestions,
       });
+
+      return { report: fallbackReport };
     }
 
     // Save report to database

@@ -2,12 +2,15 @@
 
 import { AudioSamples } from "./_components/audio-samples";
 import { Comparison } from "./_components/comparison";
+import { FAQ } from "./_components/faq";
+import { FeaturesBento } from "./_components/features-bento";
 import { Footer } from "./_components/footer";
 import { Hero } from "./_components/hero";
 import { HowItWorks } from "./_components/how-it-works";
 import { Navbar } from "./_components/navbar";
 import { Pricing } from "./_components/pricing";
 import { SampleReport } from "./_components/sample-report";
+import { StatsSection } from "./_components/stats-section";
 import { Testimonials } from "./_components/testimonials";
 import { TrustBar } from "./_components/trust-bar";
 
@@ -34,12 +37,15 @@ export default function Home() {
       <main className="relative z-1">
         <Hero />
         <TrustBar />
+        <FeaturesBento />
         <HowItWorks />
+        <SampleReport />
         <Comparison />
+        <StatsSection />
         <AudioSamples />
         <Testimonials />
-        <SampleReport />
         <Pricing />
+        <FAQ />
       </main>
       <Footer />
     </div>
