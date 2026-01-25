@@ -1,10 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { ArrowUpRight, Code2, MessageSquare, PenTool } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -13,68 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface RecentScore {
-  id: string;
-  date: string;
-  type: "TECHNICAL" | "BEHAVIORAL" | "SYSTEM_DESIGN";
-  jobTitle: string;
-  score: number;
-  duration: number;
-  status: "COMPLETED" | "IN_PROGRESS" | "FAILED";
-}
+import { orpc } from "@/lib/orpc-client";
+import { useQuery } from "@tanstack/react-query";
 
 interface RecentScoresProps {
-  scores?: RecentScore[];
+  isLoading?: boolean;
 }
-
-const defaultScores: RecentScore[] = [
-  {
-    id: "1",
-    date: "Dec 28, 2025",
-    type: "TECHNICAL",
-    jobTitle: "Senior Frontend Engineer",
-    score: 88,
-    duration: 45,
-    status: "COMPLETED",
-  },
-  {
-    id: "2",
-    date: "Dec 26, 2025",
-    type: "BEHAVIORAL",
-    jobTitle: "Product Manager",
-    score: 82,
-    duration: 30,
-    status: "COMPLETED",
-  },
-  {
-    id: "3",
-    date: "Dec 24, 2025",
-    type: "SYSTEM_DESIGN",
-    jobTitle: "Staff Engineer",
-    score: 75,
-    duration: 55,
-    status: "COMPLETED",
-  },
-  {
-    id: "4",
-    date: "Dec 22, 2025",
-    type: "TECHNICAL",
-    jobTitle: "Backend Developer",
-    score: 91,
-    duration: 40,
-    status: "COMPLETED",
-  },
-  {
-    id: "5",
-    date: "Dec 20, 2025",
-    type: "BEHAVIORAL",
-    jobTitle: "Engineering Manager",
-    score: 78,
-    duration: 35,
-    status: "COMPLETED",
-  },
-];
 
 const typeConfig = {
   TECHNICAL: {
@@ -94,14 +41,88 @@ const typeConfig = {
   },
 };
 
-function getScoreColor(score: number): string {
+function getScoreColor(score: number | null): string {
+  if (score === null) return "text-muted-foreground";
   if (score >= 85) return "text-emerald-500";
   if (score >= 70) return "text-primary";
   if (score >= 50) return "text-orange-500";
   return "text-red-500";
 }
 
-export function RecentScores({ scores = defaultScores }: RecentScoresProps) {
+function LoadingSkeleton() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <Skeleton className="h-5 w-36 mb-2" />
+          <Skeleton className="h-4 w-44" />
+        </div>
+        <Skeleton className="h-8 w-20" />
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center justify-between">
+              <div className="flex gap-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+              <div className="flex gap-4">
+                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-6 w-12" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyState() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle className="text-base font-semibold">
+            Recent Interviews
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Your latest interview scores
+          </p>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+          <p className="text-center">No interviews yet. Start practicing!</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function RecentScores({ isLoading: parentLoading }: RecentScoresProps) {
+  // Fetch recent interviews using interview.list API
+  const queryOptions = useMemo(
+    () =>
+      orpc.interview.list.queryOptions({
+        input: { limit: 5, status: "COMPLETED" },
+        staleTime: 1000 * 60 * 5, // 5 minutes
+      }),
+    [],
+  );
+
+  const { data, isLoading } = useQuery(queryOptions);
+
+  if (parentLoading || isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (!data?.interviews || data.interviews.length === 0) {
+    return <EmptyState />;
+  }
+
   return (
     <Card className="border-border/50">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -114,7 +135,7 @@ export function RecentScores({ scores = defaultScores }: RecentScoresProps) {
           </p>
         </div>
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/dashboard/interviews">
+          <Link href="/dashboard/interview">
             View all
             <ArrowUpRight className="ml-1 h-4 w-4" />
           </Link>
@@ -132,39 +153,50 @@ export function RecentScores({ scores = defaultScores }: RecentScoresProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {scores.map((score) => {
-              const config = typeConfig[score.type];
-              const Icon = config.icon;
+            {data.interviews.map((interview) => {
+              const config =
+                typeConfig[interview.type as keyof typeof typeConfig];
+              const Icon = config?.icon || Code2;
               return (
                 <TableRow
-                  key={score.id}
+                  key={interview.id}
                   className="cursor-pointer hover:bg-muted/50"
                 >
                   <TableCell className="text-muted-foreground">
-                    {score.date}
+                    {formatDistanceToNow(new Date(interview.startedAt), {
+                      addSuffix: true,
+                    })}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant="secondary"
-                      className={`${config.color} gap-1`}
+                      className={`${config?.color || "bg-primary/10 text-primary"} gap-1`}
                     >
                       <Icon className="h-3 w-3" />
-                      {config.label}
+                      {config?.label || interview.type}
                     </Badge>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {score.jobTitle}
+                    {interview.jobTitle}
                   </TableCell>
                   <TableCell className="text-center text-muted-foreground">
-                    {score.duration}m
+                    {Math.floor(interview.durationSec / 60)}m
                   </TableCell>
                   <TableCell className="text-right">
-                    <span
-                      className={`text-lg font-bold ${getScoreColor(score.score)}`}
-                    >
-                      {score.score}
-                    </span>
-                    <span className="text-muted-foreground text-sm">/100</span>
+                    {interview.score !== null ? (
+                      <>
+                        <span
+                          className={`text-lg font-bold ${getScoreColor(interview.score)}`}
+                        >
+                          {interview.score}
+                        </span>
+                        <span className="text-muted-foreground text-sm">
+                          /100
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">--</span>
+                    )}
                   </TableCell>
                 </TableRow>
               );

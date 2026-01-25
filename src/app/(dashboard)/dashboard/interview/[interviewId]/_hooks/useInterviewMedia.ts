@@ -3,7 +3,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
-import { orpc, orpcClient } from "@/lib/orpc-client";
+import { orpcClient } from "@/lib/orpc-client";
 
 export type ConnectionState =
   | "disconnected"

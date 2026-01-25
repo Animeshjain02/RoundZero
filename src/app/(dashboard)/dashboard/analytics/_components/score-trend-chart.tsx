@@ -16,6 +16,7 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ScoreDataPoint {
   date: string;
@@ -25,19 +26,8 @@ interface ScoreDataPoint {
 
 interface ScoreTrendChartProps {
   data?: ScoreDataPoint[];
+  isLoading?: boolean;
 }
-
-const defaultData: ScoreDataPoint[] = [
-  { date: "Dec 1", score: 65, interviews: 2 },
-  { date: "Dec 5", score: 72, interviews: 3 },
-  { date: "Dec 8", score: 68, interviews: 2 },
-  { date: "Dec 12", score: 75, interviews: 4 },
-  { date: "Dec 15", score: 78, interviews: 3 },
-  { date: "Dec 18", score: 82, interviews: 2 },
-  { date: "Dec 22", score: 79, interviews: 3 },
-  { date: "Dec 25", score: 85, interviews: 4 },
-  { date: "Dec 28", score: 88, interviews: 3 },
-];
 
 const chartConfig = {
   score: {
@@ -46,7 +36,56 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function ScoreTrendChart({ data = defaultData }: ScoreTrendChartProps) {
+function LoadingSkeleton() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <Skeleton className="h-5 w-24 mb-2" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <Skeleton className="h-8 w-20 rounded-lg" />
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4 flex items-baseline gap-2">
+          <Skeleton className="h-10 w-16" />
+          <Skeleton className="h-4 w-16" />
+        </div>
+        <Skeleton className="h-[250px] w-full" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyState() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle className="text-base font-semibold">Score Trend</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Your performance over time
+          </p>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+          <p>Complete interviews to see your score trend</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ScoreTrendChart({ data, isLoading }: ScoreTrendChartProps) {
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (!data || data.length === 0) {
+    return <EmptyState />;
+  }
+
   const avgScore = Math.round(
     data.reduce((acc, d) => acc + d.score, 0) / data.length,
   );
@@ -65,7 +104,8 @@ export function ScoreTrendChart({ data = defaultData }: ScoreTrendChartProps) {
         <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5">
           <TrendingUp className="h-4 w-4 text-emerald-500" />
           <span className="text-sm font-medium text-emerald-500">
-            +{trend} pts
+            {trend >= 0 ? "+" : ""}
+            {trend} pts
           </span>
         </div>
       </CardHeader>

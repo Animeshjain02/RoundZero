@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Calendar, Download, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,8 +20,12 @@ import {
   StrengthsWeaknesses,
   TimeSpentChart,
 } from "./_components";
+import { type Period, useAnalytics } from "./_hooks/useAnalytics";
 
 export default function AnalyticsPage() {
+  const [period, setPeriod] = useState<Period>("30d");
+  const { data, isLoading, error } = useAnalytics(period);
+
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
@@ -32,7 +37,10 @@ export default function AnalyticsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Select defaultValue="30d">
+          <Select
+            value={period}
+            onValueChange={(val) => setPeriod(val as Period)}
+          >
             <SelectTrigger className="w-[140px]">
               <Calendar className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Select period" />
@@ -55,32 +63,43 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Overview Stats */}
-      <OverviewStats />
+      <OverviewStats stats={data?.overview} isLoading={isLoading} />
 
       {/* Charts Row 1 */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <ScoreTrendChart />
+          <ScoreTrendChart data={data?.scoreTrend} isLoading={isLoading} />
         </div>
-        <InterviewTypeBreakdown />
+        <InterviewTypeBreakdown
+          data={data?.typeBreakdown}
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Charts Row 2 */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <SkillRadarChart />
-        <TimeSpentChart />
+        <SkillRadarChart data={data?.skillRadar} isLoading={isLoading} />
+        <TimeSpentChart data={data?.timeByWeek} isLoading={isLoading} />
       </div>
 
       {/* Activity & Insights */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <PerformanceHeatmap />
+          <PerformanceHeatmap
+            data={data?.activityHeatmap}
+            isLoading={isLoading}
+          />
         </div>
-        <StrengthsWeaknesses />
+        <StrengthsWeaknesses
+          strengths={data?.insights.strengths}
+          weaknesses={data?.insights.weaknesses}
+          suggestions={data?.insights.suggestions}
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Recent Scores Table */}
-      <RecentScores />
+      <RecentScores isLoading={isLoading} />
     </div>
   );
 }

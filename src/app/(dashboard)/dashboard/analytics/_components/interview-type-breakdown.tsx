@@ -3,6 +3,7 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TypeData {
   name: string;
@@ -12,13 +13,8 @@ interface TypeData {
 
 interface InterviewTypeBreakdownProps {
   data?: TypeData[];
+  isLoading?: boolean;
 }
-
-const defaultData: TypeData[] = [
-  { name: "Technical", value: 12, color: "var(--color-primary)" },
-  { name: "Behavioral", value: 7, color: "#22c55e" },
-  { name: "System Design", value: 5, color: "#f97316" },
-];
 
 const chartConfig = {
   technical: { label: "Technical", color: "var(--color-primary)" },
@@ -26,9 +22,62 @@ const chartConfig = {
   systemDesign: { label: "System Design", color: "#f97316" },
 } satisfies ChartConfig;
 
+function LoadingSkeleton() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <Skeleton className="h-5 w-32 mb-2" />
+        <Skeleton className="h-4 w-40" />
+      </CardHeader>
+      <CardContent>
+        <div className="h-[200px] flex items-center justify-center">
+          <Skeleton className="h-[160px] w-[160px] rounded-full" />
+        </div>
+        <div className="mt-4 space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center justify-between">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-16" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyState() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">
+          Interview Types
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Distribution by category
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+          <p className="text-center">Complete interviews to see distribution</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function InterviewTypeBreakdown({
-  data = defaultData,
+  data,
+  isLoading,
 }: InterviewTypeBreakdownProps) {
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (!data || data.length === 0) {
+    return <EmptyState />;
+  }
+
   const total = data.reduce((acc, d) => acc + d.value, 0);
 
   return (

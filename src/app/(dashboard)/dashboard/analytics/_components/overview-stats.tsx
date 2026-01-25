@@ -9,6 +9,7 @@ import {
   Video,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatItem {
   title: string;
@@ -23,28 +24,47 @@ interface StatItem {
 interface OverviewStatsProps {
   stats?: {
     totalInterviews: number;
-    avgScore: number;
-    totalTime: number;
+    avgScore: number | null;
+    totalPracticeTime: number;
     completionRate: number;
     interviewsChange: number;
     scoreChange: number;
     timeChange: number;
     completionChange: number;
   };
+  isLoading?: boolean;
 }
 
-const defaultStats = {
-  totalInterviews: 24,
-  avgScore: 78,
-  totalTime: 12.5,
-  completionRate: 92,
-  interviewsChange: 12,
-  scoreChange: 5.2,
-  timeChange: 2.3,
-  completionChange: -3,
-};
+function StatCardSkeleton() {
+  return (
+    <Card className="relative overflow-hidden border-border/50 bg-linear-to-br from-card to-card/80">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <Skeleton className="h-10 w-10 rounded-xl" />
+        </div>
+        <div className="mt-3 flex items-center gap-1.5">
+          <Skeleton className="h-4 w-20" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-export function OverviewStats({ stats = defaultStats }: OverviewStatsProps) {
+export function OverviewStats({ stats, isLoading }: OverviewStatsProps) {
+  if (isLoading || !stats) {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <StatCardSkeleton key={i} />
+        ))}
+      </div>
+    );
+  }
+
   const statItems: StatItem[] = [
     {
       title: "Total Interviews",
@@ -57,7 +77,7 @@ export function OverviewStats({ stats = defaultStats }: OverviewStatsProps) {
     },
     {
       title: "Average Score",
-      value: `${stats.avgScore}%`,
+      value: stats.avgScore !== null ? `${stats.avgScore}%` : "--",
       change: stats.scoreChange,
       changeLabel: "improvement",
       icon: <Target className="h-5 w-5" />,
@@ -66,7 +86,7 @@ export function OverviewStats({ stats = defaultStats }: OverviewStatsProps) {
     },
     {
       title: "Practice Time",
-      value: `${stats.totalTime}h`,
+      value: `${stats.totalPracticeTime}h`,
       change: stats.timeChange,
       changeLabel: "hours more",
       icon: <Clock className="h-5 w-5" />,

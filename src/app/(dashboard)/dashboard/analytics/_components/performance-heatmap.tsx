@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -11,32 +12,13 @@ import {
 interface DayActivity {
   date: string;
   count: number;
-  score?: number;
+  score: number | null;
 }
 
 interface PerformanceHeatmapProps {
   data?: DayActivity[];
+  isLoading?: boolean;
 }
-
-// Generate last 12 weeks of mock data
-function generateDefaultData(): DayActivity[] {
-  const data: DayActivity[] = [];
-  const today = new Date();
-
-  for (let i = 83; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    const hasActivity = Math.random() > 0.6;
-    data.push({
-      date: date.toISOString().split("T")[0],
-      count: hasActivity ? Math.floor(Math.random() * 4) + 1 : 0,
-      score: hasActivity ? Math.floor(Math.random() * 30) + 70 : undefined,
-    });
-  }
-  return data;
-}
-
-const defaultData = generateDefaultData();
 
 function getIntensityClass(count: number): string {
   if (count === 0) return "bg-muted/50";
@@ -48,9 +30,64 @@ function getIntensityClass(count: number): string {
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+function LoadingSkeleton() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-5 w-32 mb-2" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[140px] w-full" />
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyState() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base font-semibold">
+              Activity Heatmap
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Your practice consistency
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[140px] flex items-center justify-center text-muted-foreground">
+          <p className="text-center">Complete interviews to see activity</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function PerformanceHeatmap({
-  data = defaultData,
+  data,
+  isLoading,
 }: PerformanceHeatmapProps) {
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (!data || data.length === 0) {
+    return <EmptyState />;
+  }
+
   // Group data by weeks
   const weeks: DayActivity[][] = [];
   let currentWeek: DayActivity[] = [];
@@ -59,7 +96,7 @@ export function PerformanceHeatmap({
   const firstDate = new Date(data[0]?.date || new Date());
   const startPadding = firstDate.getDay();
   for (let i = 0; i < startPadding; i++) {
-    currentWeek.push({ date: "", count: -1 });
+    currentWeek.push({ date: "", count: -1, score: null });
   }
 
   data.forEach((day) => {
@@ -142,7 +179,9 @@ export function PerformanceHeatmap({
                                   {day.count} interview
                                   {day.count > 1 ? "s" : ""}
                                 </p>
-                                {day.score && <p>Avg score: {day.score}%</p>}
+                                {day.score !== null && (
+                                  <p>Avg score: {day.score}%</p>
+                                )}
                               </>
                             ) : (
                               <p className="text-muted-foreground">

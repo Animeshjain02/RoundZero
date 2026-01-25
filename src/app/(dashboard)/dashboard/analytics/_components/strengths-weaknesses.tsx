@@ -2,38 +2,74 @@
 
 import { AlertCircle, CheckCircle2, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface StrengthsWeaknessesProps {
   strengths?: string[];
   weaknesses?: string[];
   suggestions?: string[];
+  isLoading?: boolean;
 }
 
-const defaultStrengths = [
-  "Clear communication style",
-  "Strong problem decomposition",
-  "Good time management",
-  "Explains thought process well",
-];
+function LoadingSkeleton() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <Skeleton className="h-5 w-36 mb-2" />
+        <Skeleton className="h-4 w-44" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-8 w-full mb-4" />
+        <div className="space-y-2">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-lg" />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-const defaultWeaknesses = [
-  "Edge case handling",
-  "System design scalability",
-  "Code optimization",
-];
-
-const defaultSuggestions = [
-  "Practice more system design problems",
-  "Focus on edge cases in coding",
-  "Review Big O complexity",
-];
+function EmptyState() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">
+          Performance Insights
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Based on your recent interviews
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+          <p className="text-center">Complete interviews to see insights</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function StrengthsWeaknesses({
-  strengths = defaultStrengths,
-  weaknesses = defaultWeaknesses,
-  suggestions = defaultSuggestions,
+  strengths,
+  weaknesses,
+  suggestions,
+  isLoading,
 }: StrengthsWeaknessesProps) {
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  const hasData =
+    (strengths && strengths.length > 0) ||
+    (weaknesses && weaknesses.length > 0) ||
+    (suggestions && suggestions.length > 0);
+
+  if (!hasData) {
+    return <EmptyState />;
+  }
+
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-2">
@@ -59,7 +95,7 @@ export function StrengthsWeaknesses({
           </TabsList>
 
           <TabsContent value="strengths" className="space-y-2 mt-0">
-            {strengths.map((item, index) => (
+            {(strengths || []).map((item, index) => (
               <div
                 key={index}
                 className="flex items-start gap-2 rounded-lg bg-emerald-500/10 p-2.5"
@@ -68,10 +104,15 @@ export function StrengthsWeaknesses({
                 <span className="text-sm">{item}</span>
               </div>
             ))}
+            {(!strengths || strengths.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No strengths identified yet
+              </p>
+            )}
           </TabsContent>
 
           <TabsContent value="weaknesses" className="space-y-2 mt-0">
-            {weaknesses.map((item, index) => (
+            {(weaknesses || []).map((item, index) => (
               <div
                 key={index}
                 className="flex items-start gap-2 rounded-lg bg-orange-500/10 p-2.5"
@@ -80,10 +121,15 @@ export function StrengthsWeaknesses({
                 <span className="text-sm">{item}</span>
               </div>
             ))}
+            {(!weaknesses || weaknesses.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No areas for improvement identified yet
+              </p>
+            )}
           </TabsContent>
 
           <TabsContent value="tips" className="space-y-2 mt-0">
-            {suggestions.map((item, index) => (
+            {(suggestions || []).map((item, index) => (
               <div
                 key={index}
                 className="flex items-start gap-2 rounded-lg bg-primary/10 p-2.5"
@@ -92,6 +138,11 @@ export function StrengthsWeaknesses({
                 <span className="text-sm">{item}</span>
               </div>
             ))}
+            {(!suggestions || suggestions.length === 0) && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No suggestions yet
+              </p>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface SkillData {
   skill: string;
@@ -20,23 +21,61 @@ interface SkillData {
 
 interface SkillRadarChartProps {
   data?: SkillData[];
+  isLoading?: boolean;
 }
-
-const defaultData: SkillData[] = [
-  { skill: "Communication", current: 85, previous: 72 },
-  { skill: "Problem Solving", current: 78, previous: 65 },
-  { skill: "Technical Knowledge", current: 72, previous: 68 },
-  { skill: "System Design", current: 65, previous: 55 },
-  { skill: "Code Quality", current: 80, previous: 70 },
-  { skill: "Time Management", current: 70, previous: 60 },
-];
 
 const chartConfig = {
   current: { label: "Current", color: "var(--color-primary)" },
   previous: { label: "Previous", color: "var(--color-muted-foreground)" },
 } satisfies ChartConfig;
 
-export function SkillRadarChart({ data = defaultData }: SkillRadarChartProps) {
+function LoadingSkeleton() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <Skeleton className="h-5 w-32 mb-2" />
+        <Skeleton className="h-4 w-40" />
+      </CardHeader>
+      <CardContent>
+        <Skeleton className="h-[300px] w-full" />
+        <div className="mt-2 flex items-center justify-center gap-6">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-4 w-20" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyState() {
+  return (
+    <Card className="border-border/50">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold">
+          Skill Assessment
+        </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Current vs previous period
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+          <p className="text-center">Complete interviews to see skills</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function SkillRadarChart({ data, isLoading }: SkillRadarChartProps) {
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (!data || data.length === 0 || data.every((d) => d.current === 0)) {
+    return <EmptyState />;
+  }
+
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-2">
