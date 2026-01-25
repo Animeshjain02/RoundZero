@@ -45,12 +45,25 @@ const generateAndUploadAudio = async (
 
 // Convert database messages to AI message format
 const toAIMessages = (
-  messages: Array<{ role: string; content: string }>,
+  messages: Array<{
+    role: string;
+    content: string;
+    codeSnippet?: string | null;
+    language?: string | null;
+  }>,
 ): AIMessage[] => {
-  return messages.map((m) => ({
-    role: m.role as "user" | "assistant" | "system",
-    content: m.content,
-  }));
+  return messages.map((m) => {
+    let content = m.content;
+    if (m.codeSnippet) {
+      content += `\n\nCode Snippet:\n\`\`\`${m.language || ""}\n${
+        m.codeSnippet
+      }\n\`\`\``;
+    }
+    return {
+      role: m.role as "user" | "assistant" | "system",
+      content,
+    };
+  });
 };
 
 export const sessionHandlers = {
@@ -239,8 +252,11 @@ export const sessionHandlers = {
         },
         strengths: ["Interview was too short to evaluate"],
         weaknesses: ["Not enough conversation to assess"],
-        suggestions: ["Complete a full interview session for detailed feedback"],
-        summary: "The interview session was too brief to generate a comprehensive evaluation. Please complete a full interview with multiple questions and answers for detailed feedback.",
+        suggestions: [
+          "Complete a full interview session for detailed feedback",
+        ],
+        summary:
+          "The interview session was too brief to generate a comprehensive evaluation. Please complete a full interview with multiple questions and answers for detailed feedback.",
       };
 
       await interviewRepository.createReport({
@@ -264,7 +280,7 @@ export const sessionHandlers = {
       reportData = await generateReport(reportPrompt, messages);
     } catch (error) {
       console.error("[Report Generation Error]", error);
-      
+
       // Fallback report on generation failure
       const fallbackReport = {
         overallScore: 50,
@@ -278,7 +294,8 @@ export const sessionHandlers = {
         strengths: ["Participated in the interview"],
         weaknesses: ["Unable to fully analyze performance"],
         suggestions: ["Try another interview session for better feedback"],
-        summary: "We encountered an issue generating your detailed report. Based on your participation, we've provided a baseline score. Please try another interview for more accurate feedback.",
+        summary:
+          "We encountered an issue generating your detailed report. Based on your participation, we've provided a baseline score. Please try another interview for more accurate feedback.",
       };
 
       await interviewRepository.createReport({
