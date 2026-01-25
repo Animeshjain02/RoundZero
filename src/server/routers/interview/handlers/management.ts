@@ -178,4 +178,16 @@ export const managementHandlers = {
 
     return { success: result.count > 0 };
   }),
+
+  // Get aggregated skill progress
+  skillProgress: managementContract.skillProgress.handler(
+    async ({ context }) => {
+      const { user } = context;
+      if (!user) {
+        throw new ORPCError("UNAUTHORIZED");
+      }
+
+      return interviewRepository.getSkillProgress(user.id);
+    },
+  ),
 };

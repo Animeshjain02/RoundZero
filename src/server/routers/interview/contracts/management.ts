@@ -139,4 +139,25 @@ export const managementContract = {
         success: z.boolean(),
       }),
     ),
+
+  // Get aggregated skill progress from completed interviews
+  skillProgress: protectedProcedure
+    .route({
+      description: "Get aggregated skill progress from completed interviews",
+      method: "GET",
+      path: "/interview/skill-progress",
+      summary: "Get Skill Progress",
+      tags: ["Interview", "Management"],
+    })
+    .input(z.object({}))
+    .output(
+      z.object({
+        skills: z.array(
+          z.object({
+            name: z.string(),
+            value: z.number(),
+          }),
+        ),
+      }),
+    ),
 };

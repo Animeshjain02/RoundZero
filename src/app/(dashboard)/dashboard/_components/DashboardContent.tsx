@@ -1,5 +1,10 @@
 "use client";
 
+import { useMemo } from "react";
+import { formatDistanceToNow } from "date-fns";
+import { orpc } from "@/lib/orpc-client";
+import { type InterviewItem } from "@/server/routers/interview/interview.schemas";
+import { useQuery } from "@tanstack/react-query";
 import {
   ProTipCard,
   QuickStart,
@@ -21,56 +26,102 @@ interface DashboardContentProps {
   user: User;
 }
 
-// Mock data, we will replace it with API's
-const mockInterviews = [
-  {
-    id: 1,
-    title: "Senior Frontend Engineer",
-    type: "Technical" as const,
-    score: 8.2,
-    date: "2 hours ago",
-    duration: "45 min",
-    status: "completed" as const,
-  },
-  {
-    id: 2,
-    title: "Product Manager",
-    type: "Behavioral" as const,
-    score: 7.8,
-    date: "Yesterday",
-    duration: "32 min",
-    status: "completed" as const,
-  },
-  {
-    id: 3,
-    title: "Staff Engineer",
-    type: "System Design" as const,
-    score: null,
-    date: "In progress",
-    duration: "15 min",
-    status: "in_progress" as const,
-  },
-];
+const mapInterviewType = (type: string) => {
+  switch (type) {
+    case "TECHNICAL":
+      return "Technical";
+    case "BEHAVIORAL":
+      return "Behavioral";
+    case "SYSTEM_DESIGN":
+      return "System Design";
+    default:
+      return "Technical";
+  }
+};
+
+const mapInterviewStatus = (status: string) => {
+  switch (status) {
+    case "SETUP":
+      return "scheduled";
+    case "IN_PROGRESS":
+      return "in_progress";
+    case "COMPLETED":
+    case "FAILED":
+      return "completed";
+    default:
+      return "scheduled";
+  }
+};
 
 export default function DashboardContent({ user }: DashboardContentProps) {
-  // TODO: Will integrate with API and remove the mock data
+  // Stats query
+  const { data: statsData, isLoading: isStatsLoading } = useQuery(
+    orpc.interview.stats.queryOptions({
+      input: {},
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    }),
+  );
+
+  // Recent interviews query
+  const { data: listData, isLoading: isListLoading } = useQuery(
+    orpc.interview.list.queryOptions({
+      input: { limit: 3 },
+    }),
+  );
+
+  // Skill progress query
+  const { data: skillData, isLoading: isSkillLoading } = useQuery(
+    orpc.interview.skillProgress.queryOptions({
+      input: {},
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    }),
+  );
+
+  // Memoize transformed interviews data
+  const recentInterviews = useMemo(
+    () =>
+      listData?.interviews.map((interview: InterviewItem) => ({
+        id: interview.id,
+        title: interview.jobTitle,
+        type: mapInterviewType(interview.type) as
+          | "Technical"
+          | "Behavioral"
+          | "System Design",
+        score: interview.score,
+        date: formatDistanceToNow(new Date(interview.startedAt), {
+          addSuffix: true,
+        }),
+        duration: `${Math.floor(interview.durationSec / 60)} min`,
+        status: mapInterviewStatus(interview.status) as
+          | "completed"
+          | "in_progress"
+          | "scheduled",
+      })),
+    [listData],
+  );
 
   return (
     <div className="p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto">
       <WelcomeHeader userName={user.name} />
-      <StatsCards />
+      <StatsCards stats={statsData} isLoading={isStatsLoading} />
       <QuickStart />
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Interviews */}
         <div className="lg:col-span-2">
-          <RecentInterviews interviews={mockInterviews} />
+          <RecentInterviews
+            interviews={recentInterviews}
+            isLoading={isListLoading}
+          />
         </div>
 
         {/* Right Sidebar */}
         <div className="space-y-6">
-          <SkillProgress />
+          <SkillProgress
+            skills={skillData?.skills}
+            isLoading={isSkillLoading}
+          />
           <RecommendedPractice />
           <ProTipCard />
         </div>

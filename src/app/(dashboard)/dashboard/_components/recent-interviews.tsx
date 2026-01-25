@@ -151,7 +151,7 @@ export function RecentInterviews({
           className="text-muted-foreground gap-1"
           asChild
         >
-          <Link href="/dashboard/interviews">
+          <Link href="/dashboard/interview">
             View all <ChevronRight className="h-4 w-4" />
           </Link>
         </Button>

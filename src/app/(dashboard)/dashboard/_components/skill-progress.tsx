@@ -1,11 +1,11 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface Skill {
   name: string;
   value: number;
-  color: string;
 }
 
 interface SkillProgressProps {
@@ -13,12 +13,17 @@ interface SkillProgressProps {
   isLoading?: boolean;
 }
 
-const defaultSkills: Skill[] = [
-  { name: "Communication", value: 85, color: "bg-emerald-500" },
-  { name: "Problem Solving", value: 72, color: "bg-blue-500" },
-  { name: "Technical Knowledge", value: 68, color: "bg-violet-500" },
-  { name: "System Design", value: 45, color: "bg-orange-500" },
-];
+// Color mapping based on skill name
+const getSkillColor = (name: string): string => {
+  const colorMap: Record<string, string> = {
+    Communication: "bg-emerald-500",
+    "Problem Solving": "bg-blue-500",
+    "Technical Knowledge": "bg-violet-500",
+    "Code Quality": "bg-cyan-500",
+    "Time Management": "bg-orange-500",
+  };
+  return colorMap[name] || "bg-primary";
+};
 
 function SkillBar({ skill }: { skill: Skill }) {
   return (
@@ -29,7 +34,7 @@ function SkillBar({ skill }: { skill: Skill }) {
       </div>
       <div className="h-2 rounded-full bg-muted overflow-hidden">
         <div
-          className={`h-full rounded-full ${skill.color} transition-all duration-500`}
+          className={`h-full rounded-full ${getSkillColor(skill.name)} transition-all duration-500`}
           style={{ width: `${skill.value}%` }}
         />
       </div>
@@ -43,20 +48,27 @@ function LoadingSkeleton() {
       {[1, 2, 3, 4].map((i) => (
         <div key={i} className="space-y-2">
           <div className="flex justify-between">
-            <div className="h-4 w-24 bg-muted rounded animate-pulse" />
-            <div className="h-4 w-8 bg-muted rounded animate-pulse" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-8" />
           </div>
-          <div className="h-2 w-full bg-muted rounded animate-pulse" />
+          <Skeleton className="h-2 w-full" />
         </div>
       ))}
     </div>
   );
 }
 
-export function SkillProgress({
-  skills = defaultSkills,
-  isLoading,
-}: SkillProgressProps) {
+function EmptyState() {
+  return (
+    <div className="text-center py-6 text-muted-foreground">
+      <p className="text-sm">Complete interviews to see your skill progress</p>
+    </div>
+  );
+}
+
+export function SkillProgress({ skills, isLoading }: SkillProgressProps) {
+  const hasSkills = skills && skills.length > 0;
+
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-3">
@@ -65,8 +77,10 @@ export function SkillProgress({
       <CardContent className="space-y-4">
         {isLoading ? (
           <LoadingSkeleton />
-        ) : (
+        ) : hasSkills ? (
           skills.map((skill) => <SkillBar key={skill.name} skill={skill} />)
+        ) : (
+          <EmptyState />
         )}
       </CardContent>
     </Card>
