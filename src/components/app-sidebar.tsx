@@ -56,7 +56,7 @@ const mainNavItems = [
   },
   {
     title: "My Interviews",
-    url: "/dashboard/interviews",
+    url: "/dashboard/interview",
     icon: MessageSquare,
   },
   {
