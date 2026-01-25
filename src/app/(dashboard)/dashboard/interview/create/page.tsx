@@ -20,7 +20,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { ResumeUploader } from "@/components/file-uploader/Uploader";
-import { ResumeSelectionDialog } from "./_components/ResumeSelectionDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +46,7 @@ import {
   type CreateInterviewSchemaType,
   createInterviewSchema,
 } from "@/lib/zodSchemas/createInterview";
+import { ResumeSelectionDialog } from "./_components/ResumeSelectionDialog";
 
 const interviewTypes = [
   {

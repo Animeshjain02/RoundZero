@@ -104,8 +104,8 @@ export function FeaturesBento() {
               feature.size === "large"
                 ? "md:col-span-2"
                 : feature.size === "medium"
-                ? "md:col-span-2 lg:col-span-2"
-                : "md:col-span-1";
+                  ? "md:col-span-2 lg:col-span-2"
+                  : "md:col-span-1";
 
             return (
               <motion.div
@@ -131,7 +131,7 @@ export function FeaturesBento() {
                         .split(" ")[1]
                         .replace(
                           "to-",
-                          ""
+                          "",
                         )}/10 mb-6 group-hover:scale-110 transition-transform duration-300 w-fit`}
                     >
                       <feature.icon className="h-7 w-7 text-foreground" />

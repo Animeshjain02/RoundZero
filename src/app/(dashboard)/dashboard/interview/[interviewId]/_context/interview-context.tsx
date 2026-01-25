@@ -49,7 +49,7 @@ export interface InterviewContextType {
 
   // Transcripts
   transcript: string;
-  
+
   // Connection state
   connectionState: "disconnected" | "connecting" | "connected" | "failed";
 }
@@ -117,10 +117,10 @@ export const InterviewContextProvider = ({
 
   // API mutations using
   const { mutateAsync: startInterviewMutation } = useMutation(
-    orpc.interview.start.mutationOptions()
+    orpc.interview.start.mutationOptions(),
   );
   const { mutateAsync: chatMutation } = useMutation(
-    orpc.interview.chat.mutationOptions()
+    orpc.interview.chat.mutationOptions(),
   );
   const { mutateAsync: endInterviewMutation, isPending: isEnding } =
     useMutation(orpc.interview.end.mutationOptions());
@@ -130,7 +130,7 @@ export const InterviewContextProvider = ({
     orpc.interview.getById.queryOptions({
       input: { id: interviewId },
       enabled: !!interviewId,
-    })
+    }),
   );
 
   // Initialize state from fetched data
@@ -155,7 +155,7 @@ export const InterviewContextProvider = ({
               content: m.content,
               audioUrl: m.audioUrl,
               createdAt: m.createdAt,
-            })
+            }),
           );
         setMessages(loadedMessages);
       }
@@ -261,7 +261,7 @@ export const InterviewContextProvider = ({
         toast.error("Failed to send message");
       }
     },
-    [interviewId, transcript, chatMutation, playEncodedAudio, setTranscript]
+    [interviewId, transcript, chatMutation, playEncodedAudio, setTranscript],
   );
 
   // Keep sendMessageRef in sync for use in callbacks
@@ -288,7 +288,7 @@ export const InterviewContextProvider = ({
         toast.error("Failed to end interview");
       }
     },
-    [interviewId, endInterviewMutation, router, stopAllMedia]
+    [interviewId, endInterviewMutation, router, stopAllMedia],
   );
 
   const value: InterviewContextType = {
@@ -322,7 +322,7 @@ export const useInterview = (): InterviewContextType => {
   const context = useContext(InterviewContext);
   if (!context) {
     throw new Error(
-      "useInterview must be used within InterviewContextProvider"
+      "useInterview must be used within InterviewContextProvider",
     );
   }
   return context;

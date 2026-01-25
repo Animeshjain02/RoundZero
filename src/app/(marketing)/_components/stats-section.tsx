@@ -149,7 +149,7 @@ export function StatsSection() {
                       .split(" ")[1]
                       .replace(
                         "to-",
-                        ""
+                        "",
                       )}/10 mb-6 group-hover:scale-110 transition-transform duration-300`}
                   >
                     <stat.icon className="h-7 w-7 text-foreground" />
