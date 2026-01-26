@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowUpRight, Code2, MessageSquare, PenTool } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +18,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { orpc } from "@/lib/orpc-client";
-import { useQuery } from "@tanstack/react-query";
 
 interface RecentScoresProps {
   isLoading?: boolean;

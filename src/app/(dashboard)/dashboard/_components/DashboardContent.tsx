@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { orpc } from "@/lib/orpc-client";
-import { type InterviewItem } from "@/server/routers/interview/interview.schemas";
 import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import { useMemo } from "react";
+import { orpc } from "@/lib/orpc-client";
+import type { InterviewItem } from "@/server/routers/interview/interview.schemas";
 import {
   ProTipCard,
   QuickStart,

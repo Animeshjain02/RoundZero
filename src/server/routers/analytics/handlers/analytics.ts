@@ -1,5 +1,4 @@
 import { ORPCError } from "@orpc/client";
-import { analyticsContract } from "../contracts/analytics";
 import {
   aggregateInsights,
   calculateHeatmap,
@@ -11,6 +10,7 @@ import {
   getAnalyticsData,
   getDateRange,
 } from "../analytics.repository";
+import { analyticsContract } from "../contracts/analytics";
 
 export const analyticsHandlers = {
   // Get comprehensive analytics data for all charts

@@ -1,8 +1,8 @@
 import { getISOWeek } from "date-fns";
 import db from "@/lib/prisma";
 import {
-  INTERVIEW_STATUS,
   type CategoryScores,
+  INTERVIEW_STATUS,
 } from "../interview/interview.schemas";
 
 // Fetch all data needed for analytics in parallel (per async-parallel best practice)

@@ -1,8 +1,8 @@
 "use client";
 
-import { orpc } from "@/lib/orpc-client";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { orpc } from "@/lib/orpc-client";
 
 export type Period = "7d" | "30d" | "90d" | "all";
 

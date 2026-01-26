@@ -1,5 +1,9 @@
 "use client";
 
+import { formatDistanceToNow } from "date-fns";
+import { motion } from "framer-motion";
+import { ArrowRight, BarChart2, Calendar, Clock, Trophy } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,10 +14,6 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { InterviewItem } from "@/server/routers/interview/interview.schemas";
-import { formatDistanceToNow } from "date-fns";
-import { motion } from "framer-motion";
-import { ArrowRight, BarChart2, Calendar, Clock, Trophy } from "lucide-react";
-import Link from "next/link";
 
 interface InterviewCardProps {
   interview: InterviewItem;
