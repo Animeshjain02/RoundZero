@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ChevronLeft, Download, FileText, Share2 } from "lucide-react";
+import { ChevronLeft, FileText, Share2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { FeedbackSection } from "./_components/feedback-section";
 import { InterviewSummary } from "./_components/interview-summary";
 import { InterviewTimeline } from "./_components/interview-timeline";
 import { OverallScoreCard } from "./_components/overall-score-card";
+import { PDFDownloadButton } from "./_components/pdf-download-button";
 import { ReportRadarChart } from "./_components/report-radar-chart";
 import { TranscriptSection } from "./_components/transcript-section";
 
@@ -157,10 +158,7 @@ export default function InterviewReportPage() {
             <Share2 className="mr-2 h-4 w-4" />
             Share
           </Button>
-          <Button variant="outline" size="sm" className="shadow-sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
+          <PDFDownloadButton interview={interview} report={report} />
         </div>
       </div>
 
