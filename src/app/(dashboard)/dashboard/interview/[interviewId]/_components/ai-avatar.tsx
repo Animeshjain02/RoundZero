@@ -7,9 +7,15 @@ interface AIAvatarProps {
   isSpeaking: boolean;
   name: string;
   size?: "sm" | "md" | "lg";
+  hideLabels?: boolean;
 }
 
-export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
+export function AIAvatar({
+  isSpeaking,
+  name,
+  size = "lg",
+  hideLabels = false,
+}: AIAvatarProps) {
   const sizeClasses = {
     sm: "h-16 w-16",
     md: "h-24 w-24",
@@ -24,6 +30,7 @@ export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
 
   return (
     <div className="flex flex-col items-center gap-4">
+      {/* ... previous content ... */}
       <div className="relative">
         {/* Animated rings when speaking */}
         {isSpeaking && (
@@ -115,18 +122,19 @@ export function AIAvatar({ isSpeaking, name, size = "lg" }: AIAvatarProps) {
         </div>
       </div>
 
-      {/* Name */}
-      <div className="text-center">
-        <h3 className="font-semibold text-lg">{name}</h3>
-        <p
-          className={cn(
-            "text-sm transition-colors",
-            isSpeaking ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          {isSpeaking ? "Speaking..." : "AI Interviewer"}
-        </p>
-      </div>
+      {!hideLabels && (
+        <div className="text-center">
+          <h3 className="font-semibold text-lg">{name}</h3>
+          <p
+            className={cn(
+              "text-sm transition-colors",
+              isSpeaking ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            {isSpeaking ? "Speaking..." : "AI Interviewer"}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

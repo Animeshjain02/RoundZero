@@ -21,15 +21,17 @@ export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div
       className={cn(
-        "flex gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-300",
+        "flex gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-300 w-full",
         isAssistant ? "flex-row" : "flex-row-reverse",
       )}
     >
       {/* Avatar */}
       <div
         className={cn(
-          "h-8 w-8 rounded-full shrink-0 flex items-center justify-center",
-          isAssistant ? "bg-primary text-primary-foreground" : "bg-muted",
+          "h-8 w-8 rounded-full shrink-0 flex items-center justify-center shadow-sm",
+          isAssistant
+            ? "bg-primary text-primary-foreground"
+            : "bg-muted text-muted-foreground",
         )}
       >
         {isAssistant ? (
@@ -42,20 +44,20 @@ export function ChatMessage({ message }: ChatMessageProps) {
       {/* Message */}
       <div
         className={cn(
-          "flex flex-col gap-1 max-w-[85%]",
+          "flex flex-col gap-1 max-w-[85%] md:max-w-[75%]",
           isAssistant ? "items-start" : "items-end",
         )}
       >
         <div
           className={cn(
-            "rounded-2xl px-4 py-2.5 text-sm",
+            "rounded-2xl px-5 py-3 text-sm shadow-sm",
             isAssistant
-              ? "bg-muted rounded-tl-md"
-              : "bg-primary text-primary-foreground rounded-tr-md",
+              ? "bg-card border text-card-foreground rounded-tl-sm"
+              : "bg-primary text-primary-foreground rounded-tr-sm",
           )}
         >
           {message.isTyping ? (
-            <div className="flex items-center gap-1 py-1 px-1">
+            <div className="flex items-center gap-1.5 py-1 px-1">
               <span
                 className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"
                 style={{ animationDelay: "0ms" }}
@@ -70,10 +72,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
               />
             </div>
           ) : (
-            <p className="leading-relaxed">{message.content}</p>
+            <p className="leading-relaxed whitespace-pre-wrap">
+              {message.content}
+            </p>
           )}
         </div>
-        <span className="text-[10px] text-muted-foreground px-2">
+        <span className="text-[10px] text-muted-foreground px-2 opacity-70">
           {message.timestamp}
         </span>
       </div>

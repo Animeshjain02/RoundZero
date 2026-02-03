@@ -4,6 +4,7 @@ export { ChatSidebar } from "./chat-sidebar";
 export { CodeEditor } from "./code-editor";
 export { CodeSnippet } from "./code-snippet";
 export { ControlBar } from "./control-bar";
+export { InterviewChat } from "./interview-chat";
 export { InterviewHeader } from "./interview-header";
 export { InterviewStats } from "./interview-stats";
 export { TranscriptBubble } from "./transcript-bubble";

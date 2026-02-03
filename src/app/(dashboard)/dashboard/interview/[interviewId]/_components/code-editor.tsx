@@ -163,7 +163,7 @@ export function CodeEditor({
   return (
     <div
       className={cn(
-        "flex flex-col bg-[#1e1e1e] rounded-xl overflow-hidden border border-border/50",
+        "flex flex-col bg-[#1e1e1e] h-full overflow-hidden border-l border-border/50 shadow-2xl",
         className,
       )}
     >

@@ -1,19 +1,15 @@
 "use client";
 
-import { Mic } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useInterview } from "../_context/interview-context";
 import {
-  AIAvatar,
-  ChatSidebar,
   CodeEditor,
   ControlBar,
+  InterviewChat, // New chat component
   InterviewHeader,
   InterviewStats,
-  TranscriptBubble,
   VideoFeed,
-  Waveform,
 } from ".";
 
 export function InterviewSession() {
@@ -111,7 +107,7 @@ export function InterviewSession() {
       />
 
       {/* Stats bar */}
-      <div className="flex justify-center py-3 border-b bg-muted/30">
+      <div className="flex justify-center py-1.5 border-b bg-muted/30">
         <InterviewStats
           questionsAnswered={messages.filter((m) => m.role === "user").length}
           totalQuestions={undefined}
@@ -121,69 +117,38 @@ export function InterviewSession() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex min-h-0 overflow-hidden relative">
         {isTechnical ? (
           <>
-            {/* Left side - AI Avatar & Question */}
+            {/* Left side - Chat Interface */}
             <div
               className={cn(
-                "flex flex-col transition-all duration-300 border-r relative",
+                "flex flex-col h-full overflow-hidden transition-all duration-300 border-r border-border/40 relative",
                 isEditorExpanded ? "w-[40%]" : "w-1/2",
               )}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-background to-muted/20 -z-10" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl -z-10" />
+              <InterviewChat
+                messages={messages.map((m) => ({
+                  id: m.id,
+                  role: m.role,
+                  content: m.content,
+                  timestamp: m.createdAt
+                    ? new Date(m.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "",
+                  isTyping: false, // Can add typing state logic later
+                }))}
+                isRecording={isRecording}
+                isPlaying={isPlaying}
+                onToggleMic={toggleMic}
+                showMicReminder={showMicReminder}
+                className="h-full w-full"
+              />
 
-              <div className="relative flex-1 flex flex-col items-center justify-center gap-5 p-6 pb-32">
-                <AIAvatar isSpeaking={isPlaying} name="Alex" size="md" />
-                <Waveform
-                  isActive={isPlaying}
-                  className="h-10 w-full max-w-[250px]"
-                  barCount={24}
-                />
-
-                {/* Current question */}
-                <div className="max-w-md text-center px-4">
-                  <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">
-                    Current Question
-                  </p>
-                  <p className="text-sm text-foreground leading-relaxed">
-                    "{lastAssistantMessage}"
-                  </p>
-                </div>
-
-                {/* Live transcript display */}
-                {(transcript || isRecording) && (
-                  <div className="max-w-md w-full mt-4">
-                    <div className="bg-card border border-border rounded-xl p-4 shadow-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                        <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-                          You're speaking
-                        </span>
-                      </div>
-                      <p className="text-sm text-foreground min-h-6">
-                        {transcript || "Listening..."}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Mic reminder */}
-                {showMicReminder && !isRecording && (
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:bg-primary/90 transition-colors mt-4"
-                    onClick={toggleMic}
-                  >
-                    <Mic className="h-4 w-4" />
-                    <span className="text-sm font-medium">Click to speak</span>
-                  </button>
-                )}
-              </div>
-
-              {/* User video */}
-              <div className="absolute bottom-4 left-4 w-32 h-24 rounded-xl overflow-hidden shadow-xl border-2 border-background z-10 bg-black">
+              {/* User video floating at bottom left */}
+              <div className="absolute bottom-4 left-4 w-32 h-24 rounded-xl overflow-hidden shadow-xl border-2 border-background z-20 bg-black">
                 <VideoFeed
                   userName="You"
                   isVideoOn={true}
@@ -196,12 +161,12 @@ export function InterviewSession() {
             {/* Right side - Code Editor */}
             <div
               className={cn(
-                "transition-all duration-300 p-3",
+                "flex flex-col h-full overflow-hidden transition-all duration-300 bg-[#1e1e1e]",
                 isEditorExpanded ? "w-[60%]" : "w-1/2",
               )}
             >
               <CodeEditor
-                className="h-full"
+                className="h-full border-0 rounded-none"
                 isExpanded={isEditorExpanded}
                 onToggleExpand={() => setIsEditorExpanded(!isEditorExpanded)}
                 onSubmit={(code) =>
@@ -211,51 +176,30 @@ export function InterviewSession() {
             </div>
           </>
         ) : (
-          // Behavioral Layout - Full focus on conversation
-          <div className="flex-1 flex flex-col relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-muted/20 -z-10" />
-            <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl -z-10" />
+          // Behavioral Layout - Full Chat Interface
+          <div className="flex-1 flex flex-col relative h-full">
+            <InterviewChat
+              messages={messages.map((m) => ({
+                id: m.id,
+                role: m.role,
+                content: m.content,
+                timestamp: m.createdAt
+                  ? new Date(m.createdAt).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "",
+                isTyping: false,
+              }))}
+              isRecording={isRecording}
+              isPlaying={isPlaying}
+              onToggleMic={toggleMic}
+              showMicReminder={showMicReminder}
+              className="h-full"
+            />
 
-            <div className="relative flex-1 flex flex-col items-center justify-center gap-6 p-8 pb-32">
-              <AIAvatar isSpeaking={isPlaying} name="Alex" size="lg" />
-              <Waveform isActive={isPlaying} className="h-16 w-full max-w-md" />
-              <TranscriptBubble
-                text={lastAssistantMessage}
-                speaker="ai"
-                isLive={isPlaying}
-              />
-
-              {/* Live transcript display for behavioral */}
-              {(transcript || isRecording) && (
-                <div className="max-w-md w-full">
-                  <div className="bg-card border border-border rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">
-                        You're speaking
-                      </span>
-                    </div>
-                    <p className="text-sm text-foreground min-h-6">
-                      {transcript || "Listening..."}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Mic reminder for behavioral */}
-              {showMicReminder && !isRecording && (
-                <button
-                  type="button"
-                  className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
-                  onClick={toggleMic}
-                >
-                  <Mic className="h-4 w-4" />
-                  <span className="text-sm font-medium">Click to speak</span>
-                </button>
-              )}
-            </div>
-
-            <div className="absolute bottom-24 right-6 w-64 h-44 rounded-2xl overflow-hidden shadow-2xl border-2 border-background bg-black z-10">
+            {/* User video floating at bottom right */}
+            <div className="absolute bottom-6 right-6 w-48 h-36 rounded-2xl overflow-hidden shadow-2xl border-2 border-background bg-black z-20">
               <VideoFeed
                 userName="You"
                 isVideoOn={true}
@@ -267,7 +211,6 @@ export function InterviewSession() {
         )}
       </div>
 
-      {/* Control bar */}
       <ControlBar
         onToggleChat={() => setIsChatOpen(!isChatOpen)}
         isChatOpen={isChatOpen}
@@ -275,23 +218,6 @@ export function InterviewSession() {
         onToggleMic={toggleMic}
         onEndInterview={() => endInterview(elapsedTime)}
         isEnding={isEnding}
-      />
-
-      {/* Chat sidebar */}
-      <ChatSidebar
-        messages={messages.map((m) => ({
-          id: m.id,
-          role: m.role,
-          content: m.content,
-          timestamp: m.createdAt
-            ? new Date(m.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "",
-        }))}
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
       />
     </div>
   );
