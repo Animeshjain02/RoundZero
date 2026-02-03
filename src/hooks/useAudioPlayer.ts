@@ -29,6 +29,7 @@ export const useAudioPlayer = (): AudioPlayerState => {
       // Stop current playback if any
       if (!audio.paused) {
         audio.pause();
+        audio.currentTime = 0;
       }
 
       audio.src = audioUrl;

@@ -55,7 +55,7 @@ export interface TTSOptions {
 }
 
 const DEFAULT_TTS_OPTIONS: Required<TTSOptions> = {
-  voice: DEFAULT_INTERVIEW_VOICE,
+  voice: TTS_VOICES.ASTERIA,
   encoding: "linear16",
   container: "wav",
 };

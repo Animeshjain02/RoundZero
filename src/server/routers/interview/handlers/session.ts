@@ -28,6 +28,17 @@ const DEFAULT_GREETING =
 const INITIAL_USER_PROMPT =
   "I am ready to start the interview. Please introduce yourself and ask the first question.";
 
+// Clean text for TTS (remove markdown that Deepgram might read out)
+const cleanTextForTTS = (text: string): string => {
+  return text
+    .replace(/\*\*/g, "") // Remove bold markers
+    .replace(/\*/g, "") // Remove italic markers
+    .replace(/`/g, "") // Remove code ticks
+    .replace(/#/g, "") // Remove headers
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // Remove links, keep text
+    .trim();
+};
+
 // Generate TTS audio and upload to storage
 // Returns undefined if TTS fails (graceful degradation)
 const generateAndUploadAudio = async (
@@ -35,7 +46,9 @@ const generateAndUploadAudio = async (
   interviewId: string,
 ): Promise<string | undefined> => {
   try {
-    const audioBuffer = await textToSpeech(text);
+    const cleanedText = cleanTextForTTS(text);
+    // Prepend a pause to prevent beginning of speech from being cut off
+    const audioBuffer = await textToSpeech(` ${cleanedText}`);
     return await storageService.uploadAudio(audioBuffer, interviewId);
   } catch (error) {
     console.error("[TTS Error]", error);
