@@ -1,16 +1,5 @@
-// Re-export contracts
-export { contract } from "./interview.contract";
-// Re-export repository
-export {
-  type CreateInterviewInput,
-  type CreateMessageInput,
-  type CreateReportInput,
-  type CreateResumeInput,
-  type GetInterviewsInput,
-  interviewRepository,
-} from "./interview.repository";
 // Re-export router
-export { interviewRouter } from "./interview.router";
+export { interviewRouter } from "./_router";
 // Re-export schemas and types
 export {
   ALLOWED_RESUME_EXTENSIONS,
@@ -41,4 +30,4 @@ export {
   resumeFileSchema,
   type S3Resume,
   s3ResumeSchema,
-} from "./interview.schemas";
+} from "./schemas";

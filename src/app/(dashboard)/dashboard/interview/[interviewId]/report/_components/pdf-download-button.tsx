@@ -4,7 +4,7 @@ import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Download, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import type { CategoryScores } from "@/server/routers/interview/interview.schemas";
+import type { CategoryScores } from "@/server/routers/interview/schemas";
 import { InterviewReportPDF } from "./pdf-report";
 
 interface PDFDownloadButtonProps {

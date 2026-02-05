@@ -32,7 +32,7 @@ export function ResumeSelectionDialog({
     isLoading,
     isError,
   } = useQuery(
-    orpc.interview.listResumes.queryOptions({
+    orpc.resume.list.queryOptions({
       input: {},
       enabled: isOpen,
     }),

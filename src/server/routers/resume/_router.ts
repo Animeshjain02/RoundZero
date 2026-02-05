@@ -1,59 +1,51 @@
 import { z } from "zod";
-import { protectedProcedure } from "@/server/orpc";
-import { resumeFileSchema, s3ResumeSchema } from "../interview.schemas";
 
-export const resumeContract = {
-  // Parse resume from base64 encoded file
-  postInterviewRole: protectedProcedure
+import { protectedProcedure } from "@/server/orpc";
+import { listResumes } from "./list";
+import { parseResume, parseResumeInput } from "./parse";
+import { postInterviewRole, postInterviewRoleInput } from "./post-role";
+
+export const resumeRouter = {
+  postRole: protectedProcedure
     .route({
       description: "Post the Job Description, Skills and Resume",
       method: "POST",
-      path: "/interview/role",
+      path: "/resume/role",
       summary: "Post the Job Description, Skills and Resume",
-      tags: ["Interview", "Resume"],
+      tags: ["Resume"],
     })
-    .input(
-      z.object({
-        jobRole: z.string().min(1, "Job role is required"),
-        skills: z.array(z.string()),
-        resume: resumeFileSchema,
-      }),
-    )
+    .input(postInterviewRoleInput)
     .output(
       z.object({
         message: z.string(),
         resumeText: z.string(),
       }),
-    ),
+    )
+    .handler(postInterviewRole),
 
-  // Parse resume content from S3 storage
-  parseResume: protectedProcedure
+  parse: protectedProcedure
     .route({
       description: "Parse resume content from S3",
       method: "POST",
-      path: "/interview/parse-resume",
+      path: "/resume/parse",
       summary: "Parse Resume",
-      tags: ["Interview", "Resume"],
+      tags: ["Resume"],
     })
-    .input(
-      z.object({
-        resume: s3ResumeSchema,
-      }),
-    )
+    .input(parseResumeInput)
     .output(
       z.object({
         text: z.string(),
       }),
-    ),
+    )
+    .handler(parseResume),
 
-  // List user's resumes
-  listResumes: protectedProcedure
+  list: protectedProcedure
     .route({
       description: "List user's previously uploaded resumes",
       method: "GET",
-      path: "/interview/resume/list",
+      path: "/resume/list",
       summary: "List Resumes",
-      tags: ["Interview", "Resume"],
+      tags: ["Resume"],
     })
     .input(z.object({}))
     .output(
@@ -65,5 +57,6 @@ export const resumeContract = {
           content: z.string(),
         }),
       ),
-    ),
+    )
+    .handler(listResumes),
 };

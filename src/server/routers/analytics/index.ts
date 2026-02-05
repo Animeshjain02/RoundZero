@@ -1,3 +1,1 @@
-import { analyticsHandlers } from "./handlers/analytics";
-
-export const analyticsRouter = analyticsHandlers;
+export { analyticsRouter } from "./_router";

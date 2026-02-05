@@ -1,4 +1,4 @@
-import type { MessageRole as SchemaMessageRole } from "@/server/routers/interview/interview.schemas";
+import type { MessageRole as SchemaMessageRole } from "@/server/routers/interview/schemas";
 
 // Message role type
 export type MessageRole = "user" | "assistant" | "system";

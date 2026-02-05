@@ -17,7 +17,7 @@ import { orpc } from "@/lib/orpc-client";
 import {
   INTERVIEW_STATUS,
   type InterviewStatus,
-} from "@/server/routers/interview/interview.schemas";
+} from "@/server/routers/interview/schemas";
 import { InterviewCard } from "./interview-card";
 
 const ITEMS_PER_PAGE = 12;

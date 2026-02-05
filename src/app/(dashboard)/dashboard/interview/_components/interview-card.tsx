@@ -13,7 +13,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { InterviewItem } from "@/server/routers/interview/interview.schemas";
+import type { InterviewItem } from "@/server/routers/interview/schemas";
 
 interface InterviewCardProps {
   interview: InterviewItem;

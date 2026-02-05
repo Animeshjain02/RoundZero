@@ -1,20 +1,78 @@
 import { z } from "zod";
+
 import { protectedProcedure } from "@/server/orpc";
+import { chat, chatInput } from "./chat";
+import { createInterview, createInterviewInput } from "./create";
+import { deleteInterview, deleteInterviewInput } from "./delete";
+import { endSession, endSessionInput } from "./end";
+import { getInterviewById, getInterviewByIdInput } from "./get-by-id";
+import { listInterviews, listInterviewsInput } from "./list";
 import {
-  experienceLevelSchema,
   interviewItemSchema,
   interviewStatusSchema,
   interviewTypeSchema,
   messageSchema,
   reportSchema,
-} from "../interview.schemas";
+} from "./schemas";
+import { getSkillProgress } from "./skill-progress";
+import { startSession, startSessionInput } from "./start";
+import { getStats } from "./stats";
 
-// Pagination defaults
-const DEFAULT_LIMIT = 10;
-const MAX_LIMIT = 50;
+export const interviewRouter = {
+  // Session Handlers
+  start: protectedProcedure
+    .route({
+      description: "Start the interview and get the first question",
+      method: "POST",
+      path: "/interview/start",
+      summary: "Start Interview",
+      tags: ["Interview", "Session"],
+    })
+    .input(startSessionInput)
+    .output(
+      z.object({
+        message: z.string(),
+        audioUrl: z.string().optional(),
+        status: interviewStatusSchema,
+      }),
+    )
+    .handler(startSession),
 
-export const managementContract = {
-  // Create a new interview session
+  chat: protectedProcedure
+    .route({
+      description: "Send a message and get an AI response",
+      method: "POST",
+      path: "/interview/chat",
+      summary: "Chat",
+      tags: ["Interview", "Session"],
+    })
+    .input(chatInput)
+    .output(
+      z.object({
+        message: z.string(),
+        audioUrl: z.string().optional(),
+        savedMessageId: z.string().optional(),
+      }),
+    )
+    .handler(chat),
+
+  end: protectedProcedure
+    .route({
+      description: "End the interview and generate a report",
+      method: "POST",
+      path: "/interview/end",
+      summary: "End Interview",
+      tags: ["Interview", "Session"],
+    })
+    .input(endSessionInput)
+    .output(
+      z.object({
+        report: reportSchema,
+      }),
+    )
+    .handler(endSession),
+
+  // Management Handlers
   create: protectedProcedure
     .route({
       description: "Create a new interview session",
@@ -23,26 +81,14 @@ export const managementContract = {
       summary: "Create Interview",
       tags: ["Interview", "Management"],
     })
-    .input(
-      z.object({
-        jobTitle: z.string().min(1, "Job title is required"),
-        resumeText: z.string().min(1, "Resume text is required"),
-        type: interviewTypeSchema,
-        includeDSA: z.boolean(),
-        experienceLevel: experienceLevelSchema,
-        techStack: z.string().optional(),
-        resumeKey: z.string().optional(),
-        resumeFilename: z.string().optional(),
-        resumeId: z.string().optional(),
-      }),
-    )
+    .input(createInterviewInput)
     .output(
       z.object({
         interviewId: z.string(),
       }),
-    ),
+    )
+    .handler(createInterview),
 
-  // List user's interviews with pagination
   list: protectedProcedure
     .route({
       description: "Get user's interviews with pagination",
@@ -51,21 +97,15 @@ export const managementContract = {
       summary: "List Interviews",
       tags: ["Interview", "Management"],
     })
-    .input(
-      z.object({
-        limit: z.number().min(1).max(MAX_LIMIT).default(DEFAULT_LIMIT),
-        offset: z.number().min(0).default(0),
-        status: interviewStatusSchema.optional(),
-      }),
-    )
+    .input(listInterviewsInput)
     .output(
       z.object({
         interviews: z.array(interviewItemSchema),
         total: z.number(),
       }),
-    ),
+    )
+    .handler(listInterviews),
 
-  // Get interview by ID with full details
   getById: protectedProcedure
     .route({
       description: "Get interview by ID",
@@ -74,11 +114,7 @@ export const managementContract = {
       summary: "Get Interview",
       tags: ["Interview", "Management"],
     })
-    .input(
-      z.object({
-        id: z.string().min(1, "Interview ID is required"),
-      }),
-    )
+    .input(getInterviewByIdInput)
     .output(
       z.object({
         interview: z
@@ -99,9 +135,9 @@ export const managementContract = {
           })
           .nullable(),
       }),
-    ),
+    )
+    .handler(getInterviewById),
 
-  // Get user's interview statistics
   stats: protectedProcedure
     .route({
       description: "Get user's interview statistics",
@@ -118,9 +154,9 @@ export const managementContract = {
         averageScore: z.number().nullable(),
         totalDurationSec: z.number(),
       }),
-    ),
+    )
+    .handler(getStats),
 
-  // Delete an interview
   delete: protectedProcedure
     .route({
       description: "Delete an interview",
@@ -129,18 +165,14 @@ export const managementContract = {
       summary: "Delete Interview",
       tags: ["Interview", "Management"],
     })
-    .input(
-      z.object({
-        id: z.string().min(1, "Interview ID is required"),
-      }),
-    )
+    .input(deleteInterviewInput)
     .output(
       z.object({
         success: z.boolean(),
       }),
-    ),
+    )
+    .handler(deleteInterview),
 
-  // Get aggregated skill progress from completed interviews
   skillProgress: protectedProcedure
     .route({
       description: "Get aggregated skill progress from completed interviews",
@@ -159,5 +191,6 @@ export const managementContract = {
           }),
         ),
       }),
-    ),
+    )
+    .handler(getSkillProgress),
 };

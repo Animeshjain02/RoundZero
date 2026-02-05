@@ -2,7 +2,7 @@
 
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { format } from "date-fns";
-import type { CategoryScores } from "@/server/routers/interview/interview.schemas";
+import type { CategoryScores } from "@/server/routers/interview/schemas";
 
 // Standard fonts
 

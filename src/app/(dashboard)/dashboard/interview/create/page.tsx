@@ -126,7 +126,7 @@ export default function CreateInterviewPage() {
     mutationFn: async (values: {
       resume: { filename: string; key: string };
     }) => {
-      return await orpcClient.interview.parseResume(values);
+      return await orpcClient.resume.parse(values);
     },
     onSuccess: (data: { text: string }) => {
       form.setValue("resumeText", data.text);
