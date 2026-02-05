@@ -101,7 +101,7 @@ export default function DashboardContent({ user }: DashboardContentProps) {
   );
 
   return (
-    <div className="p-6 lg:p-8 space-y-8 max-w-[1600px] mx-auto">
+    <div className="p-6 lg:p-8 space-y-8">
       <WelcomeHeader userName={user.name} />
       <StatsCards stats={statsData} isLoading={isStatsLoading} />
       <QuickStart />
