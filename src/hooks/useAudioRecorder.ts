@@ -72,13 +72,6 @@ export const useAudioRecorder = ({
       audioContextRef.current = null;
     }
 
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== "inactive"
-    ) {
-      mediaRecorderRef.current.stop();
-    }
-
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -86,21 +79,14 @@ export const useAudioRecorder = ({
   }, []);
 
   const stopRecording = useCallback(() => {
-    cleanup();
-    setIsRecording(false);
-    setIsSpeaking(false);
-
-    // Process remaining chunks if any (manual stop)
-    if (chunksRef.current.length > 0) {
-      const mimeType = getSupportedMimeType() || "audio/webm";
-      const blob = new Blob(chunksRef.current, { type: mimeType });
-      // Only fire if we had speech
-      if (speechStartRef.current) {
-        onUtterance(blob);
-      }
-      chunksRef.current = [];
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
     }
-  }, [cleanup, onUtterance]);
+    // State cleanup happens in onstop or if stop fails
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -138,10 +124,30 @@ export const useAudioRecorder = ({
         }
       };
 
+      mediaRecorder.onstop = () => {
+        cleanup();
+        setIsRecording(false);
+        setIsSpeaking(false);
+
+        // Process chunks
+        if (chunksRef.current.length > 0 && speechStartRef.current) {
+          const mimeType = getSupportedMimeType() || "audio/webm";
+          const blob = new Blob(chunksRef.current, { type: mimeType });
+          onUtterance(blob);
+        }
+        chunksRef.current = [];
+      };
+
       // VAD Loop
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       const checkVolume = () => {
         if (!analyserRef.current) return;
+        // Check recording state to stop loop if stopped externally
+        if (
+          !mediaRecorderRef.current ||
+          mediaRecorderRef.current.state === "inactive"
+        )
+          return;
 
         analyserRef.current.getByteTimeDomainData(dataArray);
 
@@ -175,25 +181,10 @@ export const useAudioRecorder = ({
               // Validate utterance length
               const utteranceDuration = now - speechStartRef.current;
               if (utteranceDuration > AUDIO_CONFIG.MIN_UTTERANCE_MS) {
-                // Stop the recorder to finalize the file
-                if (mediaRecorderRef.current?.state === "recording") {
-                  mediaRecorderRef.current.requestData(); // Flush
-                  mediaRecorderRef.current.stop();
-
-                  // Wait for "stop" event or handle blobs immediately?
-                  // MediaRecorder is async. Let's process immediately from chunks buffer.
-                  // Wait, ondataavailable triggers *after* requestData/stop.
-                  // The cleanest way is to trigger stopRecording which cleans up.
-
-                  // We need to trigger extraction of FULL blob.
-                  // We process chunksRef.current in 'stopRecording' but requestData() is needed to get the *last* chunk.
-                  // The safe way is to call stopRecording() and let it handle the blob creation.
-                  stopRecording();
-                  return; // Exit loop
-                }
+                // Proper speech -> stop recording to trigger onstop
+                stopRecording();
+                return;
               } else {
-                // Too short, ignore
-                chunksRef.current = [];
                 speechStartRef.current = null;
                 silenceStartRef.current = null;
                 setIsSpeaking(false);
@@ -210,6 +201,8 @@ export const useAudioRecorder = ({
       checkVolume();
     } catch (error) {
       console.error("[Audio Recorder] Error accessing microphone:", error);
+      // Ensure cleanup if start fails
+      cleanup();
       throw error;
     }
   }, [cleanup, stopRecording, onUtterance]);
