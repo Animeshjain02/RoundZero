@@ -13,7 +13,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { orpc } from "@/lib/orpc-client";
-import type { INTERVIEW_STATUS } from "@/server/routers/interview";
+import type { INTERVIEW_STATUS } from "@/server/routers/interview/schemas";
 import { useInterviewMedia } from "../_hooks/useInterviewMedia";
 import type { InterviewData, Message } from "./types";
 
@@ -49,6 +49,7 @@ export interface InterviewContextType {
 
   // Transcripts
   transcript: string;
+  interimTranscript: string;
 
   // Connection state
   connectionState: "disconnected" | "connecting" | "connected" | "failed";
@@ -107,6 +108,7 @@ export const InterviewContextProvider = ({
     isRecording,
     toggleMic,
     transcript,
+    interimTranscript,
     setTranscript,
     connectionState,
     connectSTT,
@@ -307,6 +309,7 @@ export const InterviewContextProvider = ({
     toggleMic,
     stopAllMedia,
     transcript,
+    interimTranscript,
     connectionState,
   };
 

@@ -2,10 +2,10 @@
 
 import { Mic } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { AIAvatar, Waveform } from ".";
+import { AIAvatar } from "./ai-avatar";
 import { ChatMessage, type Message } from "./chat-message";
+import { Waveform } from "./waveform";
 
 interface InterviewChatProps {
   messages: Message[];
@@ -13,6 +13,7 @@ interface InterviewChatProps {
   isPlaying: boolean; // For showing AI speaking state
   onToggleMic: () => void;
   showMicReminder: boolean;
+  interimTranscript?: string;
   className?: string;
 }
 
@@ -22,17 +23,22 @@ export function InterviewChat({
   isPlaying,
   onToggleMic,
   showMicReminder,
+  interimTranscript,
   className,
 }: InterviewChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages or interim transcript changes
   useEffect(() => {
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages.length, messages[messages.length - 1]?.isTyping]);
+  }, [
+    messages.length,
+    messages[messages.length - 1]?.isTyping,
+    interimTranscript,
+  ]);
 
   return (
     <div
@@ -86,6 +92,18 @@ export function InterviewChat({
           {messages.map((message) => (
             <ChatMessage key={message.id} message={message} />
           ))}
+
+          {/* Live interim transcript bubble */}
+          {interimTranscript && (
+            <div className="flex justify-end animate-in fade-in slide-in-from-bottom-2 duration-200">
+              <div className="max-w-[80%] rounded-2xl rounded-br-md px-4 py-2.5 bg-primary/10 border border-primary/20">
+                <p className="text-sm text-muted-foreground italic leading-relaxed">
+                  {interimTranscript}
+                  <span className="inline-block w-1.5 h-4 ml-1 bg-primary/50 animate-pulse rounded-sm align-middle" />
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Invisible div for scrolling */}
           <div ref={bottomRef} className="h-px w-full" />

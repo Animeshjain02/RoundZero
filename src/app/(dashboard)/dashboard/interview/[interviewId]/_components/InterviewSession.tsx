@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useInterview } from "../_context/interview-context";
-import {
-  CodeEditor,
-  ControlBar,
-  InterviewChat, // New chat component
-  InterviewHeader,
-  InterviewStats,
-  VideoFeed,
-} from ".";
+import { CodeEditor } from "./code-editor";
+import { ControlBar } from "./control-bar";
+import { InterviewChat } from "./interview-chat";
+import { InterviewHeader } from "./interview-header";
+import { InterviewStats } from "./interview-stats";
+import { VideoFeed } from "./video-feed";
 
 export function InterviewSession() {
   const {
@@ -26,6 +24,7 @@ export function InterviewSession() {
     isLoading,
     isEnding,
     transcript,
+    interimTranscript,
   } = useInterview();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -138,12 +137,13 @@ export function InterviewSession() {
                         minute: "2-digit",
                       })
                     : "",
-                  isTyping: false, // Can add typing state logic later
+                  isTyping: false,
                 }))}
                 isRecording={isRecording}
                 isPlaying={isPlaying}
                 onToggleMic={toggleMic}
                 showMicReminder={showMicReminder}
+                interimTranscript={interimTranscript}
                 className="h-full w-full"
               />
 
@@ -195,6 +195,7 @@ export function InterviewSession() {
               isPlaying={isPlaying}
               onToggleMic={toggleMic}
               showMicReminder={showMicReminder}
+              interimTranscript={interimTranscript}
               className="h-full"
             />
 
