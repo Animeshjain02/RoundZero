@@ -7,9 +7,9 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/lib/orpc-client";
-import {
-  type InterviewItem,
-  type InterviewStatus,
+import type {
+  InterviewItem,
+  InterviewStatus,
 } from "@/server/routers/interview/schemas";
 import { InterviewCard } from "./interview-card";
 import { InterviewFilterBar } from "./interview-filter-bar";

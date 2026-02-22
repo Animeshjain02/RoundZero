@@ -24,6 +24,7 @@ export function InterviewSession() {
     isLoading,
     isEnding,
     transcript,
+    interimTranscript,
   } = useInterview();
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -136,12 +137,13 @@ export function InterviewSession() {
                         minute: "2-digit",
                       })
                     : "",
-                  isTyping: false, // Can add typing state logic later
+                  isTyping: false,
                 }))}
                 isRecording={isRecording}
                 isPlaying={isPlaying}
                 onToggleMic={toggleMic}
                 showMicReminder={showMicReminder}
+                interimTranscript={interimTranscript}
                 className="h-full w-full"
               />
 
@@ -193,6 +195,7 @@ export function InterviewSession() {
               isPlaying={isPlaying}
               onToggleMic={toggleMic}
               showMicReminder={showMicReminder}
+              interimTranscript={interimTranscript}
               className="h-full"
             />
 

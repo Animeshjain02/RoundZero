@@ -1,11 +1,28 @@
 import { z } from "zod";
 
 import { protectedProcedure } from "@/server/orpc";
+import { getDeepgramToken } from "./deepgram-token";
 import { getPresignedUrl, getPresignedUrlInput } from "./get-presigned-url";
 import { synthesize, synthesizeInput } from "./synthesize";
 import { transcribe, transcribeInput } from "./transcribe";
 
 export const mediaRouter = {
+  deepgramToken: protectedProcedure
+    .route({
+      description:
+        "Get a temporary Deepgram API key for client-side Live STT WebSocket",
+      method: "POST",
+      path: "/media/stt/token",
+      summary: "Get Deepgram Token",
+      tags: ["Media", "STT"],
+    })
+    .output(
+      z.object({
+        apiKey: z.string(),
+      }),
+    )
+    .handler(getDeepgramToken),
+
   getPresignedUrl: protectedProcedure
     .route({
       description: "Get a presigned S3 URL for uploading files directly",
