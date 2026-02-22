@@ -1,4 +1,4 @@
-import { analyticsRouter } from "./analytics";
+import { analyticsRouter } from "./analytics/_router";
 import { exampleRouter } from "./example/example";
 import { interviewRouter } from "./interview/_router";
 import { mediaRouter } from "./media/_router";

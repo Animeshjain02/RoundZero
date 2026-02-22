@@ -2,9 +2,9 @@
 
 import { Mic } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { AIAvatar, Waveform } from ".";
+import { AIAvatar } from "./ai-avatar";
+import { Waveform } from "./waveform";
 import { ChatMessage, type Message } from "./chat-message";
 
 interface InterviewChatProps {

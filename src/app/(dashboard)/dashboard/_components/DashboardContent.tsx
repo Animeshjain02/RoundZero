@@ -5,15 +5,13 @@ import { formatDistanceToNow } from "date-fns";
 import { useMemo } from "react";
 import { orpc } from "@/lib/orpc-client";
 import type { InterviewItem } from "@/server/routers/interview/schemas";
-import {
-  ProTipCard,
-  QuickStart,
-  RecentInterviews,
-  RecommendedPractice,
-  SkillProgress,
-  StatsCards,
-  WelcomeHeader,
-} from "./index";
+import { ProTipCard } from "./pro-tip-card";
+import { QuickStart } from "./quick-start";
+import { RecentInterviews } from "./recent-interviews";
+import { RecommendedPractice } from "./recommended-practice";
+import { SkillProgress } from "./skill-progress";
+import { StatsCards } from "./stats-cards";
+import { WelcomeHeader } from "./welcome-header";
 
 interface User {
   id: string;

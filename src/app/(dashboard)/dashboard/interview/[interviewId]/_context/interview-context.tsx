@@ -13,7 +13,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { orpc } from "@/lib/orpc-client";
-import type { INTERVIEW_STATUS } from "@/server/routers/interview";
+import type { INTERVIEW_STATUS } from "@/server/routers/interview/schemas";
 import { useInterviewMedia } from "../_hooks/useInterviewMedia";
 import type { InterviewData, Message } from "./types";
 

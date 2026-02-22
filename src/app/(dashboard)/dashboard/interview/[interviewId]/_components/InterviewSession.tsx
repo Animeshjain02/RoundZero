@@ -3,14 +3,12 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useInterview } from "../_context/interview-context";
-import {
-  CodeEditor,
-  ControlBar,
-  InterviewChat, // New chat component
-  InterviewHeader,
-  InterviewStats,
-  VideoFeed,
-} from ".";
+import { CodeEditor } from "./code-editor";
+import { ControlBar } from "./control-bar";
+import { InterviewChat } from "./interview-chat";
+import { InterviewHeader } from "./interview-header";
+import { InterviewStats } from "./interview-stats";
+import { VideoFeed } from "./video-feed";
 
 export function InterviewSession() {
   const {

@@ -10,16 +10,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  InterviewTypeBreakdown,
-  OverviewStats,
-  PerformanceHeatmap,
-  RecentScores,
-  ScoreTrendChart,
-  SkillRadarChart,
-  StrengthsWeaknesses,
-  TimeSpentChart,
-} from "./_components";
+import { InterviewTypeBreakdown } from "./_components/interview-type-breakdown";
+import { OverviewStats } from "./_components/overview-stats";
+import { PerformanceHeatmap } from "./_components/performance-heatmap";
+import { RecentScores } from "./_components/recent-scores";
+import { ScoreTrendChart } from "./_components/score-trend-chart";
+import { SkillRadarChart } from "./_components/skill-radar-chart";
+import { StrengthsWeaknesses } from "./_components/strengths-weaknesses";
+import { TimeSpentChart } from "./_components/time-spent-chart";
 import { type Period, useAnalytics } from "./_hooks/useAnalytics";
 
 export default function AnalyticsPage() {

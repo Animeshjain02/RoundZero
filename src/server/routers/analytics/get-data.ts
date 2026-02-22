@@ -2,15 +2,13 @@ import type { z } from "zod";
 
 import db from "@/lib/prisma";
 import type { Context } from "@/server/orpc";
-import {
-  aggregateInsights,
-  calculateHeatmap,
-  calculateOverview,
-  calculateScoreTrend,
-  calculateSkillRadar,
-  calculateTimeByWeek,
-  calculateTypeBreakdown,
-} from "./calculations";
+import { calculateHeatmap } from "./calculations/heatmap";
+import { aggregateInsights } from "./calculations/insights";
+import { calculateOverview } from "./calculations/overview";
+import { calculateScoreTrend } from "./calculations/score-trend";
+import { calculateSkillRadar } from "./calculations/skill-radar";
+import { calculateTimeByWeek } from "./calculations/time-by-week";
+import { calculateTypeBreakdown } from "./calculations/type-breakdown";
 import type {
   getDataInputSchema,
   HeatmapInterview,
