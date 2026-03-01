@@ -6,6 +6,7 @@ import { ChevronLeft, FileText, Share2 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/lib/orpc-client";
 import { FeedbackSection } from "./_components/feedback-section";
@@ -66,21 +67,30 @@ export default function InterviewReportPage() {
 
   if (error || !data?.interview) {
     return (
-      <div className="flex h-[80vh] flex-col items-center justify-center gap-4 text-center p-6 bg-muted/20 rounded-xl">
-        <div className="p-4 rounded-full bg-red-500/10 mb-2">
-          <FileText className="h-8 w-8 text-red-500" />
-        </div>
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Report Unavailable
-        </h2>
-        <p className="text-muted-foreground max-w-md">
-          {error
-            ? "We couldn't load the report at this time."
-            : "The requested interview could not be found."}
-        </p>
-        <Button onClick={() => router.push("/dashboard")}>
-          Return to Dashboard
-        </Button>
+      <div className="flex min-h-[80vh] flex-col items-center justify-center p-6 bg-background">
+        <Card className="w-full max-w-md border-border shadow-sm">
+          <CardContent className="flex flex-col items-center gap-6 p-8 text-center">
+            <div className="p-4 rounded-full bg-destructive/10 ring-1 ring-destructive/20 mb-2">
+              <FileText className="h-8 w-8 text-destructive" />
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground">
+                Report Unavailable
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {error
+                  ? "We couldn't load the report at this time. Our systems might be experiencing a temporary hiccup."
+                  : "The requested interview could not be found. It may have been relocated or deleted."}
+              </p>
+            </div>
+            <Button
+              onClick={() => router.push("/dashboard")}
+              className="w-full mt-2"
+            >
+              Return to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -91,23 +101,41 @@ export default function InterviewReportPage() {
   // Handle case where report hasn't been generated yet
   if (!report) {
     return (
-      <div className="flex h-[80vh] flex-col items-center justify-center gap-4 text-center p-6 bg-muted/20 rounded-xl">
-        <div className="p-4 rounded-full bg-yellow-500/10 mb-2">
-          <FileText className="h-8 w-8 text-yellow-500" />
-        </div>
-        <h2 className="text-2xl font-semibold tracking-tight">
-          Report Processing
-        </h2>
-        <p className="text-muted-foreground max-w-md">
-          The interview report is being generated or was not created. Please try
-          refreshing the page or contact support if this persists.
-        </p>
-        <div className="flex gap-2 mt-2">
-          <Button variant="outline" onClick={() => router.back()}>
-            Go Back
-          </Button>
-          <Button onClick={() => window.location.reload()}>Refresh Page</Button>
-        </div>
+      <div className="flex min-h-[80vh] flex-col items-center justify-center p-6 bg-background">
+        <Card className="w-full max-w-md border-border shadow-sm">
+          <CardContent className="flex flex-col items-center gap-6 p-8 text-center">
+            <div className="relative mb-2">
+              <div className="absolute inset-0 rounded-full blur-xl bg-primary/20 animate-pulse" />
+              <div className="relative p-4 rounded-full bg-background border border-border shadow-sm">
+                <FileText className="h-8 w-8 text-primary animate-pulse" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h2 className="font-heading text-2xl font-bold tracking-tight text-foreground">
+                Processing Report
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Our AI is currently analyzing your interview data to generate
+                comprehensive insights. This usually takes just a moment.
+              </p>
+            </div>
+            <div className="flex w-full gap-3 mt-4">
+              <Button
+                variant="outline"
+                onClick={() => router.back()}
+                className="flex-1"
+              >
+                Go Back
+              </Button>
+              <Button
+                onClick={() => window.location.reload()}
+                className="flex-1"
+              >
+                Refresh Status
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
