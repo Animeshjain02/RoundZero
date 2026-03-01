@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ExportButton } from "./_components/export-button";
 import { InterviewTypeBreakdown } from "./_components/interview-type-breakdown";
 import { OverviewStats } from "./_components/overview-stats";
 import { PerformanceHeatmap } from "./_components/performance-heatmap";
@@ -53,10 +54,7 @@ export default function AnalyticsPage() {
           <Button variant="outline" size="icon">
             <Filter className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="sm">
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
+          <ExportButton data={data} isLoading={isLoading} period={period} />
         </div>
       </div>
 
