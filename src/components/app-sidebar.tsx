@@ -98,12 +98,15 @@ export function AppSidebar() {
     <Sidebar
       collapsible="icon"
       variant="sidebar"
-      className="border-r border-border/50 overflow-hidden"
+      className="border-r border-sidebar-border/50 overflow-hidden"
     >
-      <SidebarHeader className="p-4">
+      <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link href="/" className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="flex items-center gap-3 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:justify-center"
+            >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Target className="h-4 w-4" />
               </div>
@@ -188,7 +191,7 @@ export function AppSidebar() {
 
         {/* Upgrade Card - Only show when expanded */}
         <div className="mt-auto p-3 group-data-[collapsible=icon]:hidden">
-          <div className="rounded-lg border border-border/50 bg-muted/50 p-3">
+          <div className="rounded-lg border border-sidebar-border/50 bg-sidebar-accent/50 p-3">
             <div className="flex items-center gap-2 mb-2">
               <Zap className="h-4 w-4 text-primary" />
               <span className="text-sm font-medium">Upgrade to Pro</span>
@@ -215,7 +218,7 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="p-2 border-t border-border/50">
+      <SidebarFooter className="p-2 border-t border-sidebar-border/50">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
