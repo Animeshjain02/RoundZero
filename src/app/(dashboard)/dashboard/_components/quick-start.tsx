@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowUpRight, ChevronRight, Code2, Target, Users } from "lucide-react";
+import {
+  ArrowUpRight,
+  Building2,
+  ChevronRight,
+  Code2,
+  Target,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,6 +22,14 @@ interface QuickAction {
 }
 
 const defaultActions: QuickAction[] = [
+  {
+    title: "Custom Interview",
+    description: "Tailored to a company & JD",
+    icon: Building2,
+    href: "/dashboard/interview/create",
+    gradient: "from-rose-500 to-pink-500",
+    bgGradient: "from-rose-500/10 to-pink-500/10",
+  },
   {
     title: "Behavioral",
     description: "STAR method practice",
@@ -61,7 +76,7 @@ export function QuickStart({ actions = defaultActions }: QuickStartProps) {
           </Link>
         </Button>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {actions.map((action) => (
           <Link key={action.title} href={action.href}>
             <Card

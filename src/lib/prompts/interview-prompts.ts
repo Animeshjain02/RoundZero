@@ -27,6 +27,8 @@ export interface BasePromptParams {
   resumeText: string;
   experienceLevel: ExperienceLevel;
   type: InterviewType;
+  companyName?: string;
+  jobDescription?: string;
 }
 
 export interface TechnicalPromptParams extends BasePromptParams {
@@ -39,10 +41,11 @@ const buildPersonaSection = (
   experienceLevel: ExperienceLevel,
   type: InterviewType,
   jobTitle: string,
+  companyName?: string,
 ): string =>
   `
-You are Alex, a Lead Engineer and rigorous interviewer. 
-You are conducting a ${experienceLevel.toUpperCase()} level ${type} interview for a ${jobTitle} role.
+You are Alex, a Lead Engineer and rigorous interviewer${companyName ? ` at ${companyName}` : ""}. 
+You are conducting a ${experienceLevel.toUpperCase()} level ${type} interview for a ${jobTitle} role${companyName ? ` at ${companyName}` : ""}.
 Your goal is to evaluate the candidate's depth of knowledge, problem-solving skills, and cultural fit.
 `.trim();
 
@@ -97,10 +100,23 @@ const buildInteractionRules = (): string =>
  * Build the system prompt for an interview session
  */
 export const buildSystemPrompt = (params: TechnicalPromptParams): string => {
-  const { jobTitle, resumeText, experienceLevel, type, techStack, includeDSA } =
-    params;
+  const {
+    jobTitle,
+    resumeText,
+    experienceLevel,
+    type,
+    techStack,
+    includeDSA,
+    companyName,
+    jobDescription,
+  } = params;
 
-  const persona = buildPersonaSection(experienceLevel, type, jobTitle);
+  const persona = buildPersonaSection(
+    experienceLevel,
+    type,
+    jobTitle,
+    companyName,
+  );
 
   // Truncate resume if too long
   const truncatedResume =
@@ -129,10 +145,28 @@ export const buildSystemPrompt = (params: TechnicalPromptParams): string => {
     persona,
     `### CANDIDATE CONTEXT`,
     `Resume Summary: ${truncatedResume}`,
+  ];
+
+  // Add company & JD context when available (custom interview)
+  if (companyName || jobDescription) {
+    const contextLines: string[] = [`### COMPANY & JOB CONTEXT`];
+    if (companyName) {
+      contextLines.push(`Company: ${companyName}`);
+    }
+    if (jobDescription) {
+      contextLines.push(`Job Description:\n${jobDescription.slice(0, 3000)}`);
+      contextLines.push(
+        `IMPORTANT: Tailor your questions to match the specific requirements, responsibilities, and qualifications listed in this job description. Reference specific points from the JD when appropriate.`,
+      );
+    }
+    promptParts.push(contextLines.join("\n"));
+  }
+
+  promptParts.push(
     `### INTERVIEW MODE: ${type}`,
     specificInstructions,
     buildInteractionRules(),
-  ];
+  );
 
   return promptParts.join("\n\n");
 };

@@ -1,8 +1,8 @@
 import {
+  DeleteAccountCard,
+  SessionsCard,
   UpdateAvatarCard,
   UpdateNameCard,
-  SessionsCard,
-  DeleteAccountCard,
 } from "@daveyplate/better-auth-ui";
 
 export default function SettingsPage() {

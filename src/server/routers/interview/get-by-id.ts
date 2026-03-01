@@ -49,6 +49,8 @@ export async function getInterviewById({
       techStack: interview.techStack,
       experienceLevel: interview.experienceLevel,
       includeDSA: interview.includeDSA,
+      companyName: interview.companyName,
+      jobDescription: interview.jobDescription,
       messages: interview.messages.map((message) => ({
         id: message.id,
         role: message.role as (typeof MESSAGE_ROLES)[keyof typeof MESSAGE_ROLES],

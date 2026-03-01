@@ -20,6 +20,8 @@ export const createInterviewInput = z.object({
   resumeKey: z.string().optional(),
   resumeFilename: z.string().optional(),
   resumeId: z.string().optional(),
+  companyName: z.string().optional(),
+  jobDescription: z.string().optional(),
 });
 
 export async function createInterview({
@@ -44,6 +46,8 @@ export async function createInterview({
     experienceLevel,
     resumeKey,
     resumeFilename,
+    companyName,
+    jobDescription,
   } = input;
 
   let resumeId: string | undefined;
@@ -87,6 +91,8 @@ export async function createInterview({
       techStack,
       experienceLevel,
       includeDSA,
+      companyName: companyName || undefined,
+      jobDescription: jobDescription || undefined,
       status: INTERVIEW_STATUS.SETUP,
       resumeId,
     },

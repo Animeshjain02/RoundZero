@@ -130,6 +130,8 @@ export const interviewRouter = {
             techStack: z.string().nullable(),
             experienceLevel: z.string(),
             includeDSA: z.boolean(),
+            companyName: z.string().nullable(),
+            jobDescription: z.string().nullable(),
             messages: z.array(messageSchema),
             report: reportSchema.nullable(),
           })

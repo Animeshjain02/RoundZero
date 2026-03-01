@@ -28,10 +28,10 @@ model User {
   stripeId String?
 
   // analytics fields for quick stats
-  totalInterviews   Int @default(0)
-  totalPracticeTime Int @default(0) // in seconds
-  currentStreak     Int @default(0) // consecutive days
-  longestStreak     Int @default(0)
+  totalInterviews   Int       @default(0)
+  totalPracticeTime Int       @default(0) // in seconds
+  currentStreak     Int       @default(0) // consecutive days
+  longestStreak     Int       @default(0)
   lastPracticeDate  DateTime?
 
   sessions   Session[]
@@ -134,6 +134,7 @@ model Interview {
   techStack       String?
   experienceLevel String  @default("MID")
 
+  companyName    String?
   jobTitle       String
   jobDescription String?
   resumeText     String?
@@ -185,7 +186,7 @@ model Report {
   id          String @id @default(uuid())
   interviewId String @unique
 
-  overallScore Int    // 0-100
+  overallScore Int // 0-100
   summary      String
 
   // The json should follow like this:-

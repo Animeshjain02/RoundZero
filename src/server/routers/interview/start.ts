@@ -86,6 +86,8 @@ export async function startSession({
     type: interview.type as InterviewType,
     techStack: interview.techStack ?? undefined,
     includeDSA: interview.includeDSA,
+    companyName: interview.companyName ?? undefined,
+    jobDescription: interview.jobDescription ?? undefined,
   });
 
   let openingMessage: string;
