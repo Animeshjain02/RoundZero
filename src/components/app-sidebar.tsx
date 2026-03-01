@@ -97,7 +97,7 @@ export function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      variant="sidebar"
+      variant="inset"
       className="border-r border-sidebar-border/50 overflow-hidden"
     >
       <SidebarHeader className="p-4 group-data-[collapsible=icon]:p-2">
@@ -120,7 +120,7 @@ export function AppSidebar() {
 
       <SidebarContent className="overflow-x-hidden">
         {/* New Interview Button */}
-        <div className="px-3 pb-2 group-data-[collapsible=icon]:px-2">
+        <div className="px-3 pt-4 group-data-[collapsible=icon]:px-2">
           <Button
             asChild
             size="sm"
