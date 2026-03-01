@@ -95,12 +95,12 @@ export function TrustBar() {
               <div className="relative p-8 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm hover:border-border hover:bg-card/50 transition-all duration-500 shimmer-border overflow-hidden">
                 {/* Background gradient on hover */}
                 <div
-                  className={`absolute inset-0 bg-linear-to-br ${stat.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
                 />
 
                 <div className="relative">
                   <div
-                    className={`inline-flex p-3 rounded-xl bg-linear-to-br ${stat.gradient} bg-opacity-10 mb-4`}
+                    className={`inline-flex p-3 rounded-xl bg-primary/10 mb-4`}
                   >
                     <stat.icon className="h-6 w-6 text-foreground" />
                   </div>

@@ -69,7 +69,7 @@ export function Hero() {
           >
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.05] mb-6">
               <span className="block text-foreground">Ace every interview</span>
-              <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
+              <span className="block mt-2 text-primary">
                 with AI that challenges you
               </span>
             </h1>
@@ -103,7 +103,7 @@ export function Hero() {
                 Start free practice
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </span>
-              <div className="absolute inset-0 bg-linear-to-r from-primary via-violet-500 to-primary bg-size-[200%_auto] animate-gradient opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
             </Button>
             <Button
               size="lg"
@@ -112,7 +112,7 @@ export function Hero() {
               asChild
             >
               <Link href="#demo" className="flex items-center">
-                <div className="mr-3 h-10 w-10 rounded-full bg-linear-to-br from-primary/20 to-violet-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="mr-3 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Play className="h-4 w-4 fill-primary text-primary ml-0.5" />
                 </div>
                 Watch demo
@@ -131,11 +131,11 @@ export function Hero() {
             <div className="flex items-center gap-4">
               <div className="flex -space-x-3">
                 {[
-                  { initials: "JD", gradient: "from-blue-500 to-cyan-400" },
-                  { initials: "ML", gradient: "from-emerald-500 to-teal-400" },
-                  { initials: "PM", gradient: "from-orange-500 to-amber-400" },
-                  { initials: "FE", gradient: "from-pink-500 to-rose-400" },
-                  { initials: "DS", gradient: "from-violet-500 to-purple-400" },
+                  { initials: "JD", bg: "bg-blue-500" },
+                  { initials: "ML", bg: "bg-emerald-500" },
+                  { initials: "PM", bg: "bg-orange-500" },
+                  { initials: "FE", bg: "bg-pink-500" },
+                  { initials: "DS", bg: "bg-violet-500" },
                 ].map((user, i) => (
                   <motion.div
                     key={user.initials}
@@ -145,7 +145,7 @@ export function Hero() {
                   >
                     <Avatar className="h-11 w-11 border-[3px] border-background ring-2 ring-primary/10 hover:ring-primary/30 transition-all hover:scale-110 hover:z-10">
                       <AvatarFallback
-                        className={`text-[11px] font-bold bg-linear-to-br ${user.gradient} text-white`}
+                        className={`text-[11px] font-bold ${user.bg} text-white`}
                       >
                         {user.initials}
                       </AvatarFallback>
@@ -184,7 +184,7 @@ export function Hero() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 + i * 0.1 }}
                 >
-                  <p className="text-2xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  <p className="text-2xl font-bold text-foreground">
                     {stat.value}
                   </p>
                   <p className="text-xs text-muted-foreground">{stat.label}</p>
@@ -201,11 +201,11 @@ export function Hero() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Glow effects */}
-          <div className="absolute -inset-4 bg-linear-to-r from-primary/30 via-violet-500/20 to-primary/30 blur-3xl opacity-30 animate-glow" />
+          {/* Outer frame removed gradient glow */}
+          <div className="absolute -inset-4 bg-primary/10 blur-2xl opacity-30 animate-pulse" />
 
           {/* Main container */}
-          <div className="relative rounded-2xl lg:rounded-3xl p-px bg-linear-to-b from-border/80 via-border/40 to-transparent overflow-hidden">
+          <div className="relative rounded-2xl lg:rounded-3xl p-px bg-border overflow-hidden">
             <div className="rounded-2xl lg:rounded-3xl bg-background/80 backdrop-blur-xl overflow-hidden shadow-2xl">
               {/* Browser chrome */}
               <div className="flex items-center gap-3 px-5 py-4 border-b border-border/50 bg-muted/20">
@@ -235,9 +235,9 @@ export function Hero() {
                 />
 
                 {/* Gradient overlays */}
-                <div className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-t from-background via-background/50 to-transparent" />
-                <div className="absolute inset-y-0 left-0 w-24 bg-linear-to-r from-background/50 to-transparent" />
-                <div className="absolute inset-y-0 right-0 w-24 bg-linear-to-l from-background/50 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 h-48 bg-background/80 backdrop-blur-[2px]" />
+                <div className="absolute inset-y-0 left-0 w-24 bg-background/50 backdrop-blur-[1px]" />
+                <div className="absolute inset-y-0 right-0 w-24 bg-background/50 backdrop-blur-[1px]" />
               </div>
 
               {/* Floating cards */}
@@ -283,7 +283,7 @@ export function Hero() {
                   ease: [0.22, 1, 0.36, 1],
                 }}
               >
-                <div className="rounded-2xl bg-linear-to-br from-primary via-primary to-violet-600 p-5 shadow-2xl shadow-primary/30 text-primary-foreground">
+                <div className="rounded-2xl bg-primary p-5 shadow-2xl shadow-primary/20 text-primary-foreground">
                   <div className="flex items-center gap-4">
                     <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
                       <CheckCircle2 className="h-6 w-6" />

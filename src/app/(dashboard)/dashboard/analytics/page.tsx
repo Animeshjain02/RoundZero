@@ -1,6 +1,7 @@
 "use client";
 
-import { Calendar, Download, Filter } from "lucide-react";
+import { Calendar, Filter } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,19 +12,77 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ExportButton } from "./_components/export-button";
-import { InterviewTypeBreakdown } from "./_components/interview-type-breakdown";
 import { OverviewStats } from "./_components/overview-stats";
-import { PerformanceHeatmap } from "./_components/performance-heatmap";
 import { RecentScores } from "./_components/recent-scores";
-import { ScoreTrendChart } from "./_components/score-trend-chart";
-import { SkillRadarChart } from "./_components/skill-radar-chart";
 import { StrengthsWeaknesses } from "./_components/strengths-weaknesses";
-import { TimeSpentChart } from "./_components/time-spent-chart";
 import { type Period, useAnalytics } from "./_hooks/useAnalytics";
+
+const ScoreTrendChart = dynamic(
+  () =>
+    import("./_components/score-trend-chart").then(
+      (mod) => mod.ScoreTrendChart,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[400px] animate-pulse bg-muted rounded-lg" />
+    ),
+  },
+);
+
+const InterviewTypeBreakdown = dynamic(
+  () =>
+    import("./_components/interview-type-breakdown").then(
+      (mod) => mod.InterviewTypeBreakdown,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[400px] animate-pulse bg-muted rounded-lg" />
+    ),
+  },
+);
+
+const SkillRadarChart = dynamic(
+  () =>
+    import("./_components/skill-radar-chart").then(
+      (mod) => mod.SkillRadarChart,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[400px] animate-pulse bg-muted rounded-lg" />
+    ),
+  },
+);
+
+const TimeSpentChart = dynamic(
+  () =>
+    import("./_components/time-spent-chart").then((mod) => mod.TimeSpentChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[400px] animate-pulse bg-muted rounded-lg" />
+    ),
+  },
+);
+
+const PerformanceHeatmap = dynamic(
+  () =>
+    import("./_components/performance-heatmap").then(
+      (mod) => mod.PerformanceHeatmap,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[300px] animate-pulse bg-muted rounded-lg" />
+    ),
+  },
+);
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState<Period>("30d");
-  const { data, isLoading, error } = useAnalytics(period);
+  const { data, isLoading } = useAnalytics(period);
 
   return (
     <div className="flex flex-col gap-6 p-6">

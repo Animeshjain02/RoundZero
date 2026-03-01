@@ -2,7 +2,6 @@
 
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Download, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { AnalyticsData, Period } from "../_hooks/useAnalytics";
 import { AnalyticsReportPDF } from "./analytics-pdf-report";
@@ -29,11 +28,7 @@ const getPeriodLabel = (period: Period) => {
 };
 
 export function ExportButton({ data, isLoading, period }: ExportButtonProps) {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const isClient = typeof window !== "undefined";
 
   if (!isClient || isLoading || !data) {
     return (

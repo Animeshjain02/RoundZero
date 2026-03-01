@@ -87,9 +87,7 @@ export function FeaturesBento() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             Everything you need to
-            <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
-              nail the interview
-            </span>
+            <span className="block mt-2 text-primary">nail the interview</span>
           </h2>
           <p className="text-lg lg:text-xl text-muted-foreground">
             A complete interview preparation ecosystem powered by cutting-edge
@@ -119,20 +117,13 @@ export function FeaturesBento() {
                 <div className="relative h-full rounded-3xl border border-border/50 bg-card/30 backdrop-blur-sm p-8 lg:p-10 hover:border-border hover:bg-card/50 transition-all duration-500 overflow-hidden shimmer-border">
                   {/* Background gradient on hover */}
                   <div
-                    className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`}
+                    className={`absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
                   />
 
                   <div className="relative h-full flex flex-col">
                     {/* Icon */}
                     <div
-                      className={`inline-flex p-4 rounded-2xl bg-linear-to-br from-${feature.gradient
-                        .split(" ")[0]
-                        .replace("from-", "")}/10 to-${feature.gradient
-                        .split(" ")[1]
-                        .replace(
-                          "to-",
-                          "",
-                        )}/10 mb-6 group-hover:scale-110 transition-transform duration-300 w-fit`}
+                      className={`inline-flex p-4 rounded-2xl bg-primary/10 mb-6 group-hover:scale-110 transition-transform duration-300 w-fit`}
                     >
                       <feature.icon className="h-7 w-7 text-foreground" />
                     </div>
@@ -146,7 +137,7 @@ export function FeaturesBento() {
 
                     {/* Decorative glow */}
                     <div
-                      className={`absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-500`}
+                      className={`absolute -bottom-12 -right-12 w-48 h-48 rounded-full bg-primary opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-500`}
                     />
                   </div>
                 </div>

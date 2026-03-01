@@ -80,9 +80,7 @@ export function Pricing() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             Invest in your
-            <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
-              career
-            </span>
+            <span className="block mt-2 text-primary">career</span>
           </h2>
           <p className="text-lg lg:text-xl text-muted-foreground">
             Start free, upgrade when you're ready. Cancel anytime, no questions
@@ -103,7 +101,7 @@ export function Pricing() {
               {/* Popular badge */}
               {plan.popular && (
                 <div className="absolute -top-4 left-0 right-0 flex justify-center z-10">
-                  <Badge className="bg-linear-to-r from-primary to-violet-600 text-primary-foreground shadow-lg shadow-primary/30 px-4 py-1">
+                  <Badge className="bg-primary text-primary-foreground shadow-lg shadow-primary/30 px-4 py-1">
                     <Zap className="h-3 w-3 mr-1" />
                     Most popular
                   </Badge>
@@ -113,13 +111,13 @@ export function Pricing() {
               <div
                 className={`relative h-full rounded-3xl border p-8 lg:p-10 transition-all duration-500 overflow-hidden ${
                   plan.popular
-                    ? "border-primary/50 bg-linear-to-b from-primary/5 to-transparent shadow-2xl shadow-primary/10"
+                    ? "border-primary bg-primary/5 shadow-2xl shadow-primary/10 border-2"
                     : "border-border/50 bg-card/30 backdrop-blur-sm hover:border-border hover:bg-card/50 shimmer-border"
                 }`}
               >
                 {/* Background glow for popular */}
                 {plan.popular && (
-                  <div className="absolute inset-0 bg-linear-to-b from-primary/10 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-primary/5" />
                 )}
 
                 <div className="relative">
@@ -149,7 +147,7 @@ export function Pricing() {
                   <Button
                     className={`w-full h-14 text-base font-semibold mb-8 group ${
                       plan.popular
-                        ? "bg-linear-to-r from-primary to-violet-600 hover:opacity-90 shadow-xl shadow-primary/30"
+                        ? "bg-primary hover:opacity-90 shadow-xl shadow-primary/30"
                         : ""
                     }`}
                     variant={plan.popular ? "default" : "outline"}

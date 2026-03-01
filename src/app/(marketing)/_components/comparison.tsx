@@ -95,9 +95,7 @@ export function Comparison() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             The smarter way to
-            <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
-              prepare
-            </span>
+            <span className="block mt-2 text-primary">prepare</span>
           </h2>
           <p className="text-lg lg:text-xl text-muted-foreground">
             See how RoundZero compares to traditional preparation methods.
@@ -124,7 +122,7 @@ export function Comparison() {
                   <th className="py-6 px-6 text-center text-sm font-semibold text-muted-foreground uppercase tracking-wider w-[150px]">
                     LeetCode
                   </th>
-                  <th className="py-6 px-6 text-center w-[180px] bg-linear-to-b from-primary/10 to-transparent">
+                  <th className="py-6 px-6 text-center w-[180px] bg-primary/10">
                     <Badge className="bg-primary text-primary-foreground shadow-lg shadow-primary/20">
                       RoundZero
                     </Badge>
@@ -148,7 +146,7 @@ export function Comparison() {
                     <td className="py-5 px-6 text-center">
                       <StatusIcon status={row.leetcode} />
                     </td>
-                    <td className="py-5 px-6 text-center bg-linear-to-b from-primary/5 to-transparent">
+                    <td className="py-5 px-6 text-center bg-primary/5">
                       <StatusIcon status={row.roundzero} />
                     </td>
                   </motion.tr>

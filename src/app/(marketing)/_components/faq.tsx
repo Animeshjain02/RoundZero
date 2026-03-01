@@ -76,9 +76,7 @@ export function FAQ() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             Questions?
-            <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
-              We've got answers
-            </span>
+            <span className="block mt-2 text-primary">We've got answers</span>
           </h2>
           <p className="text-lg lg:text-xl text-muted-foreground">
             Everything you need to know about RoundZero and interview

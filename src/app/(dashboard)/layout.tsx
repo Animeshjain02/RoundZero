@@ -6,6 +6,11 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth";
 
+export const metadata = {
+  title: "Dashboard | Interview AI",
+  description: "Manage your interviews and track your progress",
+};
+
 export default async function DashboardLayout({
   children,
 }: {

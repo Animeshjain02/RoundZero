@@ -14,7 +14,7 @@ const testimonials = [
     quote:
       "RoundZero's behavioral prep was a game-changer. The AI caught weaknesses in my STAR stories that I never noticed. Landed my dream role after just 2 weeks of practice!",
     rating: 5,
-    gradient: "from-blue-500 to-cyan-500",
+    bg: "bg-blue-500",
   },
   {
     name: "Marcus Chen",
@@ -24,7 +24,7 @@ const testimonials = [
     quote:
       "The voice interview felt incredibly real. The follow-up questions were sharp and pushed me to think deeper. This is the closest thing to an actual interview I've experienced.",
     rating: 5,
-    gradient: "from-violet-500 to-purple-500",
+    bg: "bg-violet-500",
   },
   {
     name: "Sarah Kim",
@@ -34,7 +34,7 @@ const testimonials = [
     quote:
       "Finally, honest feedback! It told me I said 'um' 47 times and my answers were too long. Fixed those issues and crushed my interviews. Worth every penny.",
     rating: 5,
-    gradient: "from-orange-500 to-red-500",
+    bg: "bg-orange-500",
   },
 ];
 
@@ -62,9 +62,7 @@ export function Testimonials() {
             </Badge>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight">
               Loved by candidates at{" "}
-              <span className="ml-1 mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
-                top companies
-              </span>
+              <span className="ml-1 mt-2 text-primary">top companies</span>
             </h2>
           </div>
           <div className="flex items-center gap-3 p-4 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-sm">
@@ -118,7 +116,7 @@ export function Testimonials() {
                 <div className="flex items-center gap-4 pt-6 border-t border-border/50">
                   <Avatar className="h-14 w-14 border-2 border-background ring-2 ring-primary/10">
                     <AvatarFallback
-                      className={`bg-linear-to-br ${item.gradient} text-white font-bold text-lg`}
+                      className={`${item.bg} text-white font-bold text-lg`}
                     >
                       {item.name
                         .split(" ")

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ChevronLeft, FileText, Share2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -14,8 +15,20 @@ import { InterviewSummary } from "./_components/interview-summary";
 import { InterviewTimeline } from "./_components/interview-timeline";
 import { OverallScoreCard } from "./_components/overall-score-card";
 import { PDFDownloadButton } from "./_components/pdf-download-button";
-import { ReportRadarChart } from "./_components/report-radar-chart";
 import { TranscriptSection } from "./_components/transcript-section";
+
+const ReportRadarChart = dynamic(
+  () =>
+    import("./_components/report-radar-chart").then(
+      (mod) => mod.ReportRadarChart,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[400px] animate-pulse bg-muted rounded-lg" />
+    ),
+  },
+);
 
 export default function InterviewReportPage() {
   const params = useParams<{ interviewId: string }>();

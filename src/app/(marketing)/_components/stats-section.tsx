@@ -101,8 +101,7 @@ export function StatsSection() {
       {/* Divider */}
       <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent" />
+      {/* Background fill removed for consistency */}
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <motion.div
@@ -114,7 +113,7 @@ export function StatsSection() {
         >
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             Trusted by thousands of
-            <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
+            <span className="block mt-2 text-primary">
               interview candidates
             </span>
           </h2>
@@ -137,27 +136,20 @@ export function StatsSection() {
               <div className="relative h-full rounded-3xl border border-border/50 bg-card/30 backdrop-blur-sm p-8 hover:border-border hover:bg-card/50 transition-all duration-500 overflow-hidden shimmer-border">
                 {/* Background gradient on hover */}
                 <div
-                  className={`absolute inset-0 bg-linear-to-br ${stat.gradient} opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
                 />
 
                 <div className="relative">
                   {/* Icon */}
                   <div
-                    className={`inline-flex p-4 rounded-2xl bg-linear-to-br from-${stat.gradient
-                      .split(" ")[0]
-                      .replace("from-", "")}/10 to-${stat.gradient
-                      .split(" ")[1]
-                      .replace(
-                        "to-",
-                        "",
-                      )}/10 mb-6 group-hover:scale-110 transition-transform duration-300`}
+                    className={`inline-flex p-4 rounded-2xl bg-primary/10 mb-6 group-hover:scale-110 transition-transform duration-300`}
                   >
                     <stat.icon className="h-7 w-7 text-foreground" />
                   </div>
 
                   {/* Counter */}
                   <div className="mb-2">
-                    <p className="text-5xl lg:text-6xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                    <p className="text-5xl lg:text-6xl font-bold text-foreground">
                       <CounterAnimation
                         value={stat.value}
                         suffix={stat.suffix}
@@ -173,7 +165,7 @@ export function StatsSection() {
 
                   {/* Decorative glow */}
                   <div
-                    className={`absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-linear-to-br ${stat.gradient} opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-500`}
+                    className={`absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-primary opacity-0 group-hover:opacity-10 blur-3xl transition-opacity duration-500`}
                   />
                 </div>
               </div>

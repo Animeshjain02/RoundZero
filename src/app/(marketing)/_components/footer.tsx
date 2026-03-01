@@ -53,8 +53,7 @@ export function Footer() {
         {/* Divider */}
         <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-border to-transparent" />
 
-        {/* Background glow */}
-        <div className="absolute inset-0 bg-linear-to-b from-primary/5 via-transparent to-transparent" />
+        {/* Background fill removed for consistency */}
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
           <motion.div
@@ -66,9 +65,7 @@ export function Footer() {
           >
             <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
               Ready to ace your
-              <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
-                next interview?
-              </span>
+              <span className="block mt-2 text-primary">next interview?</span>
             </h2>
             <p className="text-lg lg:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
               Join thousands of candidates who've transformed their interview
@@ -104,7 +101,7 @@ export function Footer() {
                 href="/"
                 className="flex items-center gap-2.5 font-bold text-xl mb-6"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-primary via-primary to-violet-600 text-primary-foreground shadow-lg shadow-primary/20">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
                   <Target className="h-5 w-5" />
                 </div>
                 <span>RoundZero</span>

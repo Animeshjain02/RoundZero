@@ -75,9 +75,7 @@ export function HowItWorks() {
           </Badge>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight mb-6">
             Four steps to interview
-            <span className="block mt-2 bg-linear-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent bg-size-[200%_auto] animate-gradient">
-              confidence
-            </span>
+            <span className="block mt-2 text-primary">confidence</span>
           </h2>
           <p className="text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto">
             A complete interview preparation system that combines AI-powered
@@ -104,22 +102,15 @@ export function HowItWorks() {
 
                 {/* Gradient background on hover */}
                 <div
-                  className={`absolute inset-0 bg-linear-to-br ${feature.bgGradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+                  className={`absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
                 />
 
                 <div className="relative">
                   {/* Icon */}
                   <div
-                    className={`inline-flex p-4 rounded-2xl bg-linear-to-br ${feature.bgGradient} mb-6 group-hover:scale-110 transition-transform duration-300`}
+                    className={`inline-flex p-4 rounded-2xl bg-primary/10 mb-6 group-hover:scale-110 transition-transform duration-300`}
                   >
-                    <feature.icon
-                      className={`h-7 w-7 bg-linear-to-br ${feature.gradient} *:fill-current`}
-                      style={{
-                        color: "transparent",
-                        backgroundClip: "text",
-                        WebkitBackgroundClip: "text",
-                      }}
-                    />
+                    <feature.icon className={`h-7 w-7 text-primary`} />
                   </div>
 
                   <h3 className="text-xl lg:text-2xl font-semibold mb-4">

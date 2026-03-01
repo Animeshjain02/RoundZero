@@ -2,7 +2,6 @@
 
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import { Download, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { CategoryScores } from "@/server/routers/interview/schemas";
 import { InterviewReportPDF } from "./pdf-report";
@@ -26,11 +25,7 @@ export function PDFDownloadButton({
   interview,
   report,
 }: PDFDownloadButtonProps) {
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const isClient = typeof window !== "undefined";
 
   if (!isClient) {
     return (

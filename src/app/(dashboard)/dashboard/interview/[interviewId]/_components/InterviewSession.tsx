@@ -23,7 +23,6 @@ export function InterviewSession() {
     endInterview,
     isLoading,
     isEnding,
-    transcript,
     interimTranscript,
   } = useInterview();
 
@@ -83,11 +82,6 @@ export function InterviewSession() {
   }
 
   const isTechnical = interview.type === "TECHNICAL";
-
-  // Get last assistant message for the "Current Question" display
-  const lastAssistantMessage =
-    messages.filter((m) => m.role === "assistant").slice(-1)[0]?.content ||
-    "Waiting for interviewer...";
 
   const formatTime = (sec: number) => {
     const m = Math.floor(sec / 60);
