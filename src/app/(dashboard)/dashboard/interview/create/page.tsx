@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { ResumeUploader } from "@/components/file-uploader/Uploader";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +43,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { orpcClient } from "@/lib/orpc-client";
 import {
+  FIELD_LIMITS,
   type CreateInterviewSchemaType,
   createInterviewSchema,
 } from "@/lib/zodSchemas/createInterview";
@@ -186,22 +187,30 @@ export default function CreateInterviewPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   }, []);
 
-  const watchType = form.watch("type");
-  const watchJobTitle = form.watch("jobTitle");
-  const resumeText = form.watch("resumeText");
+  const [watchType, watchJobTitle, resumeText] = useWatch({
+    control: form.control,
+    name: ["type", "jobTitle", "resumeText"],
+  });
 
-  // Per-step validation: determines if user can proceed past the current step
+  // Per-step validation: determines if user can proceed past the current step.
   const canProceedFromStep = useCallback(
     (step: number): boolean => {
       switch (step) {
         case 1:
-          return true; // type has a default value
-        case 2:
-          return (watchJobTitle ?? "").trim().length >= 3;
+          return true; // type always has a default value
+        case 2: {
+          const titleLen = (watchJobTitle ?? "").trim().length;
+          return (
+            titleLen >= FIELD_LIMITS.jobTitle.min &&
+            titleLen <= FIELD_LIMITS.jobTitle.max
+          );
+        }
         case 3:
           return true; // company & JD are optional
         case 4:
-          return (resumeText ?? "").trim().length >= 10;
+          return (
+            (resumeText ?? "").trim().length >= FIELD_LIMITS.resumeText.min
+          );
         default:
           return true;
       }
@@ -546,7 +555,7 @@ export default function CreateInterviewPage() {
                   variant="outline"
                   type="button"
                   onClick={() => router.back()}
-                  className="gap-2"
+                  className="gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Cancel
@@ -556,7 +565,7 @@ export default function CreateInterviewPage() {
                   variant="outline"
                   type="button"
                   onClick={goBack}
-                  className="gap-2"
+                  className="gap-2 cursor-pointer"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back
@@ -567,7 +576,7 @@ export default function CreateInterviewPage() {
                 <Button
                   type="button"
                   size="lg"
-                  className="gap-2"
+                  className="gap-2 cursor-pointer"
                   onClick={goNext}
                   disabled={!canProceedFromStep(currentStep)}
                 >
@@ -578,7 +587,7 @@ export default function CreateInterviewPage() {
                 <Button
                   type="submit"
                   size="lg"
-                  className="gap-2 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
+                  className="gap-2 cursor-pointer shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
                   disabled={isCreating || isParsing}
                 >
                   {isCreating ? (

@@ -1,7 +1,9 @@
 "use client";
 
 import { Building2, FileText } from "lucide-react";
+import { useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
+import { z } from "zod";
 import {
   Card,
   CardContent,
@@ -19,13 +21,28 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  FIELD_LIMITS,
+  createInterviewSchema,
+} from "@/lib/zodSchemas/createInterview";
+
+// RHF uses the Zod *input* type (pre-transform/defaults), not the output type.
+type CreateInterviewInput = z.input<typeof createInterviewSchema>;
 
 interface StepCompanyContextProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: UseFormReturn<any>;
+  form: UseFormReturn<CreateInterviewInput>;
 }
 
 export function StepCompanyContext({ form }: StepCompanyContextProps) {
+  // Subscribe only to the values needed for char counters — avoids broad re-renders
+  const [jobDescValue, companyNameValue] = useWatch({
+    control: form.control,
+    name: ["jobDescription", "companyName"],
+  });
+
+  const jobDescLen = (jobDescValue ?? "").length;
+  const companyNameLen = (companyNameValue ?? "").length;
+
   return (
     <Card className="border-border/50 shadow-sm">
       <CardHeader>
@@ -34,7 +51,9 @@ export function StepCompanyContext({ form }: StepCompanyContextProps) {
             <Building2 className="h-4 w-4 text-rose-500" />
           </div>
           <div>
-            <CardTitle className="text-lg">Company & Job Description</CardTitle>
+            <CardTitle className="text-lg">
+              Company &amp; Job Description
+            </CardTitle>
             <CardDescription>
               Paste the job description for a highly tailored interview
             </CardDescription>
@@ -47,11 +66,23 @@ export function StepCompanyContext({ form }: StepCompanyContextProps) {
           name="companyName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Company Name</FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel>Company Name</FormLabel>
+                <span
+                  className={`text-xs tabular-nums ${
+                    companyNameLen > FIELD_LIMITS.companyName.max
+                      ? "text-destructive"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {companyNameLen}/{FIELD_LIMITS.companyName.max}
+                </span>
+              </div>
               <FormControl>
                 <Input
                   placeholder="e.g. Google, Stripe, Vercel"
                   className="h-11"
+                  maxLength={FIELD_LIMITS.companyName.max}
                   {...field}
                 />
               </FormControl>
@@ -69,14 +100,27 @@ export function StepCompanyContext({ form }: StepCompanyContextProps) {
           name="jobDescription"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Job Description
-              </FormLabel>
+              <div className="flex items-center justify-between">
+                <FormLabel className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Job Description
+                </FormLabel>
+                <span
+                  className={`text-xs tabular-nums ${
+                    jobDescLen > FIELD_LIMITS.jobDescription.max
+                      ? "text-destructive"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {jobDescLen.toLocaleString()}/
+                  {FIELD_LIMITS.jobDescription.max.toLocaleString()}
+                </span>
+              </div>
               <FormControl>
                 <Textarea
-                  placeholder="Paste the full job description here...&#10;&#10;Example:&#10;We are looking for a Senior Software Engineer to join our Platform team. You will be responsible for..."
+                  placeholder={`Paste the full job description here...\n\nExample:\nWe are looking for a Senior Software Engineer to join our Platform team. You will be responsible for...`}
                   className="min-h-[200px] max-h-[400px] overflow-y-auto resize-y"
+                  maxLength={FIELD_LIMITS.jobDescription.max}
                   {...field}
                 />
               </FormControl>
