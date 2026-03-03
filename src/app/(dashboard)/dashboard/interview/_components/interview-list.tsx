@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { CopyPlus, Loader2, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -27,7 +27,6 @@ export function InterviewList({ initialData }: InterviewListProps) {
   const [statusFilter, setStatusFilter] = useState<InterviewStatus | "ALL">(
     "ALL",
   );
-  const queryClient = useQueryClient();
 
   // Memoize options so they only change when relevant deps change
   const infiniteOptions = useMemo(

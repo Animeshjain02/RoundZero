@@ -1,7 +1,7 @@
 "use client";
 
 import { Building2, FileText } from "lucide-react";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 import {
   Card,
   CardContent,

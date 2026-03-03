@@ -1,6 +1,6 @@
 import { ORPCError } from "@orpc/client";
 import { z } from "zod";
-import { type AIMessage, generateReport } from "@/lib/gemini";
+import { generateReport } from "@/lib/gemini";
 import db from "@/lib/prisma";
 import { buildReportPrompt } from "@/lib/prompts/interview-prompts";
 

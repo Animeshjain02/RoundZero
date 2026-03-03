@@ -2,7 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart2, Calendar, Clock, Trophy } from "lucide-react";
+import { ArrowRight, BarChart2, Calendar, Clock } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

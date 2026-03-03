@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from "uuid";
 import { formatBytes, useFileUpload } from "@/hooks/use-file-upload";
 import { Button } from "../ui/button";
 

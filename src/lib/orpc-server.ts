@@ -1,9 +1,9 @@
 import "server-only";
 
-import { createRouterClient } from "@orpc/server";
 import type { RouterClient } from "@orpc/server";
-import { appRouter } from "@/server/routers/app";
+import { createRouterClient } from "@orpc/server";
 import { os_context } from "@/server/orpc";
+import { appRouter } from "@/server/routers/app";
 
 declare global {
   var $client: RouterClient<typeof appRouter> | undefined;
