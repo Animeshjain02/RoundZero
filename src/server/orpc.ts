@@ -1,5 +1,4 @@
 import { ORPCError, os } from "@orpc/server";
-import { headers } from "next/headers";
 import { tryCatch } from "@/hooks/try-catch";
 import { auth } from "@/lib/auth";
 
@@ -8,9 +7,10 @@ export type Context = {
   session?: typeof auth.$Infer.Session.session;
 };
 
-export const os_context = async (): Promise<Context> => {
-  const h = await headers();
-  const cookie = h.get("cookie") ?? "";
+export const os_context = async (opts: {
+  headers: Headers;
+}): Promise<Context> => {
+  const cookie = opts.headers.get("cookie") ?? "";
 
   const { data: session, error } = await tryCatch(
     auth.api.getSession({ headers: { cookie } }),

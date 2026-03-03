@@ -8,7 +8,12 @@ import { env } from "@/config/env";
 import type { AppRouter } from "@/server/routers/app";
 
 const link = new RPCLink({
-  url: `${env.NEXT_PUBLIC_APP_URL}/api/orpc`,
+  url: () => {
+    if (typeof window === "undefined") {
+      throw new Error("RPCLink is not allowed on the server side.");
+    }
+    return `${env.NEXT_PUBLIC_APP_URL}/api/orpc`;
+  },
   fetch(url, options) {
     return fetch(url, {
       ...options,

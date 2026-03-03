@@ -2,8 +2,9 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { headers } from "next/headers";
 import { os_context } from "@/server/orpc";
-import { listInterviews } from "@/server/routers/interview/list";
+import { serverClient } from "@/lib/orpc-server";
 import { InterviewList } from "./_components/interview-list";
 
 export const metadata = {
@@ -12,19 +13,16 @@ export const metadata = {
 };
 
 export default async function InterviewPage() {
-  const context = await os_context();
+  const context = await os_context({ headers: await headers() });
 
   if (!context.user) {
     redirect("/sign-in?error=session");
   }
 
-  // Fetch initial data on server
-  const initialData = await listInterviews({
-    context,
-    input: {
-      limit: 12,
-      offset: 0,
-    },
+  // Fetch initial data on server using the dedicated server client
+  const initialData = await serverClient.interview.list({
+    limit: 12,
+    offset: 0,
   });
 
   return (
