@@ -41,3 +41,20 @@ export const protectedProcedure = t.use(async ({ context, next }) => {
     },
   });
 });
+
+export const adminProcedure = protectedProcedure.use(
+  async ({ context, next }) => {
+    if (context.user?.role !== "admin") {
+      throw new ORPCError("FORBIDDEN", {
+        message: "Requires admin privileges",
+      });
+    }
+
+    return next({
+      context: {
+        user: context.user,
+        session: context.session,
+      },
+    });
+  },
+);

@@ -3,13 +3,9 @@ import db from "@/lib/prisma";
 import type { Context } from "@/server/orpc";
 import { z } from "zod";
 
-export const createProblemInput = z.object({
-  title: z.string(),
-  description: z.string(),
-  functionalReqs: z.array(z.string()),
-  nonFunctionalReqs: z.array(z.string()),
-  complexity: z.string(),
-});
+import { systemDesignProblemSchema } from "@/lib/validations/practice";
+
+export const createProblemInput = systemDesignProblemSchema;
 
 export async function createProblem({
   input,

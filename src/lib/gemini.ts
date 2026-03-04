@@ -14,7 +14,7 @@ const google = createGoogleGenerativeAI({
 });
 
 // Model configuration
-const MODEL_ID = "gemini-2.5-flash-lite-preview-09-2025";
+const MODEL_ID = "gemini-2.5-flash";
 const model = google(MODEL_ID);
 
 // Temperature settings for different use cases
@@ -91,6 +91,31 @@ export const generateReport = async (
     system: systemPrompt,
     messages,
     schema: reportSchema,
+    temperature,
+  });
+
+  return object;
+};
+
+import {
+  systemDesignProblemSchema,
+  type GeneratedSystemDesignProblem,
+} from "./validations/practice";
+
+// Generate a structured system design problem based on a topic
+export const generateSystemDesignProblem = async (
+  topic: string,
+  temperature: number = TEMPERATURE.BALANCED,
+): Promise<GeneratedSystemDesignProblem> => {
+  const systemPrompt = `You are a Staff Engineer at FAANG crafting system design interview questions. 
+  The user will provide a topic. Generate a highly realistic, challenging system design problem spec.
+  Include specific, realistic numbers for scale (e.g., 500M DAU, 10k read QPS).`;
+
+  const { object } = await generateObject({
+    model,
+    system: systemPrompt,
+    prompt: `Topic: ${topic}`,
+    schema: systemDesignProblemSchema,
     temperature,
   });
 

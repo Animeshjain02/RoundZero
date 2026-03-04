@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { admin } from "better-auth/plugins";
 import { env } from "@/config/env";
 import prisma from "./prisma";
 
@@ -24,7 +25,6 @@ export const auth = betterAuth({
     },
   },
 
-  // Enable account linking for users with same emailders
   accountLinking: {
     enabled: true,
     trustedProviders: ["google", "github"],
@@ -41,5 +41,50 @@ export const auth = betterAuth({
 
   trustedOrigins: [env.BETTER_AUTH_URL],
 
-  plugins: [nextCookies()],
+  plugins: [nextCookies(), admin()],
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+      },
+      banned: {
+        type: "boolean",
+      },
+      banReason: {
+        type: "string",
+      },
+      banExpires: {
+        type: "number",
+      },
+    },
+  },
 });
+
+export type Auth = typeof auth;
+export type UserRole = "user" | "admin";
+
+export interface Session {
+  user: {
+    id: string;
+    email: string;
+    name: string | null;
+    image: string | null;
+    emailVerified: boolean;
+    role: UserRole;
+    banned: boolean | null;
+    banReason: string | null;
+    banExpires: number | null;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  session: {
+    id: string;
+    userId: string;
+    expiresAt: Date;
+    token: string;
+    ipAddress: string | null;
+    userAgent: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}

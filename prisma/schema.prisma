@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
@@ -15,39 +9,38 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  name          String?
-  email         String
-  emailVerified Boolean  @default(false)
-  image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  credits  Int     @default(3)
-  tier     String  @default("FREE")
-  stripeId String?
-
-  // analytics fields for quick stats
-  totalInterviews   Int       @default(0)
-  totalPracticeTime Int       @default(0) // in seconds
-  currentStreak     Int       @default(0) // consecutive days
-  longestStreak     Int       @default(0)
-  lastPracticeDate  DateTime?
-
-  sessions             Session[]
+  id                   String                @id @default(uuid())
+  name                 String?
+  email                String                @unique
+  emailVerified        Boolean               @default(false)
+  image                String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  role                 Role?                 @default(user)
+  banned               Boolean?
+  banReason            String?
+  banExpires           Int?
+  credits              Int                   @default(3)
+  tier                 String                @default("FREE")
+  stripeId             String?
+  totalInterviews      Int                   @default(0)
+  totalPracticeTime    Int                   @default(0)
+  currentStreak        Int                   @default(0)
+  longestStreak        Int                   @default(0)
+  lastPracticeDate     DateTime?
   accounts             Account[]
-  resumes              Resume[]
   interviews           Interview[]
+  resumes              Resume[]
+  sessions             Session[]
   systemDesignAttempts SystemDesignAttempt[]
 
-  @@unique([email])
   @@map("user")
 }
 
 model Session {
   id        String   @id @default(uuid())
   userId    String
-  token     String
+  token     String   @unique
   expiresAt DateTime
   ipAddress String?
   userAgent String?
@@ -55,7 +48,6 @@ model Session {
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@index([userId])
   @@map("session")
 }
@@ -73,9 +65,8 @@ model Account {
   password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+  idToken               String?
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  idToken String?
 
   @@index([userId])
   @@map("account")
@@ -94,21 +85,110 @@ model Verification {
 }
 
 model Resume {
-  id      String  @id @default(uuid())
-  userId  String
-  title   String
-  content String
-  fileUrl String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id         String      @id @default(uuid())
+  userId     String
+  title      String
+  content    String
+  fileUrl    String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
   interviews Interview[]
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("resume")
+}
+
+model Interview {
+  id              String                 @id @default(uuid())
+  userId          String
+  resumeId        String?
+  status          InterviewStatus        @default(SETUP)
+  type            InterviewType          @default(TECHNICAL)
+  techStack       String?
+  experienceLevel String                 @default("MID")
+  companyName     String?
+  jobTitle        String
+  jobDescription  String?
+  resumeText      String?
+  includeDSA      Boolean                @default(false)
+  jdEmbedding     Unsupported("vector")?
+  startedAt       DateTime               @default(now())
+  endedAt         DateTime?
+  durationSec     Int                    @default(0)
+  resume          Resume?                @relation(fields: [resumeId], references: [id])
+  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages        Message[]
+  report          Report?
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, type])
+  @@index([userId, startedAt])
+  @@map("interview")
+}
+
+model Message {
+  id          String      @id @default(uuid())
+  interviewId String
+  role        MessageRole
+  content     String
+  audioUrl    String?
+  codeSnippet String?
+  language    String?
+  createdAt   DateTime    @default(now())
+  interview   Interview   @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+  @@map("message")
+}
+
+model Report {
+  id             String    @id @default(uuid())
+  interviewId    String    @unique
+  overallScore   Int
+  summary        String
+  categoryScores Json
+  strengths      String[]
+  weaknesses     String[]
+  suggestions    String[]
+  createdAt      DateTime  @default(now())
+  interview      Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+  @@map("report")
+}
+
+model SystemDesignProblem {
+  id                String                @id @default(uuid())
+  title             String
+  description       String
+  functionalReqs    String[]
+  nonFunctionalReqs String[]
+  complexity        String                @default("MEDIUM")
+  createdBy         String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  attempts          SystemDesignAttempt[]
+
+  @@map("system_design_problem")
+}
+
+model SystemDesignAttempt {
+  id               String              @id @default(uuid())
+  problemId        String
+  userId           String
+  architectureJson Json
+  aiFeedback       Json?
+  score            Int?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  problem          SystemDesignProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+  @@index([userId])
+  @@map("system_design_attempt")
 }
 
 enum InterviewStatus {
@@ -124,131 +204,13 @@ enum InterviewType {
   SYSTEM_DESIGN
 }
 
-model Interview {
-  id       String  @id @default(uuid())
-  userId   String
-  resumeId String?
-
-  status InterviewStatus @default(SETUP)
-  type   InterviewType   @default(TECHNICAL)
-
-  techStack       String?
-  experienceLevel String  @default("MID")
-
-  companyName    String?
-  jobTitle       String
-  jobDescription String?
-  resumeText     String?
-  includeDSA     Boolean @default(false)
-
-  jdEmbedding Unsupported("vector(768)")?
-
-  startedAt   DateTime  @default(now())
-  endedAt     DateTime?
-  durationSec Int       @default(0)
-
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resume   Resume?   @relation(fields: [resumeId], references: [id])
-  messages Message[]
-  report   Report?
-
-  // indexes for analytics queries
-  @@index([userId])
-  @@index([userId, status])
-  @@index([userId, type])
-  @@index([userId, startedAt])
-  @@map("interview")
-}
-
-enum Role {
+enum MessageRole {
   system
   user
   assistant
 }
 
-model Message {
-  id          String  @id @default(uuid())
-  interviewId String
-  role        Role
-  content     String
-  audioUrl    String?
-  codeSnippet String?
-  language    String?
-
-  createdAt DateTime @default(now())
-
-  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-
-  @@index([interviewId])
-  @@map("message")
-}
-
-model Report {
-  id          String @id @default(uuid())
-  interviewId String @unique
-
-  overallScore Int // 0-100
-  summary      String
-
-  // The json should follow like this:-
-  //   {
-  //   "communication": 85,
-  //   "problemSolving": 78,
-  //   "technicalKnowledge": 72,
-  //   "systemDesign": 65,
-  //   "codeQuality": 80,
-  //   "timeManagement": 70
-  // }
-
-  categoryScores Json
-
-  strengths  String[]
-  weaknesses String[]
-
-  // gemini will generate the improvement suggestions
-  suggestions String[]
-
-  createdAt DateTime @default(now())
-
-  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
-
-  @@index([interviewId])
-  @@map("report")
-}
-
-model SystemDesignProblem {
-  id                String   @id @default(uuid())
-  title             String
-  description       String
-  functionalReqs    String[]
-  nonFunctionalReqs String[]
-  complexity        String   @default("MEDIUM")
-  createdBy         String? // Can be admin user ID or 'AI'
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  attempts SystemDesignAttempt[]
-
-  @@map("system_design_problem")
-}
-
-model SystemDesignAttempt {
-  id        String @id @default(uuid())
-  problemId String
-  userId    String
-
-  architectureJson Json // Stores React Flow nodes and edges
-  aiFeedback       Json? // Structured AI scorecard/report
-  score            Int? // Overall rating 0-100
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  problem SystemDesignProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
-  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([problemId])
-  @@index([userId])
-  @@map("system_design_attempt")
+enum Role {
+  user
+  admin
 }

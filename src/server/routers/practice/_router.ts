@@ -1,9 +1,10 @@
 import { z } from "zod";
-import { protectedProcedure } from "@/server/orpc";
+import { protectedProcedure, adminProcedure } from "@/server/orpc";
 import { getProblems } from "./get-problems";
 import { getProblem } from "./get-problem";
 import { createProblem, createProblemInput } from "./create-problem";
 import { submitAttempt, submitAttemptInput } from "./submit-attempt";
+import { generateProblem, generateProblemInput } from "./generate-problem";
 
 export const practiceRouter = {
   getProblems: protectedProcedure
@@ -17,6 +18,17 @@ export const practiceRouter = {
     .input(z.object({}))
     .handler(getProblems),
 
+  generateProblem: adminProcedure
+    .route({
+      description: "Generate a new system design problem using AI",
+      method: "POST",
+      path: "/practice/design/generate",
+      summary: "Generate Problem",
+      tags: ["Practice"],
+    })
+    .input(generateProblemInput)
+    .handler(generateProblem),
+
   getProblem: protectedProcedure
     .route({
       description: "Get a specific system design problem",
@@ -28,7 +40,7 @@ export const practiceRouter = {
     .input(z.object({ id: z.string() }))
     .handler(getProblem),
 
-  createProblem: protectedProcedure
+  createProblem: adminProcedure
     .route({
       description: "Create a new system design problem",
       method: "POST",

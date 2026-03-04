@@ -64,6 +64,11 @@ const mainNavItems = [
     url: "/dashboard/analytics",
     icon: TrendingUp,
   },
+  {
+    title: "Admin AI Gen",
+    url: "/admin/design-problems/new",
+    icon: Sparkles,
+  },
 ];
 
 const practiceItems = [
@@ -142,20 +147,27 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.url}>
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {mainNavItems
+                .filter((item) => {
+                  if (item.title === "Admin AI Gen") {
+                    return session?.user?.role === "admin";
+                  }
+                  return true;
+                })
+                .map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.url)}
+                      tooltip={item.title}
+                    >
+                      <Link href={item.url}>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        <span className="truncate">{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
