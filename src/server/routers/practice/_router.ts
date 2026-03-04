@@ -15,7 +15,12 @@ export const practiceRouter = {
       summary: "Get Problems",
       tags: ["Practice"],
     })
-    .input(z.object({}))
+    .input(
+      z.object({
+        search: z.string().optional(),
+        complexity: z.string().optional(),
+      }),
+    )
     .handler(getProblems),
 
   generateProblem: adminProcedure
