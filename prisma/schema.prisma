@@ -34,10 +34,11 @@ model User {
   longestStreak     Int       @default(0)
   lastPracticeDate  DateTime?
 
-  sessions   Session[]
-  accounts   Account[]
-  resumes    Resume[]
-  interviews Interview[]
+  sessions             Session[]
+  accounts             Account[]
+  resumes              Resume[]
+  interviews           Interview[]
+  systemDesignAttempts SystemDesignAttempt[]
 
   @@unique([email])
   @@map("user")
@@ -213,4 +214,41 @@ model Report {
 
   @@index([interviewId])
   @@map("report")
+}
+
+model SystemDesignProblem {
+  id                String   @id @default(uuid())
+  title             String
+  description       String
+  functionalReqs    String[]
+  nonFunctionalReqs String[]
+  complexity        String   @default("MEDIUM")
+  createdBy         String? // Can be admin user ID or 'AI'
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  attempts SystemDesignAttempt[]
+
+  @@map("system_design_problem")
+}
+
+model SystemDesignAttempt {
+  id        String @id @default(uuid())
+  problemId String
+  userId    String
+
+  architectureJson Json // Stores React Flow nodes and edges
+  aiFeedback       Json? // Structured AI scorecard/report
+  score            Int? // Overall rating 0-100
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  problem SystemDesignProblem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+  @@index([userId])
+  @@map("system_design_attempt")
 }
