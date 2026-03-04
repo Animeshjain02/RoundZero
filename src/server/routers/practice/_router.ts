@@ -5,6 +5,7 @@ import { getProblem } from "./get-problem";
 import { createProblem, createProblemInput } from "./create-problem";
 import { submitAttempt, submitAttemptInput } from "./submit-attempt";
 import { generateProblem, generateProblemInput } from "./generate-problem";
+import { getAttempt, getAttemptInput } from "./get-attempt";
 
 export const practiceRouter = {
   getProblems: protectedProcedure
@@ -66,4 +67,15 @@ export const practiceRouter = {
     })
     .input(submitAttemptInput)
     .handler(submitAttempt),
+
+  getAttempt: protectedProcedure
+    .route({
+      description: "Get the latest system design architecture attempt",
+      method: "GET",
+      path: "/practice/design/attempt",
+      summary: "Get Attempt",
+      tags: ["Practice"],
+    })
+    .input(getAttemptInput)
+    .handler(getAttempt),
 };

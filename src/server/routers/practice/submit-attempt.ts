@@ -20,6 +20,22 @@ export async function submitAttempt({
   const { user } = context;
   if (!user) throw new ORPCError("UNAUTHORIZED");
 
+  const existing = await db.systemDesignAttempt.findFirst({
+    where: { problemId: input.problemId, userId: user.id },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (existing) {
+    return await db.systemDesignAttempt.update({
+      where: { id: existing.id },
+      data: {
+        architectureJson: input.architectureJson ?? existing.architectureJson,
+        aiFeedback: input.aiFeedback ?? existing.aiFeedback,
+        score: input.score ?? existing.score,
+      },
+    });
+  }
+
   const attempt = await db.systemDesignAttempt.create({
     data: {
       problemId: input.problemId,
