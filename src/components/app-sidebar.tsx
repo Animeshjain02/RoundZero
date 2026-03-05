@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  BookOpen,
   ChevronUp,
-  Code2,
   CreditCard,
   Home,
   LayoutDashboard,
@@ -72,21 +70,21 @@ const mainNavItems = [
 ];
 
 const practiceItems = [
-  {
-    title: "Coding",
-    url: "/dashboard/practice/coding",
-    icon: Code2,
-  },
+  // {
+  //   title: "Coding",
+  //   url: "/dashboard/practice/coding",
+  //   icon: Code2,
+  // },
   {
     title: "System Design",
     url: "/dashboard/practice/design",
     icon: PenTool,
   },
-  {
-    title: "Behavioral",
-    url: "/dashboard/practice/behavioral",
-    icon: BookOpen,
-  },
+  // {
+  //   title: "Behavioral",
+  //   url: "/dashboard/practice/behavioral",
+  //   icon: BookOpen,
+  // },
 ];
 
 export function AppSidebar() {
