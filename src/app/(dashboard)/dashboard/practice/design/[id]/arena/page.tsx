@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { serverClient } from "@/lib/orpc-server";
 import { os_context } from "@/server/orpc";
 import ArenaCanvas from "./_components/arena-canvas";
+import { Badge } from "@/components/ui/badge";
 
 export default async function ArenaPage({
   params,
@@ -65,6 +66,3 @@ export default async function ArenaPage({
     </div>
   );
 }
-
-// Inline badge since it wasn't imported initially
-import { Badge } from "@/components/ui/badge";

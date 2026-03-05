@@ -1,4 +1,5 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { ORPCError } from "@orpc/client";
 import {
   generateObject,
   generateText,
@@ -98,9 +99,33 @@ export const generateReport = async (
 };
 
 import {
-  systemDesignProblemSchema,
   type GeneratedSystemDesignProblem,
+  systemDesignProblemSchema,
 } from "./validations/practice";
+
+export const architectureEvaluationSchema = z.object({
+  overallScore: z.number().min(0).max(100),
+  categoryScores: z.object({
+    scalability: z.number().min(0).max(100),
+    reliability: z.number().min(0).max(100),
+    availability: z.number().min(0).max(100),
+    performance: z.number().min(0).max(100),
+    security: z.number().min(0).max(100),
+    maintainability: z.number().min(0).max(100),
+    costOptimization: z.number().min(0).max(100),
+  }),
+  strengths: z.array(z.string()).min(1).max(5),
+  bottlenecks: z.array(z.string()).min(1).max(5),
+  suggestions: z.array(z.string()).min(1).max(5),
+  summary: z.string().min(1),
+});
+
+export type ArchitectureEvaluation = z.infer<
+  typeof architectureEvaluationSchema
+>;
+
+export type ArchitectureCategoryScores =
+  ArchitectureEvaluation["categoryScores"];
 
 // Generate a structured system design problem based on a topic
 export const generateSystemDesignProblem = async (
@@ -120,4 +145,86 @@ export const generateSystemDesignProblem = async (
   });
 
   return object;
+};
+
+interface ArchitectureEvaluationInput {
+  problemTitle: string;
+  problemDescription: string;
+  functionalReqs: string[];
+  nonFunctionalReqs: string[];
+  complexity: string;
+  architectureText: string;
+}
+
+export const generateArchitectureEvaluation = async (
+  input: ArchitectureEvaluationInput,
+  temperature: number = 0.2,
+): Promise<ArchitectureEvaluation> => {
+  const systemPrompt = `You are a Principal Architect at a top tech company reviewing system design solutions.
+Your goal is to evaluate the architecture against the problem requirements and provide constructive feedback.
+
+CRITICAL: You MUST respond with ONLY a valid JSON object. No markdown, no explanations, no additional text.
+The JSON must exactly match this schema:
+{
+  "overallScore": number (0-100),
+  "categoryScores": {
+    "scalability": number (0-100),
+    "reliability": number (0-100),
+    "availability": number (0-100),
+    "performance": number (0-100),
+    "security": number (0-100),
+    "maintainability": number (0-100),
+    "costOptimization": number (0-100)
+  },
+  "strengths": array of 1-5 strings,
+  "bottlenecks": array of 1-5 strings,
+  "suggestions": array of 1-5 strings,
+  "summary": string
+}
+
+Be strict but fair. Consider:
+- Does the architecture address the functional requirements?
+- Are the non-functional requirements (scale, latency, availability) met?
+- Is the design appropriate for the complexity level?
+- Are there obvious missing components or anti-patterns?
+- Is the architecture cost-effective?
+
+Provide specific, actionable feedback that helps the candidate improve.`;
+
+  const userPrompt = `
+# Problem: ${input.problemTitle}
+
+## Description
+${input.problemDescription}
+
+## Functional Requirements
+${input.functionalReqs.map((r, i) => `${i + 1}. ${r}`).join("\n")}
+
+## Non-Functional Requirements
+${input.nonFunctionalReqs.map((r, i) => `${i + 1}. ${r}`).join("\n")}
+
+## Complexity Level
+${input.complexity}
+
+# Candidate's Architecture
+${input.architectureText}
+
+Respond with ONLY a valid JSON object matching the schema described in the system prompt.`;
+
+  try {
+    const { object } = await generateObject({
+      model,
+      system: systemPrompt,
+      prompt: userPrompt,
+      schema: architectureEvaluationSchema,
+      temperature,
+    });
+
+    return object;
+  } catch (error) {
+    console.error("Architecture evaluation failed:", error);
+    throw new ORPCError("INTERNAL_ERROR", {
+      message: "Failed to evaluate architecture. Please try again.",
+    });
+  }
 };

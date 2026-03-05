@@ -1,11 +1,15 @@
 import { z } from "zod";
-import { protectedProcedure, adminProcedure } from "@/server/orpc";
-import { getProblems } from "./get-problems";
-import { getProblem } from "./get-problem";
+import { adminProcedure, protectedProcedure } from "@/server/orpc";
 import { createProblem, createProblemInput } from "./create-problem";
-import { submitAttempt, submitAttemptInput } from "./submit-attempt";
+import {
+  evaluateArchitecture,
+  evaluateArchitectureInput,
+} from "./evaluate-architecture";
 import { generateProblem, generateProblemInput } from "./generate-problem";
 import { getAttempt, getAttemptInput } from "./get-attempt";
+import { getProblem } from "./get-problem";
+import { getProblems } from "./get-problems";
+import { submitAttempt, submitAttemptInput } from "./submit-attempt";
 
 export const practiceRouter = {
   getProblems: protectedProcedure
@@ -78,4 +82,15 @@ export const practiceRouter = {
     })
     .input(getAttemptInput)
     .handler(getAttempt),
+
+  evaluateArchitecture: protectedProcedure
+    .route({
+      description: "Evaluate a system design architecture using AI",
+      method: "POST",
+      path: "/practice/design/evaluate",
+      summary: "Evaluate Architecture",
+      tags: ["Practice"],
+    })
+    .input(evaluateArchitectureInput)
+    .handler(evaluateArchitecture),
 };

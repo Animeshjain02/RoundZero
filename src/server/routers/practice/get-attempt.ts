@@ -17,10 +17,17 @@ export async function getAttempt({
   const { user } = context;
   if (!user) throw new ORPCError("UNAUTHORIZED");
 
-  const attempt = await db.systemDesignAttempt.findFirst({
-    where: { problemId: input.problemId, userId: user.id },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const attempt = await db.systemDesignAttempt.findFirst({
+      where: { problemId: input.problemId, userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
 
-  return attempt ?? null;
+    return attempt ?? null;
+  } catch (error) {
+    console.error("Failed to fetch attempt:", error);
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+      message: "Failed to load your previous attempt.",
+    });
+  }
 }

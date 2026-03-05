@@ -20,31 +20,36 @@ export async function submitAttempt({
   const { user } = context;
   if (!user) throw new ORPCError("UNAUTHORIZED");
 
-  const existing = await db.systemDesignAttempt.findFirst({
-    where: { problemId: input.problemId, userId: user.id },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const existing = await db.systemDesignAttempt.findFirst({
+      where: { problemId: input.problemId, userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
 
-  if (existing) {
-    return await db.systemDesignAttempt.update({
-      where: { id: existing.id },
+    if (existing) {
+      return await db.systemDesignAttempt.update({
+        where: { id: existing.id },
+        data: {
+          architectureJson: input.architectureJson ?? existing.architectureJson,
+          aiFeedback: input.aiFeedback ?? existing.aiFeedback,
+          score: input.score ?? existing.score,
+        },
+      });
+    }
+
+    return await db.systemDesignAttempt.create({
       data: {
-        architectureJson: input.architectureJson ?? existing.architectureJson,
-        aiFeedback: input.aiFeedback ?? existing.aiFeedback,
-        score: input.score ?? existing.score,
+        problemId: input.problemId,
+        userId: user.id,
+        architectureJson: input.architectureJson ?? {},
+        aiFeedback: input.aiFeedback ?? {},
+        score: input.score,
       },
     });
+  } catch (error) {
+    console.error("Failed to save attempt:", error);
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+      message: "Failed to save your progress. Please try again.",
+    });
   }
-
-  const attempt = await db.systemDesignAttempt.create({
-    data: {
-      problemId: input.problemId,
-      userId: user.id,
-      architectureJson: input.architectureJson ?? {},
-      aiFeedback: input.aiFeedback ?? {},
-      score: input.score,
-    },
-  });
-
-  return attempt;
 }

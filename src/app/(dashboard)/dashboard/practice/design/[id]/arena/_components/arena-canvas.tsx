@@ -1,31 +1,31 @@
 "use client";
 
-import { useCallback, useRef, useState, useEffect } from "react";
 import {
-  ReactFlow,
-  ReactFlowProvider,
   addEdge,
-  useNodesState,
-  useEdgesState,
-  Controls,
   Background,
   BackgroundVariant,
+  type Connection,
+  Controls,
+  type Edge,
   Panel,
-  Connection,
-  Edge,
+  ReactFlow,
+  ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
   useReactFlow,
 } from "@xyflow/react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "@xyflow/react/dist/style.css";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Save, RefreshCw } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import type { Node, NodeTypes } from "@xyflow/react";
+import { RefreshCw, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
-import { SystemNode } from "./nodes/system-node";
-import { NodeSidebar } from "./node-sidebar";
-
-import type { NodeTypes, Node } from "@xyflow/react";
+import type { ArchitectureEvaluation } from "@/lib/gemini";
 import { orpc } from "@/lib/orpc-client";
+import { EvaluationResultsSheet } from "./evaluation-results-sheet";
+import { NodeSidebar } from "./node-sidebar";
+import { SystemNode } from "./nodes/system-node";
 
 const nodeTypes: NodeTypes = {
   systemNode: SystemNode as any,
@@ -38,6 +38,10 @@ function ArenaInner({ problemId }: { problemId: string }) {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const { screenToFlowPosition, getNodes, getEdges, fitView } = useReactFlow();
 
+  const [showResults, setShowResults] = useState(false);
+  const [evaluationResult, setEvaluationResult] =
+    useState<ArchitectureEvaluation | null>(null);
+
   const { data: attempt, isLoading } = useQuery(
     orpc.practice.getAttempt.queryOptions({
       input: { problemId },
@@ -48,6 +52,19 @@ function ArenaInner({ problemId }: { problemId: string }) {
     orpc.practice.submitAttempt.mutationOptions({
       onSuccess: () => toast.success("Architecture saved successfully"),
       onError: () => toast.error("Failed to save progress"),
+    }),
+  );
+
+  const { mutate: evaluateArchitecture, isPending: isEvaluating } = useMutation(
+    orpc.practice.evaluateArchitecture.mutationOptions({
+      onSuccess: (data) => {
+        setEvaluationResult(data);
+        setShowResults(true);
+        toast.success("Architecture evaluated successfully");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to evaluate architecture");
+      },
     }),
   );
 
@@ -63,6 +80,11 @@ function ArenaInner({ problemId }: { problemId: string }) {
 
       // Give React Flow a moment to render before fitting view
       setTimeout(() => fitView({ padding: 0.2 }), 50);
+    }
+
+    // Load existing AI feedback if available
+    if (attempt?.aiFeedback) {
+      setEvaluationResult(attempt.aiFeedback as ArchitectureEvaluation);
     }
   }, [attempt, setNodes, setEdges, fitView]);
 
@@ -119,6 +141,24 @@ function ArenaInner({ problemId }: { problemId: string }) {
     saveAttempt({
       problemId,
       architectureJson: payload,
+    });
+  };
+
+  const handleEvaluate = () => {
+    if (nodes.length === 0) {
+      toast.error("Please add some components before submitting for review");
+      return;
+    }
+
+    const payload = {
+      nodes: getNodes(),
+      edges: getEdges(),
+    };
+
+    evaluateArchitecture({
+      problemId,
+      nodes: payload.nodes,
+      edges: payload.edges,
     });
   };
 
@@ -181,10 +221,41 @@ function ArenaInner({ problemId }: { problemId: string }) {
                 )}
                 Save Progress
               </Button>
+              <Button
+                size="sm"
+                className="rounded-xl shadow-md font-medium cursor-pointer"
+                onClick={handleEvaluate}
+                disabled={isEvaluating}
+              >
+                {isEvaluating ? (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                Submit for Review
+              </Button>
+              {evaluationResult && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl shadow-md font-medium cursor-pointer"
+                  onClick={() => setShowResults(true)}
+                >
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  View Last Review
+                </Button>
+              )}
             </div>
           </Panel>
         </ReactFlow>
       </div>
+
+      <EvaluationResultsSheet
+        open={showResults}
+        onOpenChange={setShowResults}
+        evaluation={evaluationResult}
+        isLoading={isEvaluating}
+      />
     </div>
   );
 }
