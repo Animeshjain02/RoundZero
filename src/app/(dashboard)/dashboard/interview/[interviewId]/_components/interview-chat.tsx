@@ -28,17 +28,24 @@ export function InterviewChat({
 }: InterviewChatProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const previousScrollSignatureRef = useRef("");
 
   // Auto-scroll to bottom on new messages or interim transcript changes
   useEffect(() => {
+    const scrollSignature = `${messages.length}:${messages.at(-1)?.id ?? ""}:${
+      interimTranscript ?? ""
+    }`;
+
+    if (scrollSignature === previousScrollSignatureRef.current) {
+      return;
+    }
+
+    previousScrollSignatureRef.current = scrollSignature;
+
     if (bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [
-    messages.length,
-    messages[messages.length - 1]?.isTyping,
-    interimTranscript,
-  ]);
+  });
 
   return (
     <div

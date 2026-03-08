@@ -90,8 +90,8 @@ export const messageSchema = z.object({
   role: messageRoleSchema,
   content: z.string(),
   audioUrl: z.string().nullable(),
-  codeSnippet: z.string().nullable().optional(),
-  language: z.string().nullable().optional(),
+  codeSnippet: z.string().nullable(),
+  language: z.string().nullable(),
   createdAt: z.date(),
 });
 
@@ -130,12 +130,7 @@ export const FILE_LIMITS = {
 export const durationSecSchema = z.number().int().nonnegative();
 
 // Allowed file extensions
-export const ALLOWED_RESUME_EXTENSIONS = [
-  ".pdf",
-  ".docx",
-  ".doc",
-  ".txt",
-] as const;
+export const ALLOWED_RESUME_EXTENSIONS = [".pdf", ".docx", ".txt"] as const;
 
 export const isAllowedResumeExtension = (filename: string): boolean => {
   const lowerFilename = filename.toLowerCase();

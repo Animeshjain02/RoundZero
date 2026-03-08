@@ -2,12 +2,15 @@
 
 import { Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CodeSnippet } from "./code-snippet";
 
 export interface Message {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: string;
+  codeSnippet?: string | null;
+  language?: string | null;
   isTyping?: boolean;
 }
 
@@ -77,6 +80,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
             </p>
           )}
         </div>
+        {message.codeSnippet ? (
+          <CodeSnippet
+            code={message.codeSnippet}
+            language={message.language || "text"}
+            className="w-full overflow-hidden"
+          />
+        ) : null}
         <span className="text-[10px] text-muted-foreground px-2 opacity-70">
           {message.timestamp}
         </span>

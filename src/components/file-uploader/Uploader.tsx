@@ -10,12 +10,32 @@ import {
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { formatBytes, useFileUpload } from "@/hooks/use-file-upload";
+import { orpcClient } from "@/lib/orpc-client";
 import { Button } from "../ui/button";
 
 interface ResumeUploaderProps {
   onUploadComplete: (key: string, file: File) => void;
   onRemove: (key: string) => void;
 }
+
+const inferResumeContentType = (file: File): string | null => {
+  if (file.type) {
+    return file.type;
+  }
+
+  const lowerFilename = file.name.toLowerCase();
+  if (lowerFilename.endsWith(".pdf")) {
+    return "application/pdf";
+  }
+  if (lowerFilename.endsWith(".docx")) {
+    return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+  if (lowerFilename.endsWith(".txt")) {
+    return "text/plain";
+  }
+
+  return null;
+};
 
 export function ResumeUploader({
   onUploadComplete,
@@ -35,21 +55,19 @@ export function ResumeUploader({
       setUploadState({ uploading: true, progress: 0 });
 
       try {
-        const preSignedUrlResponse = await fetch("/api/s3/upload", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            fileName: file.name,
-            contentType: file.type,
-            size: file.size,
-          }),
-        });
-
-        if (!preSignedUrlResponse.ok) {
-          throw new Error("Failed to get presigned URL");
+        const contentType = inferResumeContentType(file);
+        if (!contentType) {
+          throw new Error("Unsupported resume format. Use PDF, DOCX, or TXT.");
         }
 
-        const { preSignedUrl, key } = await preSignedUrlResponse.json();
+        const { url, key } = await orpcClient.media.getPresignedUrl({
+          filename: file.name,
+          contentType: contentType as
+            | "application/pdf"
+            | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            | "text/plain",
+          purpose: "resume",
+        });
 
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
@@ -74,8 +92,8 @@ export function ResumeUploader({
 
           xhr.onerror = () => reject(new Error("Upload failed"));
 
-          xhr.open("PUT", preSignedUrl);
-          xhr.setRequestHeader("Content-Type", file.type);
+          xhr.open("PUT", url);
+          xhr.setRequestHeader("Content-Type", contentType);
           xhr.send(file);
         });
       } catch (error) {
@@ -113,7 +131,7 @@ export function ResumeUploader({
     maxFiles: 1,
     maxSize,
     accept:
-      ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain",
     multiple: false,
     onFilesAdded: handleFilesAdded,
   });
@@ -121,11 +139,7 @@ export function ResumeUploader({
   const handleRemove = async (fileId: string) => {
     if (uploadState.key) {
       try {
-        await fetch("/api/s3/delete", {
-          method: "DELETE",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ key: uploadState.key }),
-        });
+        await orpcClient.media.deleteFile({ key: uploadState.key });
         onRemove(uploadState.key);
         toast.success("File removed");
       } catch {
@@ -140,7 +154,8 @@ export function ResumeUploader({
     <div className="flex flex-col gap-2">
       {files.length === 0 ? (
         <>
-          <div
+          <button
+            type="button"
             className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-input border-dashed p-4 transition-colors hover:bg-accent/50 has-disabled:pointer-events-none has-[input:focus]:border-ring has-disabled:opacity-50 has-[input:focus]:ring-[3px] has-[input:focus]:ring-ring/50 data-[dragging=true]:bg-accent/50 cursor-pointer"
             data-dragging={isDragging || undefined}
             onClick={openFileDialog}
@@ -148,8 +163,6 @@ export function ResumeUploader({
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            role="button"
-            tabIndex={-1}
           >
             <input
               {...getInputProps()}
@@ -168,12 +181,12 @@ export function ResumeUploader({
                 Drag & drop or click to browse
               </p>
               <div className="flex flex-wrap justify-center gap-1 text-muted-foreground/70 text-xs">
-                <span>PDF, DOC, DOCX</span>
+                <span>PDF, DOCX, TXT</span>
                 <span>∙</span>
                 <span>Up to {formatBytes(maxSize)}</span>
               </div>
             </div>
-          </div>
+          </button>
 
           {errors.length > 0 && (
             <div

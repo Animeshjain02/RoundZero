@@ -16,6 +16,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { CodeSnippet } from "../../_components/code-snippet";
 import { AudioPlayButton } from "./audio-play-button";
 
 interface Message {
@@ -23,6 +24,8 @@ interface Message {
   role: "system" | "user" | "assistant";
   content: string;
   audioUrl: string | null;
+  codeSnippet?: string | null;
+  language?: string | null;
   createdAt: Date;
 }
 
@@ -147,6 +150,13 @@ function QAPairCard({ pair }: { pair: QAPair }) {
                       </span>
                     )}
                   </p>
+                  {pair.answer.codeSnippet ? (
+                    <CodeSnippet
+                      code={pair.answer.codeSnippet}
+                      language={pair.answer.language || "text"}
+                      className="mt-3"
+                    />
+                  ) : null}
                 </div>
                 <AudioPlayButton
                   audioUrl={pair.answer.audioUrl}

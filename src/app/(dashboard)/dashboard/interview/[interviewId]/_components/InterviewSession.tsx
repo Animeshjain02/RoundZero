@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useInterview } from "../_context/interview-context";
 import { CodeEditor } from "./code-editor";
@@ -17,6 +17,7 @@ export function InterviewSession() {
     messages,
     isRecording,
     isPlaying,
+    isHydrated,
     toggleMic,
     sendMessage,
     startInterview,
@@ -33,10 +34,18 @@ export function InterviewSession() {
 
   // Auto-start interview if in SETUP
   useEffect(() => {
-    if (status === "SETUP" && !isLoading && interview) {
+    if (isHydrated && status === "SETUP" && !isLoading && interview) {
       startInterview();
     }
-  }, [status, startInterview, isLoading, interview]);
+  }, [isHydrated, status, startInterview, isLoading, interview]);
+
+  useEffect(() => {
+    if (!interview) {
+      return;
+    }
+
+    setElapsedTime(interview.durationSec);
+  }, [interview]);
 
   // Timer
   useEffect(() => {
@@ -73,7 +82,26 @@ export function InterviewSession() {
     }
   }, [isRecording]);
 
-  if (isLoading || !interview) {
+  const chatMessages = useMemo(
+    () =>
+      messages.map((message) => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        codeSnippet: message.codeSnippet,
+        language: message.language,
+        timestamp: message.createdAt
+          ? new Date(message.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "",
+        isTyping: false,
+      })),
+    [messages],
+  );
+
+  if (isLoading || !interview || !isHydrated) {
     return (
       <div className="flex h-screen items-center justify-center">
         Loading Interview...
@@ -121,18 +149,7 @@ export function InterviewSession() {
               )}
             >
               <InterviewChat
-                messages={messages.map((m) => ({
-                  id: m.id,
-                  role: m.role,
-                  content: m.content,
-                  timestamp: m.createdAt
-                    ? new Date(m.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : "",
-                  isTyping: false,
-                }))}
+                messages={chatMessages}
                 isRecording={isRecording}
                 isPlaying={isPlaying}
                 onToggleMic={toggleMic}
@@ -163,8 +180,11 @@ export function InterviewSession() {
                 className="h-full border-0 rounded-none"
                 isExpanded={isEditorExpanded}
                 onToggleExpand={() => setIsEditorExpanded(!isEditorExpanded)}
-                onSubmit={(code) =>
-                  sendMessage(`[CODE_SUBMISSION] ${code}`, code)
+                onSubmit={(code, language) =>
+                  sendMessage("Shared a code submission for review.", {
+                    codeSnippet: code,
+                    language,
+                  })
                 }
               />
             </div>
@@ -173,18 +193,7 @@ export function InterviewSession() {
           // Behavioral Layout - Full Chat Interface
           <div className="flex-1 flex flex-col relative h-full">
             <InterviewChat
-              messages={messages.map((m) => ({
-                id: m.id,
-                role: m.role,
-                content: m.content,
-                timestamp: m.createdAt
-                  ? new Date(m.createdAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "",
-                isTyping: false,
-              }))}
+              messages={chatMessages}
               isRecording={isRecording}
               isPlaying={isPlaying}
               onToggleMic={toggleMic}

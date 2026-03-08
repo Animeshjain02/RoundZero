@@ -1,7 +1,6 @@
 // Valid content types by purpose
 export const VALID_RESUME_TYPES = [
   "application/pdf",
-  "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "text/plain",
 ];

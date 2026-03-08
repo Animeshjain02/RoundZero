@@ -15,7 +15,7 @@ const google = createGoogleGenerativeAI({
 });
 
 // Model configuration
-const MODEL_ID = "gemini-2.5-flash";
+const MODEL_ID = "gemini-3.1-flash-lite-preview";
 const model = google(MODEL_ID);
 
 // Temperature settings for different use cases

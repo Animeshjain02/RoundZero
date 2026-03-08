@@ -31,8 +31,7 @@ export const interviewRouter = {
     .input(startSessionInput)
     .output(
       z.object({
-        message: z.string(),
-        audioUrl: z.string().optional(),
+        assistantMessage: messageSchema,
         status: interviewStatusSchema,
       }),
     )
@@ -49,9 +48,8 @@ export const interviewRouter = {
     .input(chatInput)
     .output(
       z.object({
-        message: z.string(),
-        audioUrl: z.string().optional(),
-        savedMessageId: z.string().optional(),
+        userMessage: messageSchema,
+        assistantMessage: messageSchema.nullable(),
       }),
     )
     .handler(chat),

@@ -26,12 +26,56 @@ const isValidRole = (role: string): role is Message["role"] => {
   return VALID_ROLES.includes(role as Message["role"]);
 };
 
+interface SendMessageOptions {
+  codeSnippet?: string;
+  language?: string;
+}
+
+const toClientMessage = (message: {
+  id: string;
+  role: string;
+  content: string;
+  audioUrl: string | null;
+  codeSnippet?: string | null;
+  language?: string | null;
+  createdAt: Date;
+}): Message | null => {
+  if (!isValidRole(message.role)) {
+    return null;
+  }
+
+  return {
+    id: message.id,
+    role: message.role,
+    content: message.content,
+    audioUrl: message.audioUrl,
+    codeSnippet: message.codeSnippet ?? null,
+    language: message.language ?? null,
+    createdAt: message.createdAt,
+  };
+};
+
+const mergeMessage = (messages: Message[], nextMessage: Message): Message[] => {
+  const existingIndex = messages.findIndex(
+    (message) => message.id === nextMessage.id,
+  );
+
+  if (existingIndex === -1) {
+    return [...messages, nextMessage];
+  }
+
+  return messages.map((message) =>
+    message.id === nextMessage.id ? nextMessage : message,
+  );
+};
+
 export interface InterviewContextType {
   // State
   messages: Message[];
   isRecording: boolean;
   isPlaying: boolean;
   isConnecting: boolean;
+  isHydrated: boolean;
   interviewId: string;
   status: InterviewStatus;
   interview: InterviewData | null | undefined;
@@ -40,7 +84,7 @@ export interface InterviewContextType {
 
   // Actions
   startInterview: () => Promise<void>;
-  sendMessage: (text: string, code?: string) => Promise<void>;
+  sendMessage: (text: string, options?: SendMessageOptions) => Promise<void>;
   endInterview: (durationSec: number) => Promise<void>;
 
   // Media Controls
@@ -77,10 +121,11 @@ export const InterviewContextProvider = ({
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<InterviewStatus>("SETUP");
+  const [isHydrated, setIsHydrated] = useState(false);
   const isStartingRef = useRef(false);
-  // Ref to hold sendMessage for use in callbacks (solves ordering issue)
   const sendMessageRef = useRef<
-    ((content: string, codeSnippet?: string) => Promise<void>) | undefined
+    | ((content: string, options?: SendMessageOptions) => Promise<void>)
+    | undefined
   >(undefined);
   const isSendingRef = useRef(false);
 
@@ -135,41 +180,34 @@ export const InterviewContextProvider = ({
     }),
   );
 
-  // Initialize state from fetched data
   useEffect(() => {
-    if (interviewDataResult?.interview) {
-      const interview = interviewDataResult.interview;
-      setStatus(interview.status as InterviewStatus);
-
-      if (interview.messages) {
-        const loadedMessages: Message[] = interview.messages
-          .filter((m) => isValidRole(m.role))
-          .map(
-            (m: {
-              id: string;
-              role: string;
-              content: string;
-              audioUrl: string | null;
-              createdAt: Date;
-            }) => ({
-              id: m.id,
-              role: m.role as Message["role"],
-              content: m.content,
-              audioUrl: m.audioUrl,
-              createdAt: m.createdAt,
-            }),
-          );
-        setMessages(loadedMessages);
-      }
+    if (isLoading || isHydrated || !interviewDataResult) {
+      return;
     }
-  }, [interviewDataResult]);
 
-  // Start interview session
+    const interview = interviewDataResult.interview;
+    if (!interview) {
+      setIsHydrated(true);
+      return;
+    }
+
+    const hydratedMessages = interview.messages
+      .map(toClientMessage)
+      .filter((message): message is Message => message !== null);
+
+    setStatus(interview.status as InterviewStatus);
+    setMessages(hydratedMessages);
+    setIsHydrated(true);
+  }, [interviewDataResult, isHydrated, isLoading]);
+
+  useEffect(() => stopAllMedia, [stopAllMedia]);
+
   const startInterview = useCallback(async () => {
-    if (!interviewId) return;
+    if (!interviewId || !isHydrated) {
+      return;
+    }
 
-    // Prevent duplicate starts
-    if (isStartingRef.current || status === "IN_PROGRESS") {
+    if (isStartingRef.current || status !== "SETUP") {
       return;
     }
 
@@ -177,28 +215,23 @@ export const InterviewContextProvider = ({
 
     try {
       const response = await startInterviewMutation({ interviewId });
+      const assistantMessage = toClientMessage(response.assistantMessage);
 
-      const newMessage: Message = {
-        id: `opening-${Date.now()}`,
-        role: "assistant",
-        content: response.message,
-        audioUrl: response.audioUrl,
-        createdAt: new Date(),
-      };
+      if (assistantMessage) {
+        setMessages((prev) => mergeMessage(prev, assistantMessage));
+      }
+      setStatus(response.status as InterviewStatus);
 
-      // Connect STT first, then update state
-      try {
-        await connectSTT();
-      } catch (sttError) {
-        console.log("STT failed", sttError);
+      if (response.status === "IN_PROGRESS") {
+        try {
+          await connectSTT();
+        } catch (sttError) {
+          console.log("STT failed", sttError);
+        }
       }
 
-      setMessages((prev) => [...prev, newMessage]);
-      setStatus("IN_PROGRESS");
-
-      // Play the opening audio
-      if (response.audioUrl) {
-        playEncodedAudio(response.audioUrl);
+      if (assistantMessage?.audioUrl) {
+        playEncodedAudio(assistantMessage.audioUrl);
       }
     } catch (error) {
       console.error("[Interview Context] Failed to start:", error);
@@ -208,57 +241,73 @@ export const InterviewContextProvider = ({
     }
   }, [
     interviewId,
+    isHydrated,
     status,
     startInterviewMutation,
     playEncodedAudio,
     connectSTT,
   ]);
 
-  // Send a message to the AI interviewer
   const sendMessage = useCallback(
-    async (content: string, codeSnippet?: string) => {
+    async (content: string, options?: SendMessageOptions) => {
       if (!interviewId) return;
 
-      // Store transcript for potential rollback
       const previousTranscript = transcript;
-      const userMessageId = `user-${Date.now()}`;
+      const optimisticUserMessageId = `user-${Date.now()}`;
 
-      // Add user message optimistically
       const userMessage: Message = {
-        id: userMessageId,
+        id: optimisticUserMessageId,
         role: "user",
         content,
+        audioUrl: null,
+        codeSnippet: options?.codeSnippet ?? null,
+        language: options?.language ?? null,
         createdAt: new Date(),
       };
       setMessages((prev) => [...prev, userMessage]);
       setTranscript("");
 
       try {
-        // Get AI response
         const response = await chatMutation({
           interviewId,
           message: content,
-          codeSnippet,
+          codeSnippet: options?.codeSnippet,
+          language: options?.language,
         });
 
-        // Add AI response
-        const aiMessage: Message = {
-          id: response.savedMessageId || `ai-${Date.now()}`,
-          role: "assistant",
-          content: response.message,
-          audioUrl: response.audioUrl,
-          createdAt: new Date(),
-        };
-        setMessages((prev) => [...prev, aiMessage]);
+        const persistedUserMessage = toClientMessage(response.userMessage);
+        const assistantMessage = response.assistantMessage
+          ? toClientMessage(response.assistantMessage)
+          : null;
 
-        // Play the response audio
-        if (response.audioUrl) {
-          playEncodedAudio(response.audioUrl);
+        setMessages((prev) => {
+          const withoutOptimisticMessage = prev.filter(
+            (message) => message.id !== optimisticUserMessageId,
+          );
+
+          let nextMessages = withoutOptimisticMessage;
+
+          if (persistedUserMessage) {
+            nextMessages = mergeMessage(nextMessages, persistedUserMessage);
+          }
+
+          if (assistantMessage) {
+            nextMessages = mergeMessage(nextMessages, assistantMessage);
+          }
+
+          return nextMessages;
+        });
+
+        if (assistantMessage?.audioUrl) {
+          playEncodedAudio(assistantMessage.audioUrl);
+        } else if (!assistantMessage) {
+          toast.error("Your answer was saved, but the AI response failed.");
         }
       } catch (error) {
         console.error("[Interview Context] Chat error:", error);
-        // Rollback optimistic updates
-        setMessages((prev) => prev.filter((m) => m.id !== userMessageId));
+        setMessages((prev) =>
+          prev.filter((message) => message.id !== optimisticUserMessageId),
+        );
         setTranscript(previousTranscript);
         toast.error("Failed to send message");
       }
@@ -271,7 +320,6 @@ export const InterviewContextProvider = ({
     sendMessageRef.current = sendMessage;
   }, [sendMessage]);
 
-  // End the interview and generate report
   const endInterview = useCallback(
     async (durationSec: number) => {
       if (!interviewId) return;
@@ -298,10 +346,11 @@ export const InterviewContextProvider = ({
     isRecording,
     isPlaying,
     isConnecting: connectionState === "connecting",
+    isHydrated,
     interviewId,
     status,
     interview: interviewDataResult?.interview,
-    isLoading,
+    isLoading: isLoading || !isHydrated,
     isEnding,
     startInterview,
     sendMessage,
