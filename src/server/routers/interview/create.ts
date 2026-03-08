@@ -54,19 +54,21 @@ export async function createInterview({
 
   // Create resume record if file was uploaded
   if (resumeKey && resumeFilename) {
-    try {
-      const createdResume = await db.resume.create({
-        data: {
-          userId: user.id,
-          title: resumeFilename,
-          content: resumeText,
-          fileUrl: STORAGE_CONFIG.getPublicUrl(resumeKey),
-        },
+    if (!resumeKey.startsWith(`resumes/${user.id}/`)) {
+      throw new ORPCError("BAD_REQUEST", {
+        message: "Invalid resume upload key",
       });
-      resumeId = createdResume.id;
-    } catch (error) {
-      console.error("[Resume Creation Error]", error);
     }
+
+    const createdResume = await db.resume.create({
+      data: {
+        userId: user.id,
+        title: resumeFilename,
+        content: resumeText,
+        fileUrl: STORAGE_CONFIG.getPublicUrl(resumeKey),
+      },
+    });
+    resumeId = createdResume.id;
   } else if (input.resumeId) {
     // Use existing resume - validate ownership
     const existingResume = await db.resume.findFirst({

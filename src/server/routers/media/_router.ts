@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { protectedProcedure } from "@/server/orpc";
 import { getDeepgramToken } from "./deepgram-token";
+import { deleteFile, deleteFileInput } from "./delete-file";
 import { getPresignedUrl, getPresignedUrlInput } from "./get-presigned-url";
 import { synthesize, synthesizeInput } from "./synthesize";
 import { transcribe, transcribeInput } from "./transcribe";
@@ -39,6 +40,22 @@ export const mediaRouter = {
       }),
     )
     .handler(getPresignedUrl),
+
+  deleteFile: protectedProcedure
+    .route({
+      description: "Delete a previously uploaded user-owned file",
+      method: "DELETE",
+      path: "/media/file",
+      summary: "Delete Uploaded File",
+      tags: ["Media", "Upload"],
+    })
+    .input(deleteFileInput)
+    .output(
+      z.object({
+        success: z.boolean(),
+      }),
+    )
+    .handler(deleteFile),
 
   transcribe: protectedProcedure
     .route({

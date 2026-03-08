@@ -1,38 +1,16 @@
 import { ORPCError } from "@orpc/client";
 import { z } from "zod";
-import { textToSpeech } from "@/lib/deepgram";
-import { generateInterviewResponse } from "@/lib/gemini";
 import db from "@/lib/prisma";
-import {
-  buildSystemPrompt,
-  type ExperienceLevel,
-  type InterviewType,
-} from "@/lib/prompts/interview-prompts";
-import { storageService } from "@/lib/storage";
 
 import type { Context } from "@/server/orpc";
-import { INTERVIEW_STATUS, MESSAGE_ROLES } from "./schemas";
-
-// Service / Helper Logic (kept inline or could be moved to utils)
+import { INTERVIEW_STATUS } from "./schemas";
 import {
-  cleanTextForTTS,
-  DEFAULT_GREETING,
-  INITIAL_USER_PROMPT,
-} from "./utils";
-
-export const generateAndUploadAudio = async (
-  text: string,
-  interviewId: string,
-): Promise<string | undefined> => {
-  try {
-    const cleanedText = cleanTextForTTS(text);
-    const audioBuffer = await textToSpeech(` ${cleanedText}`);
-    return await storageService.uploadAudio(audioBuffer, interviewId);
-  } catch (error) {
-    console.error("[TTS Error]", error);
-    return undefined;
-  }
-};
+  generateAndUploadInterviewAudio,
+  generateOpeningInterviewMessage,
+  getLatestAssistantMessage,
+  interviewMessageSelect,
+  serializeInterviewMessage,
+} from "./service";
 
 export const startSessionInput = z.object({
   interviewId: z.string().min(1, "Interview ID is required"),
@@ -50,12 +28,21 @@ export async function startSession({
 
   const interview = await db.interview.findFirst({
     where: { id: input.interviewId, userId: user.id },
-    include: {
+    select: {
+      id: true,
+      jobTitle: true,
+      resumeText: true,
+      experienceLevel: true,
+      type: true,
+      techStack: true,
+      includeDSA: true,
+      companyName: true,
+      jobDescription: true,
+      status: true,
       messages: {
         orderBy: { createdAt: "asc" },
+        select: interviewMessageSelect,
       },
-      report: true,
-      resume: true,
     },
   });
 
@@ -63,64 +50,76 @@ export async function startSession({
     throw new ORPCError("NOT_FOUND", { message: "Interview not found" });
   }
 
-  // If already started and has messages, return the last assistant message
-  if (interview.messages.length > 0) {
-    const lastAssistantMessage = interview.messages
-      .filter((m) => m.role === MESSAGE_ROLES.ASSISTANT)
-      .pop();
+  const lastAssistantMessage = getLatestAssistantMessage(interview.messages);
+  if (lastAssistantMessage) {
+    return {
+      assistantMessage: serializeInterviewMessage(lastAssistantMessage),
+      status:
+        interview.status as (typeof INTERVIEW_STATUS)[keyof typeof INTERVIEW_STATUS],
+    };
+  }
 
-    if (lastAssistantMessage) {
+  const openingMessage = await generateOpeningInterviewMessage(interview);
+  const audioUrl = await generateAndUploadInterviewAudio(
+    openingMessage,
+    interview.id,
+  );
+
+  const sessionState = await db.$transaction(async (tx) => {
+    const currentInterview = await tx.interview.findFirst({
+      where: { id: input.interviewId, userId: user.id },
+      select: {
+        status: true,
+        messages: {
+          orderBy: { createdAt: "asc" },
+          select: interviewMessageSelect,
+        },
+      },
+    });
+
+    if (!currentInterview) {
+      throw new ORPCError("NOT_FOUND", { message: "Interview not found" });
+    }
+
+    const currentAssistantMessage = getLatestAssistantMessage(
+      currentInterview.messages,
+    );
+    if (currentAssistantMessage) {
       return {
-        message: lastAssistantMessage.content,
-        audioUrl: lastAssistantMessage.audioUrl ?? undefined,
-        status:
-          interview.status as (typeof INTERVIEW_STATUS)[keyof typeof INTERVIEW_STATUS],
+        assistantMessage: currentAssistantMessage,
+        status: currentInterview.status,
       };
     }
-  }
 
-  const systemPrompt = buildSystemPrompt({
-    jobTitle: interview.jobTitle,
-    resumeText: interview.resumeText ?? "",
-    experienceLevel: interview.experienceLevel as ExperienceLevel,
-    type: interview.type as InterviewType,
-    techStack: interview.techStack ?? undefined,
-    includeDSA: interview.includeDSA,
-    companyName: interview.companyName ?? undefined,
-    jobDescription: interview.jobDescription ?? undefined,
-  });
+    if (currentInterview.status === INTERVIEW_STATUS.SETUP) {
+      await tx.interview.update({
+        where: { id: interview.id, userId: user.id },
+        data: { status: INTERVIEW_STATUS.IN_PROGRESS },
+      });
+    }
 
-  let openingMessage: string;
-  try {
-    openingMessage = await generateInterviewResponse(systemPrompt, [
-      { role: "user", content: INITIAL_USER_PROMPT },
-    ]);
-  } catch (error) {
-    console.error("[AI Generation Error]", error);
-    openingMessage = DEFAULT_GREETING;
-  }
-
-  const audioUrl = await generateAndUploadAudio(openingMessage, interview.id);
-
-  if (interview.status === INTERVIEW_STATUS.SETUP) {
-    await db.interview.update({
-      where: { id: interview.id, userId: user.id },
-      data: { status: INTERVIEW_STATUS.IN_PROGRESS },
+    const assistantMessage = await tx.message.create({
+      data: {
+        interviewId: interview.id,
+        role: "assistant",
+        content: openingMessage,
+        audioUrl,
+      },
+      select: interviewMessageSelect,
     });
-  }
 
-  await db.message.create({
-    data: {
-      interviewId: interview.id,
-      role: MESSAGE_ROLES.ASSISTANT,
-      content: openingMessage,
-      audioUrl,
-    },
+    return {
+      assistantMessage,
+      status:
+        currentInterview.status === INTERVIEW_STATUS.SETUP
+          ? INTERVIEW_STATUS.IN_PROGRESS
+          : currentInterview.status,
+    };
   });
 
   return {
-    message: openingMessage,
-    audioUrl,
-    status: INTERVIEW_STATUS.IN_PROGRESS,
+    assistantMessage: serializeInterviewMessage(sessionState.assistantMessage),
+    status:
+      sessionState.status as (typeof INTERVIEW_STATUS)[keyof typeof INTERVIEW_STATUS],
   };
 }

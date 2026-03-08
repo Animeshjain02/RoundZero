@@ -3,7 +3,12 @@ import { z } from "zod";
 
 import db from "@/lib/prisma";
 import type { Context } from "@/server/orpc";
-import type { CategoryScores, MESSAGE_ROLES } from "./schemas";
+import {
+  interviewMessageSelect,
+  interviewReportSelect,
+  serializeInterviewMessage,
+  serializeInterviewReport,
+} from "./service";
 
 export const getInterviewByIdInput = z.object({
   id: z.string().min(1, "Interview ID is required"),
@@ -23,12 +28,27 @@ export async function getInterviewById({
 
   const interview = await db.interview.findFirst({
     where: { id: input.id, userId: user.id },
-    include: {
+    select: {
+      id: true,
+      jobTitle: true,
+      type: true,
+      status: true,
+      startedAt: true,
+      endedAt: true,
+      durationSec: true,
+      resumeText: true,
+      techStack: true,
+      experienceLevel: true,
+      includeDSA: true,
+      companyName: true,
+      jobDescription: true,
       messages: {
         orderBy: { createdAt: "asc" },
+        select: interviewMessageSelect,
       },
-      report: true,
-      resume: true,
+      report: {
+        select: interviewReportSelect,
+      },
     },
   });
 
@@ -51,23 +71,8 @@ export async function getInterviewById({
       includeDSA: interview.includeDSA,
       companyName: interview.companyName,
       jobDescription: interview.jobDescription,
-      messages: interview.messages.map((message) => ({
-        id: message.id,
-        role: message.role as (typeof MESSAGE_ROLES)[keyof typeof MESSAGE_ROLES],
-        content: message.content,
-        audioUrl: message.audioUrl,
-        createdAt: message.createdAt,
-      })),
-      report: interview.report
-        ? {
-            overallScore: interview.report.overallScore,
-            categoryScores: interview.report.categoryScores as CategoryScores,
-            strengths: interview.report.strengths,
-            weaknesses: interview.report.weaknesses,
-            suggestions: interview.report.suggestions,
-            summary: interview.report.summary,
-          }
-        : null,
+      messages: interview.messages.map(serializeInterviewMessage),
+      report: serializeInterviewReport(interview.report),
     },
   };
 }

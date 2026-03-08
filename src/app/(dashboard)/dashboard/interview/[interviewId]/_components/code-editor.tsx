@@ -111,7 +111,7 @@ interface CodeEditorProps {
   className?: string;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
-  onSubmit?: (code: string) => Promise<void>;
+  onSubmit?: (code: string, language: string) => Promise<void>;
 }
 
 export function CodeEditor({
@@ -148,9 +148,9 @@ export function CodeEditor({
       setIsSubmitting(true);
       try {
         setOutput("Submitting code to AI...");
-        await onSubmit(code);
+        await onSubmit(code, language);
         setOutput("Submitted successfully.");
-      } catch (e) {
+      } catch (_error) {
         setOutput("Submission failed.");
       } finally {
         setIsSubmitting(false);

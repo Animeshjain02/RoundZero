@@ -1,7 +1,15 @@
-import type { MessageRole as SchemaMessageRole } from "@/server/routers/interview/schemas";
-
 // Message role type
 export type MessageRole = "user" | "assistant" | "system";
+
+export interface InterviewMessage {
+  id: string;
+  role: MessageRole;
+  content: string;
+  audioUrl: string | null;
+  codeSnippet: string | null;
+  language: string | null;
+  createdAt: Date;
+}
 
 // Interview data type (simplified for client use)
 export interface InterviewData {
@@ -16,13 +24,9 @@ export interface InterviewData {
   techStack: string | null;
   experienceLevel: string;
   includeDSA: boolean;
-  messages: Array<{
-    id: string;
-    role: MessageRole;
-    content: string;
-    audioUrl: string | null;
-    createdAt: Date;
-  }>;
+  companyName: string | null;
+  jobDescription: string | null;
+  messages: InterviewMessage[];
   report: {
     overallScore: number;
     categoryScores: {
@@ -40,14 +44,7 @@ export interface InterviewData {
 }
 
 // Message type for UI
-export interface Message {
-  id: string;
-  role: MessageRole;
-  content: string;
+export interface Message extends InterviewMessage {
   timestamp?: string;
-  createdAt?: string | Date;
-  audioUrl?: string | null;
   isTyping?: boolean;
-  codeSnippet?: string | null;
-  language?: string | null;
 }

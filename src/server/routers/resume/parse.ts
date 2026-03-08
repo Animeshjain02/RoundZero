@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { extractResumeText } from "@/lib/extractResumeText";
 import { storageService } from "@/lib/storage";
+import type { Context } from "@/server/orpc";
 import { s3ResumeSchema } from "../interview/schemas";
 
 export const parseResumeInput = z.object({
@@ -11,10 +12,23 @@ export const parseResumeInput = z.object({
 
 export async function parseResume({
   input,
+  context,
 }: {
   input: z.infer<typeof parseResumeInput>;
+  context: Context;
 }) {
   const { resume } = input;
+  const { user } = context;
+
+  if (!user) {
+    throw new ORPCError("UNAUTHORIZED");
+  }
+
+  if (!resume.key.startsWith(`resumes/${user.id}/`)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "You do not have access to this resume",
+    });
+  }
 
   // Download file from S3
   let buffer: Buffer;

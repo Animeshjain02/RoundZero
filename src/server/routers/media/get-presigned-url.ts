@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
 import { STORAGE_CONFIG } from "@/config/storage";
+import db from "@/lib/prisma";
 import { S3 } from "@/lib/s3Client";
 import type { Context } from "@/server/orpc";
 
@@ -22,6 +23,8 @@ export const getPresignedUrlInput = z.object({
     "audio/mpeg",
     "audio/webm",
     "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/plain",
   ]),
   purpose: z.enum(["resume", "interview_audio"]),
   interviewId: z.string().optional(),
@@ -66,6 +69,18 @@ export async function getPresignedUrl({
         message: "Interview ID required for audio upload",
       });
     }
+
+    const interview = await db.interview.findFirst({
+      where: { id: interviewId, userId: user.id },
+      select: { id: true },
+    });
+
+    if (!interview) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "You do not have access to this interview",
+      });
+    }
+
     const ext = MIME_TO_EXT[contentType] || "wav";
     key = `interviews/${interviewId}/audio/${uuidv4()}.${ext}`;
   } else {

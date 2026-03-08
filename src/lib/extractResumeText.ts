@@ -14,8 +14,11 @@ export async function extractResumeText(filename: string, buffer: Buffer) {
       const { value } = await mammoth.extractRawText({ buffer });
       return (value || "").trim();
     }
+    if (lowerCaseFileName.endsWith(".txt")) {
+      return buffer.toString("utf-8").trim();
+    }
 
-    return buffer.toString("utf-8").trim();
+    throw new Error("Unsupported resume format");
   } catch (error) {
     console.error(`Error parsing file ${filename}:`, error);
     throw new Error("Failed to extract text from resume.");
