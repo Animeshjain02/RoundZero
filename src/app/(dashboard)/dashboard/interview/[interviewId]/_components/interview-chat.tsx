@@ -11,6 +11,7 @@ interface InterviewChatProps {
   messages: Message[];
   isRecording: boolean; // For showing recording state/waveform
   isPlaying: boolean; // For showing AI speaking state
+  isResponding: boolean; // For showing streamed response state
   onToggleMic: () => void;
   showMicReminder: boolean;
   interimTranscript?: string;
@@ -21,6 +22,7 @@ export function InterviewChat({
   messages,
   isRecording,
   isPlaying,
+  isResponding,
   onToggleMic,
   showMicReminder,
   interimTranscript,
@@ -58,7 +60,12 @@ export function InterviewChat({
       <div className="flex items-center justify-between px-4 py-2 border-b bg-background/80 backdrop-blur-md sticky top-0 z-10 shrink-0">
         <div className="flex items-center gap-2">
           <div className="scale-75 origin-left -mr-4">
-            <AIAvatar isSpeaking={isPlaying} name="Alex" size="sm" hideLabels />
+            <AIAvatar
+              isSpeaking={isPlaying || isResponding}
+              name="Alex"
+              size="sm"
+              hideLabels
+            />
           </div>
           <div>
             <h3 className="text-xs font-semibold leading-tight">
@@ -70,11 +77,17 @@ export function InterviewChat({
                   "w-1 h-1 rounded-full",
                   isPlaying
                     ? "bg-green-500 animate-pulse"
-                    : "bg-muted-foreground",
+                    : isResponding
+                      ? "bg-amber-500 animate-pulse"
+                      : "bg-muted-foreground",
                 )}
               />
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-                {isPlaying ? "Speaking..." : "Listening..."}
+                {isPlaying
+                  ? "Speaking..."
+                  : isResponding
+                    ? "Responding..."
+                    : "Listening..."}
               </span>
             </div>
           </div>
@@ -83,7 +96,7 @@ export function InterviewChat({
         {/* Waveform Visualization (Active when AI speaks or User speaks) */}
         <div className="hidden md:block w-24 h-6 opacity-40">
           <Waveform
-            isActive={isPlaying || isRecording}
+            isActive={isPlaying || isResponding || isRecording}
             className="h-full w-full"
             barCount={8}
           />

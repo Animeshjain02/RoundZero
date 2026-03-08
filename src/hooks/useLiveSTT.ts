@@ -96,7 +96,7 @@ export const useLiveSTT = (options: LiveSTTOptions = {}): LiveSTTState => {
     }
     utteranceTimeoutRef.current = setTimeout(() => {
       triggerUtteranceEnd();
-    }, optionsRef.current.utteranceTimeoutMs || 1500);
+    }, optionsRef.current.utteranceTimeoutMs || 800);
   }, [triggerUtteranceEnd]);
 
   const cleanup = useCallback(() => {
@@ -111,7 +111,9 @@ export const useLiveSTT = (options: LiveSTTOptions = {}): LiveSTTState => {
     }
 
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((track) => {
+        track.stop();
+      });
     }
 
     if (

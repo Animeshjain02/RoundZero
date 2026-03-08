@@ -22,6 +22,7 @@ export interface InterviewMediaState {
 
 export interface InterviewMediaOptions {
   onSpeechEnd?: (finalTranscript: string) => void;
+  isAssistantResponding?: boolean;
 }
 
 export const useInterviewMedia = (
@@ -32,7 +33,7 @@ export const useInterviewMedia = (
   const [interimTranscript, setInterimTranscript] = useState("");
 
   const micEnabledRef = useRef(true);
-  const prevIsPlayingRef = useRef(false);
+  const prevIsAssistantBusyRef = useRef(false);
 
   const {
     playEncodedAudio: rawPlay,
@@ -65,15 +66,17 @@ export const useInterviewMedia = (
   });
 
   useEffect(() => {
-    if (isPlaying && !prevIsPlayingRef.current) {
+    const isAssistantBusy = isPlaying || !!options?.isAssistantResponding;
+
+    if (isAssistantBusy && !prevIsAssistantBusyRef.current) {
       pauseMic();
-    } else if (!isPlaying && prevIsPlayingRef.current) {
+    } else if (!isAssistantBusy && prevIsAssistantBusyRef.current) {
       if (micEnabledRef.current) {
         resumeMic();
       }
     }
-    prevIsPlayingRef.current = isPlaying;
-  }, [isPlaying, pauseMic, resumeMic]);
+    prevIsAssistantBusyRef.current = isAssistantBusy;
+  }, [isPlaying, options?.isAssistantResponding, pauseMic, resumeMic]);
 
   const playEncodedAudio = useCallback(
     (audioUrl: string) => {
@@ -86,7 +89,7 @@ export const useInterviewMedia = (
     try {
       await connect();
       micEnabledRef.current = true;
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to connect real-time transcription");
     }
   }, [connect]);
@@ -96,7 +99,7 @@ export const useInterviewMedia = (
       try {
         await connect();
         micEnabledRef.current = true;
-      } catch (error) {
+      } catch (_error) {
         toast.error("Microphone access denied or unavailable");
       }
       return;
