@@ -17,6 +17,7 @@ export function InterviewSession() {
     messages,
     isRecording,
     isPlaying,
+    isResponding,
     isHydrated,
     toggleMic,
     sendMessage,
@@ -63,6 +64,7 @@ export function InterviewSession() {
     if (
       status === "IN_PROGRESS" &&
       !isPlaying &&
+      !isResponding &&
       !isRecording &&
       messages.length > 0
     ) {
@@ -73,7 +75,7 @@ export function InterviewSession() {
     } else {
       setShowMicReminder(false);
     }
-  }, [status, isPlaying, isRecording, messages.length]);
+  }, [status, isPlaying, isResponding, isRecording, messages.length]);
 
   // Hide mic reminder when user starts recording
   useEffect(() => {
@@ -152,6 +154,7 @@ export function InterviewSession() {
                 messages={chatMessages}
                 isRecording={isRecording}
                 isPlaying={isPlaying}
+                isResponding={isResponding}
                 onToggleMic={toggleMic}
                 showMicReminder={showMicReminder}
                 interimTranscript={interimTranscript}
@@ -196,6 +199,7 @@ export function InterviewSession() {
               messages={chatMessages}
               isRecording={isRecording}
               isPlaying={isPlaying}
+              isResponding={isResponding}
               onToggleMic={toggleMic}
               showMicReminder={showMicReminder}
               interimTranscript={interimTranscript}

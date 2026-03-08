@@ -1,6 +1,8 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import { useParams, useRouter } from "next/navigation";
 import {
   createContext,
@@ -8,30 +10,81 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { orpc } from "@/lib/orpc-client";
 import type { INTERVIEW_STATUS } from "@/server/routers/interview/schemas";
 import { useInterviewMedia } from "../_hooks/useInterviewMedia";
 import type { InterviewData, Message } from "./types";
 
-// Interview status type
 type InterviewStatus = keyof typeof INTERVIEW_STATUS;
 
-// Valid message roles
 const VALID_ROLES = ["user", "assistant", "system"] as const;
+const interviewMessageMetadataSchema = z.object({
+  persistedId: z.string().optional(),
+  audioUrl: z.string().nullable().optional(),
+  codeSnippet: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+});
+
+type InterviewMessageMetadata = z.infer<typeof interviewMessageMetadataSchema>;
+type InterviewUIMessage = UIMessage<InterviewMessageMetadata>;
+
 const isValidRole = (role: string): role is Message["role"] => {
   return VALID_ROLES.includes(role as Message["role"]);
 };
 
-interface SendMessageOptions {
-  codeSnippet?: string;
-  language?: string;
-}
+const getMessageText = (message: Pick<InterviewUIMessage, "parts">): string => {
+  let text = "";
 
-const toClientMessage = (message: {
+  for (const part of message.parts) {
+    if (part.type === "text") {
+      text += part.text;
+    }
+  }
+
+  return text;
+};
+
+const getStableMessageId = (message: InterviewUIMessage): string => {
+  return message.metadata?.persistedId ?? message.id;
+};
+
+const toMessageDate = (createdAt?: string): Date => {
+  if (!createdAt) {
+    return new Date();
+  }
+
+  const parsedDate = new Date(createdAt);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return new Date();
+  }
+
+  return parsedDate;
+};
+
+const toClientMessage = (message: InterviewUIMessage): Message | null => {
+  if (!isValidRole(message.role)) {
+    return null;
+  }
+
+  return {
+    id: getStableMessageId(message),
+    role: message.role,
+    content: getMessageText(message),
+    audioUrl: message.metadata?.audioUrl ?? null,
+    codeSnippet: message.metadata?.codeSnippet ?? null,
+    language: message.metadata?.language ?? null,
+    createdAt: toMessageDate(message.metadata?.createdAt),
+  };
+};
+
+const toUIMessage = (message: {
   id: string;
   role: string;
   content: string;
@@ -39,7 +92,7 @@ const toClientMessage = (message: {
   codeSnippet?: string | null;
   language?: string | null;
   createdAt: Date;
-}): Message | null => {
+}): InterviewUIMessage | null => {
   if (!isValidRole(message.role)) {
     return null;
   }
@@ -47,33 +100,52 @@ const toClientMessage = (message: {
   return {
     id: message.id,
     role: message.role,
-    content: message.content,
-    audioUrl: message.audioUrl,
-    codeSnippet: message.codeSnippet ?? null,
-    language: message.language ?? null,
-    createdAt: message.createdAt,
+    metadata: {
+      persistedId: message.id,
+      audioUrl: message.audioUrl,
+      codeSnippet: message.codeSnippet ?? null,
+      language: message.language ?? null,
+      createdAt: message.createdAt.toISOString(),
+    },
+    parts: [
+      {
+        type: "text",
+        text: message.content,
+      },
+    ],
   };
 };
 
-const mergeMessage = (messages: Message[], nextMessage: Message): Message[] => {
-  const existingIndex = messages.findIndex(
-    (message) => message.id === nextMessage.id,
-  );
+const mergeMessage = (
+  messages: InterviewUIMessage[],
+  nextMessage: InterviewUIMessage,
+): InterviewUIMessage[] => {
+  const stableId = getStableMessageId(nextMessage);
+  const existingIndex = messages.findIndex((message) => {
+    return (
+      getStableMessageId(message) === stableId || message.id === nextMessage.id
+    );
+  });
 
   if (existingIndex === -1) {
     return [...messages, nextMessage];
   }
 
-  return messages.map((message) =>
-    message.id === nextMessage.id ? nextMessage : message,
+  return messages.map((message, index) =>
+    index === existingIndex ? nextMessage : message,
   );
 };
 
+interface SendMessageOptions {
+  codeSnippet?: string;
+  language?: string;
+}
+
 export interface InterviewContextType {
-  // State
   messages: Message[];
   isRecording: boolean;
   isPlaying: boolean;
+  isResponding: boolean;
   isConnecting: boolean;
   isHydrated: boolean;
   interviewId: string;
@@ -81,21 +153,13 @@ export interface InterviewContextType {
   interview: InterviewData | null | undefined;
   isLoading: boolean;
   isEnding: boolean;
-
-  // Actions
   startInterview: () => Promise<void>;
   sendMessage: (text: string, options?: SendMessageOptions) => Promise<void>;
   endInterview: (durationSec: number) => Promise<void>;
-
-  // Media Controls
   toggleMic: () => Promise<void>;
   stopAllMedia: () => void;
-
-  // Transcripts
   transcript: string;
   interimTranscript: string;
-
-  // Connection state
   connectionState: "disconnected" | "connecting" | "connected" | "failed";
 }
 
@@ -112,14 +176,11 @@ export const InterviewContextProvider = ({
 }: InterviewContextProviderProps) => {
   const params = useParams();
   const router = useRouter();
-
-  // Validate interviewId
   const paramInterviewId = params?.interviewId;
   const interviewId =
     propInterviewId ||
     (typeof paramInterviewId === "string" ? paramInterviewId : "");
 
-  const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<InterviewStatus>("SETUP");
   const [isHydrated, setIsHydrated] = useState(false);
   const isStartingRef = useRef(false);
@@ -128,15 +189,16 @@ export const InterviewContextProvider = ({
     | undefined
   >(undefined);
   const isSendingRef = useRef(false);
+  const playAudioRef = useRef<(audioUrl: string) => void>(() => {});
 
-  // Handle speech end: auto-submit transcript to AI
   const handleSpeechEnd = useCallback(async (finalTranscript: string) => {
     const trimmed = finalTranscript.trim();
-    if (!trimmed || isSendingRef.current || !sendMessageRef.current) return;
+    if (!trimmed || isSendingRef.current || !sendMessageRef.current) {
+      return;
+    }
 
     try {
       isSendingRef.current = true;
-      console.log("[Interview Context] Sending user speech:", trimmed);
       await sendMessageRef.current(trimmed);
     } catch (error) {
       console.error("[Interview Context] Auto-send error:", error);
@@ -146,7 +208,58 @@ export const InterviewContextProvider = ({
     }
   }, []);
 
-  // Media management
+  const chatTransport = useMemo(
+    () =>
+      new DefaultChatTransport<InterviewUIMessage>({
+        api: "/api/interview/chat/stream",
+        credentials: "include",
+        prepareSendMessagesRequest: ({ messages }) => {
+          const latestMessage = messages.at(-1);
+
+          return {
+            credentials: "include",
+            body: {
+              interviewId,
+              message: latestMessage
+                ? getMessageText(latestMessage).trim()
+                : "",
+              codeSnippet: latestMessage?.metadata?.codeSnippet ?? undefined,
+              language: latestMessage?.metadata?.language ?? undefined,
+            },
+          };
+        },
+      }),
+    [interviewId],
+  );
+
+  const {
+    messages: chatMessages,
+    setMessages: setChatMessages,
+    sendMessage: sendChatMessage,
+    status: chatStatus,
+    stop: stopStreamingReply,
+  } = useChat<InterviewUIMessage>({
+    messages: [],
+    transport: chatTransport,
+    messageMetadataSchema: interviewMessageMetadataSchema,
+    onError: (error) => {
+      console.error("[Interview Context] Chat stream error:", error);
+    },
+    onFinish: ({ isError, message }) => {
+      if (isError) {
+        toast.error("Your answer was saved, but the AI response failed.");
+        return;
+      }
+
+      const audioUrl = message.metadata?.audioUrl;
+      if (audioUrl) {
+        playAudioRef.current(audioUrl);
+      }
+    },
+  });
+
+  const isResponding = chatStatus === "submitted" || chatStatus === "streaming";
+
   const {
     isPlaying,
     playEncodedAudio,
@@ -160,19 +273,27 @@ export const InterviewContextProvider = ({
     stopAllMedia,
   } = useInterviewMedia(interviewId, {
     onSpeechEnd: handleSpeechEnd,
+    isAssistantResponding: isResponding,
   });
 
-  // API mutations using
+  useEffect(() => {
+    playAudioRef.current = playEncodedAudio;
+  }, [playEncodedAudio]);
+
+  const messages = useMemo(
+    () =>
+      chatMessages
+        .map(toClientMessage)
+        .filter((message): message is Message => message !== null),
+    [chatMessages],
+  );
+
   const { mutateAsync: startInterviewMutation } = useMutation(
     orpc.interview.start.mutationOptions(),
-  );
-  const { mutateAsync: chatMutation } = useMutation(
-    orpc.interview.chat.mutationOptions(),
   );
   const { mutateAsync: endInterviewMutation, isPending: isEnding } =
     useMutation(orpc.interview.end.mutationOptions());
 
-  // Fetch interview data using
   const { data: interviewDataResult, isLoading } = useQuery(
     orpc.interview.getById.queryOptions({
       input: { id: interviewId },
@@ -187,20 +308,38 @@ export const InterviewContextProvider = ({
 
     const interview = interviewDataResult.interview;
     if (!interview) {
+      setChatMessages([]);
       setIsHydrated(true);
       return;
     }
 
     const hydratedMessages = interview.messages
-      .map(toClientMessage)
-      .filter((message): message is Message => message !== null);
+      .map(toUIMessage)
+      .filter((message): message is InterviewUIMessage => message !== null);
 
     setStatus(interview.status as InterviewStatus);
-    setMessages(hydratedMessages);
+    setChatMessages(hydratedMessages);
     setIsHydrated(true);
-  }, [interviewDataResult, isHydrated, isLoading]);
+  }, [interviewDataResult, isHydrated, isLoading, setChatMessages]);
 
-  useEffect(() => stopAllMedia, [stopAllMedia]);
+  useEffect(() => {
+    return () => {
+      stopStreamingReply();
+      stopAllMedia();
+    };
+  }, [stopAllMedia, stopStreamingReply]);
+
+  useEffect(() => {
+    if (
+      !isHydrated ||
+      status !== "IN_PROGRESS" ||
+      connectionState !== "disconnected"
+    ) {
+      return;
+    }
+
+    void connectSTT();
+  }, [isHydrated, status, connectionState, connectSTT]);
 
   const startInterview = useCallback(async () => {
     if (!interviewId || !isHydrated) {
@@ -215,23 +354,26 @@ export const InterviewContextProvider = ({
 
     try {
       const response = await startInterviewMutation({ interviewId });
-      const assistantMessage = toClientMessage(response.assistantMessage);
+      const assistantMessage = toUIMessage(response.assistantMessage);
 
       if (assistantMessage) {
-        setMessages((prev) => mergeMessage(prev, assistantMessage));
+        setChatMessages((previousMessages) =>
+          mergeMessage(previousMessages, assistantMessage),
+        );
       }
+
       setStatus(response.status as InterviewStatus);
 
       if (response.status === "IN_PROGRESS") {
         try {
           await connectSTT();
         } catch (sttError) {
-          console.log("STT failed", sttError);
+          console.error("[Interview Context] STT connection failed:", sttError);
         }
       }
 
-      if (assistantMessage?.audioUrl) {
-        playEncodedAudio(assistantMessage.audioUrl);
+      if (assistantMessage?.metadata?.audioUrl) {
+        playEncodedAudio(assistantMessage.metadata.audioUrl);
       }
     } catch (error) {
       console.error("[Interview Context] Failed to start:", error);
@@ -244,107 +386,76 @@ export const InterviewContextProvider = ({
     isHydrated,
     status,
     startInterviewMutation,
-    playEncodedAudio,
     connectSTT,
+    playEncodedAudio,
+    setChatMessages,
   ]);
 
   const sendMessage = useCallback(
     async (content: string, options?: SendMessageOptions) => {
-      if (!interviewId) return;
+      if (!interviewId || isResponding) {
+        return;
+      }
 
       const previousTranscript = transcript;
-      const optimisticUserMessageId = `user-${Date.now()}`;
-
-      const userMessage: Message = {
-        id: optimisticUserMessageId,
-        role: "user",
-        content,
-        audioUrl: null,
-        codeSnippet: options?.codeSnippet ?? null,
-        language: options?.language ?? null,
-        createdAt: new Date(),
-      };
-      setMessages((prev) => [...prev, userMessage]);
       setTranscript("");
 
       try {
-        const response = await chatMutation({
-          interviewId,
-          message: content,
-          codeSnippet: options?.codeSnippet,
-          language: options?.language,
+        await sendChatMessage({
+          text: content,
+          metadata: {
+            codeSnippet: options?.codeSnippet ?? null,
+            language: options?.language ?? null,
+            createdAt: new Date().toISOString(),
+          },
         });
-
-        const persistedUserMessage = toClientMessage(response.userMessage);
-        const assistantMessage = response.assistantMessage
-          ? toClientMessage(response.assistantMessage)
-          : null;
-
-        setMessages((prev) => {
-          const withoutOptimisticMessage = prev.filter(
-            (message) => message.id !== optimisticUserMessageId,
-          );
-
-          let nextMessages = withoutOptimisticMessage;
-
-          if (persistedUserMessage) {
-            nextMessages = mergeMessage(nextMessages, persistedUserMessage);
-          }
-
-          if (assistantMessage) {
-            nextMessages = mergeMessage(nextMessages, assistantMessage);
-          }
-
-          return nextMessages;
-        });
-
-        if (assistantMessage?.audioUrl) {
-          playEncodedAudio(assistantMessage.audioUrl);
-        } else if (!assistantMessage) {
-          toast.error("Your answer was saved, but the AI response failed.");
-        }
       } catch (error) {
         console.error("[Interview Context] Chat error:", error);
-        setMessages((prev) =>
-          prev.filter((message) => message.id !== optimisticUserMessageId),
-        );
         setTranscript(previousTranscript);
         toast.error("Failed to send message");
       }
     },
-    [interviewId, transcript, chatMutation, playEncodedAudio, setTranscript],
+    [interviewId, isResponding, transcript, sendChatMessage, setTranscript],
   );
 
-  // Keep sendMessageRef in sync for use in callbacks
   useEffect(() => {
     sendMessageRef.current = sendMessage;
   }, [sendMessage]);
 
   const endInterview = useCallback(
     async (durationSec: number) => {
-      if (!interviewId) return;
+      if (!interviewId) {
+        return;
+      }
 
       try {
+        stopStreamingReply();
         await endInterviewMutation({ interviewId, durationSec });
 
-        // Only stop media after successful mutation
         stopAllMedia();
         setStatus("COMPLETED");
 
         router.push(`/dashboard/interview/${interviewId}/report`);
         toast.success("Interview completed! Generating report...");
       } catch (error) {
-        console.error("Interview context end error:", error);
+        console.error("[Interview Context] End error:", error);
         toast.error("Failed to end interview");
       }
     },
-    [interviewId, endInterviewMutation, router, stopAllMedia],
+    [
+      interviewId,
+      endInterviewMutation,
+      router,
+      stopAllMedia,
+      stopStreamingReply,
+    ],
   );
 
   const value: InterviewContextType = {
     messages,
     isRecording,
     isPlaying,
+    isResponding,
     isConnecting: connectionState === "connecting",
     isHydrated,
     interviewId,
@@ -369,7 +480,6 @@ export const InterviewContextProvider = ({
   );
 };
 
-// Hook to access interview context
 export const useInterview = (): InterviewContextType => {
   const context = useContext(InterviewContext);
   if (!context) {

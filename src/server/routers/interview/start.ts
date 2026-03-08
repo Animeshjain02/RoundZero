@@ -60,10 +60,6 @@ export async function startSession({
   }
 
   const openingMessage = await generateOpeningInterviewMessage(interview);
-  const audioUrl = await generateAndUploadInterviewAudio(
-    openingMessage,
-    interview.id,
-  );
 
   const sessionState = await db.$transaction(async (tx) => {
     const currentInterview = await tx.interview.findFirst({
@@ -87,6 +83,7 @@ export async function startSession({
     if (currentAssistantMessage) {
       return {
         assistantMessage: currentAssistantMessage,
+        createdAssistantMessage: false,
         status: currentInterview.status,
       };
     }
@@ -103,13 +100,13 @@ export async function startSession({
         interviewId: interview.id,
         role: "assistant",
         content: openingMessage,
-        audioUrl,
       },
       select: interviewMessageSelect,
     });
 
     return {
       assistantMessage,
+      createdAssistantMessage: true,
       status:
         currentInterview.status === INTERVIEW_STATUS.SETUP
           ? INTERVIEW_STATUS.IN_PROGRESS
@@ -117,8 +114,19 @@ export async function startSession({
     };
   });
 
+  const audioUrl = sessionState.createdAssistantMessage
+    ? await generateAndUploadInterviewAudio(
+        openingMessage,
+        interview.id,
+        sessionState.assistantMessage.id,
+      )
+    : sessionState.assistantMessage.audioUrl;
+
   return {
-    assistantMessage: serializeInterviewMessage(sessionState.assistantMessage),
+    assistantMessage: {
+      ...serializeInterviewMessage(sessionState.assistantMessage),
+      audioUrl: audioUrl ?? sessionState.assistantMessage.audioUrl,
+    },
     status:
       sessionState.status as (typeof INTERVIEW_STATUS)[keyof typeof INTERVIEW_STATUS],
   };

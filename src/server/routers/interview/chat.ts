@@ -59,19 +59,22 @@ export async function chat({
 
   try {
     const aiResponseText = await generateInterviewReply(interview, history);
-    const audioUrl = await generateAndUploadInterviewAudio(
-      aiResponseText,
-      interview.id,
-    );
     const assistantMessage = await createAssistantInterviewMessage({
       interviewId: interview.id,
       content: aiResponseText,
-      audioUrl,
     });
+    const audioUrl = await generateAndUploadInterviewAudio(
+      aiResponseText,
+      interview.id,
+      assistantMessage.id,
+    );
 
     return {
       userMessage: serializeInterviewMessage(userMessage),
-      assistantMessage: serializeInterviewMessage(assistantMessage),
+      assistantMessage: {
+        ...serializeInterviewMessage(assistantMessage),
+        audioUrl: audioUrl ?? assistantMessage.audioUrl,
+      },
     };
   } catch (error) {
     console.error("[AI Generation Error]", error);

@@ -5,6 +5,7 @@ import {
   type Report as GeneratedInterviewReport,
   generateInterviewResponse,
   generateReport,
+  streamInterviewResponse,
 } from "@/lib/gemini";
 import db from "@/lib/prisma";
 import {
@@ -13,7 +14,7 @@ import {
   type ExperienceLevel,
   type InterviewType,
 } from "@/lib/prompts/interview-prompts";
-import { storageService } from "@/lib/storage";
+import { CONTENT_TYPES, storageService } from "@/lib/storage";
 import {
   type CategoryScores,
   type Report as InterviewReport,
@@ -52,6 +53,8 @@ export type InterviewMessageRecord = Prisma.MessageGetPayload<{
 export type InterviewReportRecord = Prisma.ReportGetPayload<{
   select: typeof interviewReportSelect;
 }>;
+
+const INTERVIEW_AUDIO_CONTENT_TYPE = CONTENT_TYPES.WAV;
 
 type InterviewPromptContext = {
   id: string;
@@ -195,14 +198,50 @@ export const createAssistantInterviewMessage = async (input: {
     select: interviewMessageSelect,
   });
 
+const toAudioDataUrl = (
+  audioBuffer: Buffer,
+  contentType: string = INTERVIEW_AUDIO_CONTENT_TYPE,
+) => `data:${contentType};base64,${audioBuffer.toString("base64")}`;
+
+const persistInterviewAudioUpload = (input: {
+  audioBuffer: Buffer;
+  interviewId: string;
+  messageId: string;
+}) => {
+  void storageService
+    .uploadAudio(
+      input.audioBuffer,
+      input.interviewId,
+      INTERVIEW_AUDIO_CONTENT_TYPE,
+    )
+    .then(async (audioUrl) => {
+      await db.message.update({
+        where: { id: input.messageId },
+        data: { audioUrl },
+      });
+    })
+    .catch((error) => {
+      console.error("[Audio Upload Error]", error);
+    });
+};
+
 export const generateAndUploadInterviewAudio = async (
   text: string,
   interviewId: string,
+  messageId: string,
 ): Promise<string | undefined> => {
   try {
     const cleanedText = cleanTextForTTS(text);
     const audioBuffer = await textToSpeech(` ${cleanedText}`);
-    return await storageService.uploadAudio(audioBuffer, interviewId);
+    const playbackUrl = toAudioDataUrl(audioBuffer);
+
+    persistInterviewAudioUpload({
+      audioBuffer,
+      interviewId,
+      messageId,
+    });
+
+    return playbackUrl;
   } catch (error) {
     console.error("[TTS Error]", error);
     return undefined;
@@ -227,6 +266,15 @@ export const generateInterviewReply = async (
   messages: InterviewMessageRecord[],
 ): Promise<string> =>
   generateInterviewResponse(
+    buildPromptForInterview(interview),
+    toAIMessages(messages),
+  );
+
+export const streamInterviewReply = (
+  interview: InterviewPromptContext,
+  messages: InterviewMessageRecord[],
+) =>
+  streamInterviewResponse(
     buildPromptForInterview(interview),
     toAIMessages(messages),
   );
