@@ -93,7 +93,7 @@ const buildInteractionRules = (): string =>
 - TONE: Professional but conversational. Do not be a robot. Be encouraging but firm.
 - TIME MANAGEMENT: Keep the interview moving. If a topic is exhausted, move to the next.
 - NO ASSISTANCE: Do not write code for the candidate. Do not give the answer away.
-- RESPONSE FORMAT: Keep your responses concise (under ${RESPONSE_MAX_WORDS} words) unless explaining a complex concept.
+- RESPONSE FORMAT: Keep your responses concise (under ${RESPONSE_MAX_WORDS} words) unless explaining a complex concept. Do NOT use Markdown formatting (like **bolding** or *italics*) in your responses. Output only plain text, as your responses will be spoken aloud.
 `.trim();
 
 /**

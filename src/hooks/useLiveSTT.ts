@@ -27,13 +27,15 @@ export interface LiveSTTState {
 }
 
 const DEEPGRAM_WSS_BASE = "wss://api.deepgram.com/v1/listen";
+const DEEPGRAM_ENDPOINTING_MS = 900;
+const DEFAULT_UTTERANCE_TIMEOUT_MS = 2200;
 
 const DEEPGRAM_PARAMS = new URLSearchParams({
   model: "nova-3",
   language: "en-US",
   smart_format: "true",
   interim_results: "true",
-  endpointing: "300",
+  endpointing: DEEPGRAM_ENDPOINTING_MS.toString(),
 }).toString();
 
 const AUDIO_CONSTRAINTS: MediaTrackConstraints = {
@@ -96,7 +98,7 @@ export const useLiveSTT = (options: LiveSTTOptions = {}): LiveSTTState => {
     }
     utteranceTimeoutRef.current = setTimeout(() => {
       triggerUtteranceEnd();
-    }, optionsRef.current.utteranceTimeoutMs || 800);
+    }, optionsRef.current.utteranceTimeoutMs || DEFAULT_UTTERANCE_TIMEOUT_MS);
   }, [triggerUtteranceEnd]);
 
   const cleanup = useCallback(() => {

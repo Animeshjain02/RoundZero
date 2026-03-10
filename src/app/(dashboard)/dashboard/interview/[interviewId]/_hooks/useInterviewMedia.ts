@@ -7,14 +7,15 @@ export type { ConnectionState };
 
 export interface InterviewMediaState {
   isPlaying: boolean;
-  playEncodedAudio: (audioUrl: string) => void;
+  /** Ref-stable: safe to call from callbacks without stale closure concerns */
+  playAudio: (audioUrl: string) => void;
   stopAudio: () => void;
   isRecording: boolean;
   toggleMic: () => Promise<void>;
-  stopRecording: () => void;
   transcript: string;
   interimTranscript: string;
-  setTranscript: React.Dispatch<React.SetStateAction<string>>;
+  clearTranscript: () => void;
+  restoreTranscript: (text: string) => void;
   connectionState: ConnectionState;
   connectSTT: () => Promise<void>;
   stopAllMedia: () => void;
@@ -26,7 +27,6 @@ export interface InterviewMediaOptions {
 }
 
 export const useInterviewMedia = (
-  _interviewId: string,
   options?: InterviewMediaOptions,
 ): InterviewMediaState => {
   const [transcript, setTranscript] = useState("");
@@ -35,11 +35,27 @@ export const useInterviewMedia = (
   const micEnabledRef = useRef(true);
   const prevIsAssistantBusyRef = useRef(false);
 
+  // Stabilize callback refs to avoid stale closures in useLiveSTT
+  const onSpeechEndRef = useRef(options?.onSpeechEnd);
+  useEffect(() => {
+    onSpeechEndRef.current = options?.onSpeechEnd;
+  }, [options?.onSpeechEnd]);
+
   const {
-    playEncodedAudio: rawPlay,
+    playEncodedAudio,
     isPlaying,
     stop: stopAudio,
   } = useAudioPlayer();
+
+  // Ref-stable play function — safe to call from stale closures (e.g. onFinish)
+  const playEncodedAudioRef = useRef(playEncodedAudio);
+  useEffect(() => {
+    playEncodedAudioRef.current = playEncodedAudio;
+  }, [playEncodedAudio]);
+
+  const playAudio = useCallback((audioUrl: string) => {
+    playEncodedAudioRef.current(audioUrl);
+  }, []);
 
   const {
     connectionState,
@@ -59,12 +75,13 @@ export const useInterviewMedia = (
       if (trimmed) {
         setTranscript(trimmed);
         setInterimTranscript("");
-        options?.onSpeechEnd?.(trimmed);
+        onSpeechEndRef.current?.(trimmed);
       }
     },
     onSpeechStarted: () => setInterimTranscript(""),
   });
 
+  // Auto pause/resume mic when assistant is busy (playing audio or responding)
   useEffect(() => {
     const isAssistantBusy = isPlaying || !!options?.isAssistantResponding;
 
@@ -78,30 +95,29 @@ export const useInterviewMedia = (
     prevIsAssistantBusyRef.current = isAssistantBusy;
   }, [isPlaying, options?.isAssistantResponding, pauseMic, resumeMic]);
 
-  const playEncodedAudio = useCallback(
-    (audioUrl: string) => {
-      rawPlay(audioUrl);
-    },
-    [rawPlay],
-  );
-
-  const connectSTT = useCallback(async () => {
-    try {
-      await connect();
-      micEnabledRef.current = true;
-    } catch (_error) {
-      toast.error("Failed to connect real-time transcription");
-    }
-  }, [connect]);
-
-  const toggleMic = useCallback(async () => {
-    if (connectionState !== "connected") {
+  // Shared connect helper to avoid duplicated logic
+  const tryConnect = useCallback(
+    async (errorMessage: string): Promise<boolean> => {
       try {
         await connect();
         micEnabledRef.current = true;
-      } catch (_error) {
-        toast.error("Microphone access denied or unavailable");
+        return true;
+      } catch {
+        toast.error(errorMessage);
+        return false;
       }
+    },
+    [connect],
+  );
+
+  const connectSTT = useCallback(
+    () => tryConnect("Failed to connect real-time transcription").then(() => {}),
+    [tryConnect],
+  );
+
+  const toggleMic = useCallback(async () => {
+    if (connectionState !== "connected") {
+      await tryConnect("Microphone access denied or unavailable");
       return;
     }
 
@@ -112,7 +128,7 @@ export const useInterviewMedia = (
       resumeMic();
       micEnabledRef.current = true;
     }
-  }, [connectionState, isRecording, connect, pauseMic, resumeMic]);
+  }, [connectionState, isRecording, tryConnect, pauseMic, resumeMic]);
 
   const stopAllMedia = useCallback(() => {
     stopAudio();
@@ -120,16 +136,27 @@ export const useInterviewMedia = (
     micEnabledRef.current = false;
   }, [stopAudio, disconnect]);
 
+  const clearTranscript = useCallback(() => setTranscript(""), []);
+  const restoreTranscript = useCallback((text: string) => setTranscript(text), []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      disconnect();
+    };
+  }, [stopAudio, disconnect]);
+
   return {
     isPlaying,
-    playEncodedAudio,
+    playAudio,
     stopAudio,
     isRecording,
     toggleMic,
-    stopRecording: disconnect,
     transcript,
     interimTranscript,
-    setTranscript,
+    clearTranscript,
+    restoreTranscript,
     connectionState,
     connectSTT,
     stopAllMedia,

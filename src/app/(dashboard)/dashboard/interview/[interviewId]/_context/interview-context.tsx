@@ -136,6 +136,13 @@ const mergeMessage = (
   );
 };
 
+/** Keep a ref always in sync with the latest value — avoids stale closures. */
+function useLatestRef<T>(value: T) {
+  const ref = useRef(value);
+  ref.current = value;
+  return ref;
+}
+
 interface SendMessageOptions {
   codeSnippet?: string;
   language?: string;
@@ -184,30 +191,9 @@ export const InterviewContextProvider = ({
   const [status, setStatus] = useState<InterviewStatus>("SETUP");
   const [isHydrated, setIsHydrated] = useState(false);
   const isStartingRef = useRef(false);
-  const sendMessageRef = useRef<
-    | ((content: string, options?: SendMessageOptions) => Promise<void>)
-    | undefined
-  >(undefined);
   const isSendingRef = useRef(false);
-  const playAudioRef = useRef<(audioUrl: string) => void>(() => {});
 
-  const handleSpeechEnd = useCallback(async (finalTranscript: string) => {
-    const trimmed = finalTranscript.trim();
-    if (!trimmed || isSendingRef.current || !sendMessageRef.current) {
-      return;
-    }
-
-    try {
-      isSendingRef.current = true;
-      await sendMessageRef.current(trimmed);
-    } catch (error) {
-      console.error("[Interview Context] Auto-send error:", error);
-      toast.error("Failed to send your response");
-    } finally {
-      isSendingRef.current = false;
-    }
-  }, []);
-
+  // Chat transport
   const chatTransport = useMemo(
     () =>
       new DefaultChatTransport<InterviewUIMessage>({
@@ -232,6 +218,7 @@ export const InterviewContextProvider = ({
     [interviewId],
   );
 
+  // useChat
   const {
     messages: chatMessages,
     setMessages: setChatMessages,
@@ -251,35 +238,57 @@ export const InterviewContextProvider = ({
         return;
       }
 
+      // playAudio is ref-stable — no stale closure risk here
       const audioUrl = message.metadata?.audioUrl;
       if (audioUrl) {
-        playAudioRef.current(audioUrl);
+        playAudio(audioUrl);
       }
     },
   });
 
   const isResponding = chatStatus === "submitted" || chatStatus === "streaming";
 
+  // Speech end handler (stable identity, reads latest via ref)
+  const sendMessageLatestRef = useRef<
+    (content: string, options?: SendMessageOptions) => Promise<void>
+  >(async () => {});
+
+  const handleSpeechEnd = useCallback(async (finalTranscript: string) => {
+    const trimmed = finalTranscript.trim();
+    if (!trimmed || isSendingRef.current) {
+      return;
+    }
+
+    try {
+      isSendingRef.current = true;
+      await sendMessageLatestRef.current(trimmed);
+    } catch (error) {
+      console.error("[Interview Context] Auto-send error:", error);
+      toast.error("Failed to send your response");
+    } finally {
+      isSendingRef.current = false;
+    }
+  }, []);
+
+  // Media hook
   const {
     isPlaying,
-    playEncodedAudio,
+    playAudio,
     isRecording,
     toggleMic,
     transcript,
     interimTranscript,
-    setTranscript,
+    clearTranscript,
+    restoreTranscript,
     connectionState,
     connectSTT,
     stopAllMedia,
-  } = useInterviewMedia(interviewId, {
+  } = useInterviewMedia({
     onSpeechEnd: handleSpeechEnd,
     isAssistantResponding: isResponding,
   });
 
-  useEffect(() => {
-    playAudioRef.current = playEncodedAudio;
-  }, [playEncodedAudio]);
-
+  // Derived state
   const messages = useMemo(
     () =>
       chatMessages
@@ -288,6 +297,7 @@ export const InterviewContextProvider = ({
     [chatMessages],
   );
 
+  // Mutations & queries
   const { mutateAsync: startInterviewMutation } = useMutation(
     orpc.interview.start.mutationOptions(),
   );
@@ -301,6 +311,7 @@ export const InterviewContextProvider = ({
     }),
   );
 
+  // Hydrate messages from server
   useEffect(() => {
     if (isLoading || isHydrated || !interviewDataResult) {
       return;
@@ -322,6 +333,7 @@ export const InterviewContextProvider = ({
     setIsHydrated(true);
   }, [interviewDataResult, isHydrated, isLoading, setChatMessages]);
 
+  // Teardown on unmount
   useEffect(() => {
     return () => {
       stopStreamingReply();
@@ -329,6 +341,7 @@ export const InterviewContextProvider = ({
     };
   }, [stopAllMedia, stopStreamingReply]);
 
+  // Auto-connect STT when interview is in progress
   useEffect(() => {
     if (
       !isHydrated ||
@@ -341,12 +354,14 @@ export const InterviewContextProvider = ({
     void connectSTT();
   }, [isHydrated, status, connectionState, connectSTT]);
 
+  // Actions
   const startInterview = useCallback(async () => {
-    if (!interviewId || !isHydrated) {
-      return;
-    }
-
-    if (isStartingRef.current || status !== "SETUP") {
+    if (
+      !interviewId ||
+      !isHydrated ||
+      isStartingRef.current ||
+      status !== "SETUP"
+    ) {
       return;
     }
 
@@ -357,9 +372,7 @@ export const InterviewContextProvider = ({
       const assistantMessage = toUIMessage(response.assistantMessage);
 
       if (assistantMessage) {
-        setChatMessages((previousMessages) =>
-          mergeMessage(previousMessages, assistantMessage),
-        );
+        setChatMessages((prev) => mergeMessage(prev, assistantMessage));
       }
 
       setStatus(response.status as InterviewStatus);
@@ -373,7 +386,7 @@ export const InterviewContextProvider = ({
       }
 
       if (assistantMessage?.metadata?.audioUrl) {
-        playEncodedAudio(assistantMessage.metadata.audioUrl);
+        playAudio(assistantMessage.metadata.audioUrl);
       }
     } catch (error) {
       console.error("[Interview Context] Failed to start:", error);
@@ -387,7 +400,7 @@ export const InterviewContextProvider = ({
     status,
     startInterviewMutation,
     connectSTT,
-    playEncodedAudio,
+    playAudio,
     setChatMessages,
   ]);
 
@@ -398,7 +411,7 @@ export const InterviewContextProvider = ({
       }
 
       const previousTranscript = transcript;
-      setTranscript("");
+      clearTranscript();
 
       try {
         await sendChatMessage({
@@ -411,16 +424,25 @@ export const InterviewContextProvider = ({
         });
       } catch (error) {
         console.error("[Interview Context] Chat error:", error);
-        setTranscript(previousTranscript);
+        restoreTranscript(previousTranscript);
         toast.error("Failed to send message");
       }
     },
-    [interviewId, isResponding, transcript, sendChatMessage, setTranscript],
+    [
+      interviewId,
+      isResponding,
+      transcript,
+      sendChatMessage,
+      clearTranscript,
+      restoreTranscript,
+    ],
   );
 
+  // Keep sendMessage ref in sync for the stable handleSpeechEnd callback
+  const sendMessageRef = useLatestRef(sendMessage);
   useEffect(() => {
-    sendMessageRef.current = sendMessage;
-  }, [sendMessage]);
+    sendMessageLatestRef.current = sendMessageRef.current;
+  }, [sendMessageRef]);
 
   const endInterview = useCallback(
     async (durationSec: number) => {
@@ -451,6 +473,7 @@ export const InterviewContextProvider = ({
     ],
   );
 
+  // Context value
   const value: InterviewContextType = {
     messages,
     isRecording,
