@@ -1,9 +1,9 @@
 "use client";
 
 import { Building2, FileText } from "lucide-react";
-import { useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
-import { z } from "zod";
+import { useWatch } from "react-hook-form";
+import type { z } from "zod";
 import {
   Card,
   CardContent,
@@ -22,8 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  type createInterviewSchema,
   FIELD_LIMITS,
-  createInterviewSchema,
 } from "@/lib/zodSchemas/createInterview";
 
 // RHF uses the Zod *input* type (pre-transform/defaults), not the output type.

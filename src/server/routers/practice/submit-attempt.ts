@@ -1,7 +1,7 @@
 import { ORPCError } from "@orpc/client";
+import { z } from "zod";
 import db from "@/lib/prisma";
 import type { Context } from "@/server/orpc";
-import { z } from "zod";
 
 export const submitAttemptInput = z.object({
   problemId: z.string(),

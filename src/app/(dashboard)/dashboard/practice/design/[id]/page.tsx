@@ -12,11 +12,10 @@ import { notFound, redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-
+import { Separator } from "@/components/ui/separator";
 import { serverClient } from "@/lib/orpc-server";
+import { cn } from "@/lib/utils";
 import { os_context } from "@/server/orpc";
 
 export async function generateMetadata({

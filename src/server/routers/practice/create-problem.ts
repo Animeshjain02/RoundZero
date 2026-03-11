@@ -1,9 +1,8 @@
 import { ORPCError } from "@orpc/client";
+import type { z } from "zod";
 import db from "@/lib/prisma";
-import type { Context } from "@/server/orpc";
-import { z } from "zod";
-
 import { systemDesignProblemSchema } from "@/lib/validations/practice";
+import type { Context } from "@/server/orpc";
 
 export const createProblemInput = systemDesignProblemSchema;
 

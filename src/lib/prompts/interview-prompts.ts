@@ -204,3 +204,52 @@ Required JSON Structure:
   "summary": "A concise executive summary (3-4 sentences) on whether to move forward."
 }
 `.trim();
+
+/** 
+ * 
+ *  TODO:
+ *   1. Parallelize Database Queries (Easy Win)
+  In chat.ts, you are saving the user message and fetching the interview history sequentially. You can do both at the
+  same time to shave off some milliseconds:
+
+
+    1 // Instead of this:
+    2 const userMessage = await createUserInterviewMessage({ ... });
+    3 const history = await listInterviewMessages(interview.id);
+    4
+    5 // Do this:
+    6 const [userMessage, history] = await Promise.all([
+    7   createUserInterviewMessage({
+    8     interviewId: interview.id,
+    9     content: input.message,
+   10     codeSnippet: input.codeSnippet,
+   11     language: input.language,
+   12   }),
+   13   listInterviewMessages(interview.id)
+   14 ]);
+
+
+  2. The "Base64 Data URL" Bottleneck
+  Right now, you are converting the audio buffer to a Base64 Data URL (toAudioDataUrl(audioBuffer)) and returning it
+  inside the JSON response. While this avoids the S3 latency, audio files can be quite large. Base64 encoding adds
+  ~33% to the file size, and parsing massive JSON strings on the client can cause UI stuttering.
+   * Fix: Instead of returning a Data URL in a JSON payload, consider creating a dedicated REST endpoint for the AI
+     response that returns the raw binary audio stream, while the text response is sent in the headers or over a
+     WebSocket.
+
+
+  3. Reduce the Speech-to-Text Silence Timeout
+  In src/hooks/useLiveSTT.ts, the default utteranceTimeoutMs is set to 1500ms (1.5 seconds). This means when the user
+  finishes speaking, the app waits an entire 1.5 seconds of silence before even starting the request to the server.
+   * Fix: Reduce this timeout to 800ms or 1000ms. It will make the interviewer feel much more snappy and responsive to
+     the candidate.
+
+
+  4. Implement Streaming Text (Advanced)
+  Currently, the user still has to wait for Gemini to finish generating the entire text response, and then wait for
+  Deepgram to generate the entire audio file before they see or hear anything.
+   * Fix: Move away from a standard request/response model and implement Server-Sent Events (SSE) or WebSockets. You
+     can use Vercel's AI SDK (streamText) to stream the text token-by-token to the UI as it's generated, providing
+     immediate visual feedback while the audio generates in the background.
+ * 
+ */

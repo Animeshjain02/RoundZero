@@ -1,23 +1,23 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
+  CheckCircle2,
   Loader2,
   Plus,
-  Sparkles,
+  RefreshCw,
   Save,
+  Server,
+  Sparkles,
   Trash2,
   Zap,
-  RefreshCw,
-  CheckCircle2,
-  Server,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-
+import { useCallback, useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -29,11 +29,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { orpcClient } from "@/lib/orpc-client";
 import {
-  systemDesignProblemSchema,
   type GeneratedSystemDesignProblem,
+  systemDesignProblemSchema,
 } from "@/lib/validations/practice";
 
 const TOPIC_CHIPS = [

@@ -2,8 +2,8 @@ import { analyticsRouter } from "./analytics/_router";
 import { exampleRouter } from "./example/example";
 import { interviewRouter } from "./interview/_router";
 import { mediaRouter } from "./media/_router";
-import { resumeRouter } from "./resume/_router";
 import { practiceRouter } from "./practice/_router";
+import { resumeRouter } from "./resume/_router";
 
 export const appRouter = {
   analytics: analyticsRouter,

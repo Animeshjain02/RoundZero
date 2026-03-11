@@ -474,3 +474,23 @@
   font-weight: 300;
   line-height: 1.6;
 }
+
+/* ── React Flow: animated dashed edge ── */
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.animated-dash {
+  animation: dash-flow 0.8s linear infinite;
+}
+
+/* ── React Flow: MiniMap ── */
+.react-flow__minimap {
+  border-radius: 0.75rem !important;
+  border: 1px solid hsl(var(--border)) !important;
+  background: hsl(var(--card)) !important;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.08) !important;
+  overflow: hidden !important;
+}

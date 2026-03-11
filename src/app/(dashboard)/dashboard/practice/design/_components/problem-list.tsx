@@ -1,8 +1,8 @@
 "use client";
 
+import type { InferRouterOutputs } from "@orpc/server";
 import { useQuery } from "@tanstack/react-query";
-import { type InferRouterOutputs } from "@orpc/server";
-import { Search, Server, X, Loader2 } from "lucide-react";
+import { Loader2, Search, Server, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDebounce } from "@/hooks/use-debounce";
 import { orpc } from "@/lib/orpc-client";
-import { type AppRouter } from "@/server/routers/app";
+import type { AppRouter } from "@/server/routers/app";
 import { SystemDesignCard } from "./system-design-card";
 
 const COMPLEXITY_OPTIONS = ["ALL", "EASY", "MEDIUM", "HARD"] as const;

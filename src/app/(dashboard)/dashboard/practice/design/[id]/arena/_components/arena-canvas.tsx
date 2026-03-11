@@ -7,6 +7,8 @@ import {
   type Connection,
   Controls,
   type Edge,
+  type EdgeTypes,
+  MiniMap,
   Panel,
   ReactFlow,
   ReactFlowProvider,
@@ -23,12 +25,28 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { ArchitectureEvaluation } from "@/lib/gemini";
 import { orpc } from "@/lib/orpc-client";
+import { DataFlowEdge } from "./edges/data-flow-edge";
 import { EvaluationResultsSheet } from "./evaluation-results-sheet";
 import { NodeSidebar } from "./node-sidebar";
 import { SystemNode } from "./nodes/system-node";
 
 const nodeTypes: NodeTypes = {
   systemNode: SystemNode as any,
+};
+
+const edgeTypes: EdgeTypes = {
+  dataFlowEdge: DataFlowEdge as any,
+};
+
+const defaultEdgeOptions = {
+  type: "dataFlowEdge",
+  animated: false,
+};
+
+const connectionLineStyle = {
+  strokeWidth: 2,
+  stroke: "color-mix(in oklch, var(--primary) 50%, transparent)",
+  strokeDasharray: "6 4",
 };
 
 // Extracted inner component to use hooks that depend on ReactFlowProvider
@@ -90,7 +108,7 @@ function ArenaInner({ problemId }: { problemId: string }) {
 
   const onConnect = useCallback(
     (params: Connection | Edge) =>
-      setEdges((eds) => addEdge({ ...params, animated: true }, eds)),
+      setEdges((eds) => addEdge({ ...params, type: "dataFlowEdge" }, eds)),
     [setEdges],
   );
 
@@ -132,6 +150,27 @@ function ArenaInner({ problemId }: { problemId: string }) {
     [screenToFlowPosition, setNodes],
   );
 
+  // Delete selected nodes/edges on Backspace / Delete key
+  const onKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Backspace" || event.key === "Delete") {
+        // Don't delete if user is typing in an input/textarea
+        const target = event.target as HTMLElement;
+        if (
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+
+        setNodes((nds) => nds.filter((n) => !n.selected));
+        setEdges((eds) => eds.filter((e) => !e.selected));
+      }
+    },
+    [setNodes, setEdges],
+  );
+
   const handleSave = () => {
     const payload = {
       nodes: getNodes(),
@@ -166,7 +205,12 @@ function ArenaInner({ problemId }: { problemId: string }) {
     <div className="flex h-[calc(100vh-4rem)] w-full overflow-hidden bg-background">
       <NodeSidebar />
 
-      <div className="relative flex-1" ref={reactFlowWrapper}>
+      <div
+        className="relative flex-1"
+        ref={reactFlowWrapper}
+        onKeyDown={onKeyDown}
+        tabIndex={0}
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -176,10 +220,16 @@ function ArenaInner({ problemId }: { problemId: string }) {
           onDrop={onDrop}
           onDragOver={onDragOver}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          defaultEdgeOptions={defaultEdgeOptions}
+          connectionLineStyle={connectionLineStyle}
           fitView
           fitViewOptions={{ padding: 0.2 }}
           className="bg-dot-pattern"
           proOptions={{ hideAttribution: true }}
+          deleteKeyCode={null}
+          selectionOnDrag
+          selectNodesOnDrag={false}
         >
           <Background
             variant={BackgroundVariant.Dots}
@@ -188,6 +238,13 @@ function ArenaInner({ problemId }: { problemId: string }) {
             className="opacity-40"
           />
           <Controls className="bg-background border border-border/50 shadow-sm rounded-xl overflow-hidden" />
+          <MiniMap
+            nodeStrokeWidth={3}
+            zoomable
+            pannable
+            className="rounded-xl!"
+            maskColor="rgba(0, 0, 0, 0.15)"
+          />
 
           <Panel position="top-right" className="m-4">
             <div className="flex items-center gap-3">

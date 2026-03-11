@@ -78,19 +78,25 @@ export const NODE_CATEGORIES: {
   id: NodeCategory;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  color: string;
 }[] = [
-  { id: "clients", label: "Clients", icon: Globe },
-  { id: "compute", label: "Compute", icon: Server },
-  { id: "databases", label: "Databases", icon: Database },
-  { id: "caching", label: "Caching", icon: Zap },
-  { id: "storage", label: "Storage", icon: HardDrive },
-  { id: "networking", label: "Networking", icon: Router },
-  { id: "messaging", label: "Messaging", icon: MessageSquare },
-  { id: "queue", label: "Message Queues", icon: Inbox },
-  { id: "security", label: "Security", icon: Shield },
-  { id: "monitoring", label: "Monitoring", icon: Activity },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "external", label: "External Services", icon: ExternalLink },
+  { id: "clients", label: "Clients", icon: Globe, color: "slate" },
+  { id: "compute", label: "Compute", icon: Server, color: "blue" },
+  { id: "databases", label: "Databases", icon: Database, color: "emerald" },
+  { id: "caching", label: "Caching", icon: Zap, color: "amber" },
+  { id: "storage", label: "Storage", icon: HardDrive, color: "purple" },
+  { id: "networking", label: "Networking", icon: Router, color: "rose" },
+  { id: "messaging", label: "Messaging", icon: MessageSquare, color: "cyan" },
+  { id: "queue", label: "Message Queues", icon: Inbox, color: "orange" },
+  { id: "security", label: "Security", icon: Shield, color: "red" },
+  { id: "monitoring", label: "Monitoring", icon: Activity, color: "teal" },
+  { id: "analytics", label: "Analytics", icon: BarChart3, color: "indigo" },
+  {
+    id: "external",
+    label: "External Services",
+    icon: ExternalLink,
+    color: "violet",
+  },
 ];
 
 export const DESIGN_NODES: DesignNode[] = [

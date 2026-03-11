@@ -41,11 +41,7 @@ export const useInterviewMedia = (
     onSpeechEndRef.current = options?.onSpeechEnd;
   }, [options?.onSpeechEnd]);
 
-  const {
-    playEncodedAudio,
-    isPlaying,
-    stop: stopAudio,
-  } = useAudioPlayer();
+  const { playEncodedAudio, isPlaying, stop: stopAudio } = useAudioPlayer();
 
   // Ref-stable play function — safe to call from stale closures (e.g. onFinish)
   const playEncodedAudioRef = useRef(playEncodedAudio);
@@ -111,7 +107,8 @@ export const useInterviewMedia = (
   );
 
   const connectSTT = useCallback(
-    () => tryConnect("Failed to connect real-time transcription").then(() => {}),
+    () =>
+      tryConnect("Failed to connect real-time transcription").then(() => {}),
     [tryConnect],
   );
 
@@ -137,7 +134,10 @@ export const useInterviewMedia = (
   }, [stopAudio, disconnect]);
 
   const clearTranscript = useCallback(() => setTranscript(""), []);
-  const restoreTranscript = useCallback((text: string) => setTranscript(text), []);
+  const restoreTranscript = useCallback(
+    (text: string) => setTranscript(text),
+    [],
+  );
 
   // Cleanup on unmount
   useEffect(() => {
