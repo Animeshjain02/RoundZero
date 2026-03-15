@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { serverClient } from "@/lib/orpc-server";
+import { getServerClient } from "@/lib/orpc-server";
 import { os_context } from "@/server/orpc";
 import ArenaCanvas from "./_components/arena-canvas";
 
@@ -23,7 +23,8 @@ export default async function ArenaPage({
 
   let problem;
   try {
-    problem = await serverClient.practice.getProblem({ id });
+    const client = await getServerClient();
+    problem = await client.practice.getProblem({ id });
   } catch (error) {
     notFound();
   }

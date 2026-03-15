@@ -4,6 +4,9 @@ import { protectedProcedure } from "@/server/orpc";
 import { listResumes } from "./list";
 import { parseResume, parseResumeInput } from "./parse";
 import { postInterviewRole, postInterviewRoleInput } from "./post-role";
+import { analyze, analyzeResumeInput } from "./analyze";
+import { analyzeText, analyzeTextInput } from "./analyze-text";
+import { atsEvaluationSchema } from "@/lib/gemini";
 
 export const resumeRouter = {
   postRole: protectedProcedure
@@ -59,4 +62,28 @@ export const resumeRouter = {
       ),
     )
     .handler(listResumes),
+    
+  analyze: protectedProcedure
+    .route({
+      description: "Analyze resume for ATS score and feedback",
+      method: "POST",
+      path: "/resume/analyze",
+      summary: "Analyze Resume",
+      tags: ["Resume"],
+    })
+    .input(analyzeResumeInput)
+    .output(atsEvaluationSchema)
+    .handler(analyze),
+    
+  analyzeText: protectedProcedure
+    .route({
+      description: "Analyze resume text for ATS score and feedback",
+      method: "POST",
+      path: "/resume/analyze-text",
+      summary: "Analyze Resume Text",
+      tags: ["Resume"],
+    })
+    .input(analyzeTextInput)
+    .output(atsEvaluationSchema)
+    .handler(analyzeText),
 };

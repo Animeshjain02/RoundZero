@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { serverClient } from "@/lib/orpc-server";
+import { getServerClient } from "@/lib/orpc-server";
 import { os_context } from "@/server/orpc";
 import { InterviewList } from "./_components/interview-list";
 
@@ -19,8 +19,9 @@ export default async function InterviewPage() {
     redirect("/sign-in?error=session");
   }
 
-  // Fetch initial data on server using the dedicated server client
-  const initialData = await serverClient.interview.list({
+  // Fetch initial data on server using a fresh client
+  const client = await getServerClient();
+  const initialData = await client.interview.list({
     limit: 12,
     offset: 0,
   });

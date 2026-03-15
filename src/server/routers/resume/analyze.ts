@@ -5,16 +5,17 @@ import { extractResumeText } from "@/lib/extractResumeText";
 import { storageService } from "@/lib/storage";
 import type { Context } from "@/server/orpc";
 import { s3ResumeSchema } from "../interview/schemas";
+import { analyzeResume, atsEvaluationSchema } from "@/lib/gemini";
 
-export const parseResumeInput = z.object({
+export const analyzeResumeInput = z.object({
   resume: s3ResumeSchema,
 });
 
-export async function parseResume({
+export async function analyze({
   input,
   context,
 }: {
-  input: z.infer<typeof parseResumeInput>;
+  input: z.infer<typeof analyzeResumeInput>;
   context: Context;
 }) {
   const { resume } = input;
@@ -45,9 +46,9 @@ export async function parseResume({
   // Extract text from resume
   let text: string;
   try {
-    console.log("[Resume Parsing] Starting extraction for:", resume.filename);
+    console.log("[Resume Analysis] Starting extraction for:", resume.filename);
     text = await extractResumeText(resume.filename, buffer);
-    console.log("[Resume Parsing] Extraction successful, length:", text.length);
+    console.log("[Resume Analysis] Extraction successful, length:", text.length);
   } catch (error) {
     console.error("[Resume Text Extraction Error]", error);
     throw new ORPCError("INTERNAL_SERVER_ERROR", {
@@ -55,5 +56,14 @@ export async function parseResume({
     });
   }
 
-  return { text };
+  // Analyze text with AI
+  try {
+    const analysis = await analyzeResume(text);
+    return analysis;
+  } catch (error) {
+    console.error("[Resume Analysis AI Error]", error);
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+      message: "Failed to analyze resume with AI",
+    });
+  }
 }

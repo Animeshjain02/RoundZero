@@ -45,6 +45,17 @@ export const reportSchema = z.object({
 
 export type Report = z.infer<typeof reportSchema>;
 
+export const atsEvaluationSchema = z.object({
+  score: z.number().min(0).max(100),
+  feedback: z.array(z.string()).min(1),
+  missingKeywords: z.array(z.string()),
+  formattingIssues: z.array(z.string()),
+  strengths: z.array(z.string()).min(1),
+  summary: z.string().min(1),
+});
+
+export type ATSEvaluation = z.infer<typeof atsEvaluationSchema>;
+
 // Category scores type for type safety
 export type CategoryScores = Report["categoryScores"];
 
@@ -225,6 +236,48 @@ Respond with ONLY a valid JSON object matching the schema described in the syste
     console.error("Architecture evaluation failed:", error);
     throw new ORPCError("INTERNAL_ERROR", {
       message: "Failed to evaluate architecture. Please try again.",
+    });
+  }
+};
+
+export const analyzeResume = async (
+  resumeText: string,
+  temperature: number = TEMPERATURE.PRECISE,
+): Promise<ATSEvaluation> => {
+  const systemPrompt = `You are an expert ATS (Applicant Tracking System) specialist and career coach.
+Your goal is to evaluate a candidate's resume and provide a detailed ATS score and feedback for improvement.
+
+CRITICAL: You MUST respond with ONLY a valid JSON object. No markdown, no explanations, no additional text.
+The JSON must exactly match this schema:
+{
+  "score": number (0-100),
+  "feedback": array of strings (specific areas for improvement),
+  "missingKeywords": array of strings (relevant keywords for modern tech roles that are missing),
+  "formattingIssues": array of strings (layout or parsing issues detected),
+  "strengths": array of strings (what is done well),
+  "summary": string (a concise overall assessment)
+}
+
+Be realistic and critical. A perfect 100 is rare. Focus on:
+1. Keyword optimization (Skills, technologies, methodologies).
+2. Action verbs and quantifying achievements.
+3. Formatting (Standard headers, readability, parsing compatibility).
+4. Contact info and essential sections (Experience, Education, Skills).`;
+
+  try {
+    const { object } = await generateObject({
+      model,
+      system: systemPrompt,
+      prompt: `Analyze this resume text:\n\n${resumeText}`,
+      schema: atsEvaluationSchema,
+      temperature,
+    });
+
+    return object;
+  } catch (error) {
+    console.error("Resume analysis failed:", error);
+    throw new ORPCError("INTERNAL_SERVER_ERROR", {
+      message: "Failed to analyze resume. Please try again.",
     });
   }
 };

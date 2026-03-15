@@ -23,10 +23,6 @@ export const createInterviewSchema = z.object({
 
   resumeText: z
     .string()
-    .min(
-      FIELD_LIMITS.resumeText.min,
-      `Resume must be at least ${FIELD_LIMITS.resumeText.min} characters`,
-    )
     .max(
       FIELD_LIMITS.resumeText.max,
       `Resume is too long (max ${FIELD_LIMITS.resumeText.max.toLocaleString()} characters)`,

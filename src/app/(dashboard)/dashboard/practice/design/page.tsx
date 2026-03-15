@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { serverClient } from "@/lib/orpc-server";
+import { getServerClient } from "@/lib/orpc-server";
 import { os_context } from "@/server/orpc";
 import { ProblemList } from "./_components/problem-list";
 
@@ -20,8 +20,9 @@ export default async function SystemDesignHubPage() {
     redirect("/sign-in?error=session");
   }
 
-  // Fetch problems on server
-  const problems = await serverClient.practice.getProblems({});
+  // Fetch problems on server using a fresh client
+  const client = await getServerClient();
+  const problems = await client.practice.getProblems({});
 
   return (
     <div className="flex flex-col gap-8 p-8 w-full animate-in fade-in duration-500">

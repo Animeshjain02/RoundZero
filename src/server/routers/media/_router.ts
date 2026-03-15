@@ -6,6 +6,7 @@ import { deleteFile, deleteFileInput } from "./delete-file";
 import { getPresignedUrl, getPresignedUrlInput } from "./get-presigned-url";
 import { synthesize, synthesizeInput } from "./synthesize";
 import { transcribe, transcribeInput } from "./transcribe";
+import { directUpload, directUploadInput } from "./direct-upload";
 
 export const mediaRouter = {
   deepgramToken: protectedProcedure
@@ -88,4 +89,21 @@ export const mediaRouter = {
       }),
     )
     .handler(synthesize),
+    
+  upload: protectedProcedure
+    .route({
+      description: "Upload a file directly to the server (bypasses direct-to-S3 DNS issues)",
+      method: "POST",
+      path: "/media/upload/direct",
+      summary: "Direct Upload",
+      tags: ["Media", "Upload"],
+    })
+    .input(directUploadInput)
+    .output(
+      z.object({
+        url: z.string(),
+        key: z.string(),
+      }),
+    )
+    .handler(directUpload),
 };

@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { serverClient } from "@/lib/orpc-server";
+import { getServerClient } from "@/lib/orpc-server";
 import { cn } from "@/lib/utils";
 import { os_context } from "@/server/orpc";
 
@@ -25,7 +25,8 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   try {
-    const problem = await serverClient.practice.getProblem({ id });
+    const client = await getServerClient();
+    const problem = await client.practice.getProblem({ id });
     return {
       title: `${problem.title} | System Design`,
       description: problem.description,
@@ -72,7 +73,8 @@ export default async function ProblemDetailsPage({
   let problem;
 
   try {
-    problem = await serverClient.practice.getProblem({ id });
+    const client = await getServerClient();
+    problem = await client.practice.getProblem({ id });
   } catch {
     notFound();
   }

@@ -60,42 +60,18 @@ export function ResumeUploader({
           throw new Error("Unsupported resume format. Use PDF, DOCX, or TXT.");
         }
 
-        const { url, key } = await orpcClient.media.getPresignedUrl({
+        const { url, key } = await orpcClient.media.upload({
+          file,
           filename: file.name,
           contentType: contentType as
             | "application/pdf"
             | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             | "text/plain",
-          purpose: "resume",
         });
 
-        await new Promise<void>((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-
-          xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-              const progress = Math.round((event.loaded / event.total) * 100);
-              setUploadState((prev) => ({ ...prev, progress, key }));
-            }
-          };
-
-          xhr.onload = () => {
-            if (xhr.status === 200 || xhr.status === 204) {
-              setUploadState({ uploading: false, progress: 100, key });
-              toast.success("File uploaded successfully");
-              onUploadComplete(key, file);
-              resolve();
-            } else {
-              reject(new Error("Upload failed"));
-            }
-          };
-
-          xhr.onerror = () => reject(new Error("Upload failed"));
-
-          xhr.open("PUT", url);
-          xhr.setRequestHeader("Content-Type", contentType);
-          xhr.send(file);
-        });
+        setUploadState({ uploading: false, progress: 100, key });
+        toast.success("File uploaded successfully");
+        onUploadComplete(key, file);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Upload failed";

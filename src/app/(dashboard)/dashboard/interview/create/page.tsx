@@ -14,6 +14,10 @@ import {
   Target,
   Users,
   Zap,
+  Star,
+  AlertTriangle,
+  Lightbulb,
+  CheckCircle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -50,6 +54,8 @@ import {
 import { FormStepper } from "./_components/FormStepper";
 import { ResumeSelectionDialog } from "./_components/ResumeSelectionDialog";
 import { StepCompanyContext } from "./_components/StepCompanyContext";
+import { Progress } from "@/components/ui/progress";
+import { ATSEvaluation } from "@/lib/gemini";
 
 // Hoisted static data outside component (rendering-hoist-jsx, rerender-memo-with-default-value)
 const interviewTypes = [
@@ -92,6 +98,7 @@ export default function CreateInterviewPage() {
   const [resumeFilename, setResumeFilename] = useState<string | null>(null);
   const [resumeId, setResumeId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [atsAnalysis, setAtsAnalysis] = useState<ATSEvaluation | null>(null);
 
   const router = useRouter();
 
@@ -136,13 +143,45 @@ export default function CreateInterviewPage() {
       return await orpcClient.resume.parse(values);
     },
     onSuccess: (data: { text: string }) => {
-      form.setValue("resumeText", data.text);
+      form.setValue("resumeText", data.text, { 
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true 
+      });
       toast.success("Resume parsed successfully");
     },
     onError: (error: Error) => {
       toast.error("Failed to parse resume: " + error.message);
       setResumeKey(null);
       setResumeFilename(null);
+    },
+  });
+
+  const { mutate: analyzeResume, isPending: isAnalyzing } = useMutation({
+    mutationFn: async (values: {
+      resume: { filename: string; key: string };
+    }) => {
+      return await orpcClient.resume.analyze(values);
+    },
+    onSuccess: (data) => {
+      setAtsAnalysis(data);
+      toast.success("ATS analysis complete");
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to analyze resume: " + error.message);
+    },
+  });
+
+  const { mutate: analyzeText, isPending: isAnalyzingText } = useMutation({
+    mutationFn: async (values: { text: string }) => {
+      return await orpcClient.resume.analyzeText(values);
+    },
+    onSuccess: (data) => {
+      setAtsAnalysis(data);
+      toast.success("ATS analysis complete");
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to analyze resume: " + error.message);
     },
   });
 
@@ -161,15 +200,17 @@ export default function CreateInterviewPage() {
       setResumeKey(key);
       setResumeFilename(file.name);
       parseResume({ resume: { filename: file.name, key: key } });
+      analyzeResume({ resume: { filename: file.name, key: key } });
     },
-    [parseResume],
+    [parseResume, analyzeResume],
   );
 
   const onResumeRemove = useCallback(() => {
     setResumeKey(null);
     setResumeFilename(null);
     setResumeId(null);
-    form.setValue("resumeText", "");
+    setAtsAnalysis(null);
+    form.setValue("resumeText", "", { shouldValidate: true });
     toast.info("Resume removed");
   }, [form]);
 
@@ -178,9 +219,14 @@ export default function CreateInterviewPage() {
       setResumeId(selectedResumeId);
       setResumeKey(null);
       setResumeFilename(null);
-      form.setValue("resumeText", content);
+      form.setValue("resumeText", content, { 
+        shouldValidate: true,
+        shouldDirty: true,
+        shouldTouch: true 
+      });
+      analyzeText({ text: content });
     },
-    [form],
+    [form, analyzeText],
   );
 
   const goBack = useCallback(() => {
@@ -208,9 +254,7 @@ export default function CreateInterviewPage() {
         case 3:
           return true; // company & JD are optional
         case 4:
-          return (
-            (resumeText ?? "").trim().length >= FIELD_LIMITS.resumeText.min
-          );
+          return true; // No minimum length requirement for resume
         default:
           return true;
       }
@@ -508,7 +552,7 @@ export default function CreateInterviewPage() {
                               onRemove={onResumeRemove}
                             />
 
-                            {isParsing && (
+                            {(isParsing || isAnalyzing || isAnalyzingText) && (
                               <div className="flex items-center gap-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
                                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
                                 <div>
@@ -522,7 +566,88 @@ export default function CreateInterviewPage() {
                               </div>
                             )}
 
-                            {field.value && !isParsing && (
+                            {atsAnalysis && !isAnalyzing && !isAnalyzingText && (
+                              <div className="space-y-4 mt-6">
+                                <Card className="border-border bg-card/50 overflow-hidden">
+                                  <CardHeader className="bg-muted/30 pb-4">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <div className="p-2 rounded-lg bg-primary/10">
+                                          <Star className="h-4 w-4 text-primary" />
+                                        </div>
+                                        <div>
+                                          <CardTitle className="text-base">ATS Analysis Results</CardTitle>
+                                          <CardDescription>AI-powered feedback for your resume</CardDescription>
+                                        </div>
+                                      </div>
+                                      <div className="flex flex-col items-end">
+                                        <span className="text-2xl font-bold text-primary">{atsAnalysis.score}</span>
+                                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">ATS Score</span>
+                                      </div>
+                                    </div>
+                                    <div className="mt-4">
+                                      <Progress value={atsAnalysis.score} className="h-2" />
+                                    </div>
+                                  </CardHeader>
+                                  <CardContent className="p-0">
+                                    <div className="grid md:grid-cols-2 divide-x divide-y md:divide-y-0 divide-border/50">
+                                      <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                          <CheckCircle className="h-4 w-4" />
+                                          Strengths
+                                        </div>
+                                        <ul className="space-y-1.5">
+                                          {atsAnalysis.strengths.slice(0, 3).map((s, i) => (
+                                            <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                                              <span className="mt-1 h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
+                                              {s}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                      <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2 text-sm font-semibold text-amber-600 dark:text-amber-400">
+                                          <Lightbulb className="h-4 w-4" />
+                                          Improvements
+                                        </div>
+                                        <ul className="space-y-1.5">
+                                          {atsAnalysis.feedback.slice(0, 3).map((f, i) => (
+                                            <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
+                                              <span className="mt-1 h-1 w-1 rounded-full bg-amber-500 shrink-0" />
+                                              {f}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </div>
+                                    
+                                    {atsAnalysis.missingKeywords.length > 0 && (
+                                      <div className="p-4 border-t border-border/50 bg-muted/10">
+                                        <div className="flex items-center gap-2 text-sm font-semibold mb-2">
+                                          <AlertTriangle className="h-4 w-4 text-primary" />
+                                          Suggested Keywords
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                          {atsAnalysis.missingKeywords.map((kw, i) => (
+                                            <Badge key={i} variant="secondary" className="text-[10px] font-medium bg-secondary/50">
+                                              {kw}
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    <div className="p-4 border-t border-border/50">
+                                      <p className="text-xs italic text-muted-foreground leading-relaxed">
+                                        "{atsAnalysis.summary}"
+                                      </p>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </div>
+                            )}
+
+                            {field.value && !isParsing && !atsAnalysis && (
                               <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                                 <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
                                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -540,7 +665,7 @@ export default function CreateInterviewPage() {
                             )}
                           </div>
                         </FormControl>
-                        <FormMessage />
+                        {!(isParsing || isAnalyzing || isAnalyzingText) && <FormMessage />}
                       </FormItem>
                     )}
                   />
@@ -588,7 +713,7 @@ export default function CreateInterviewPage() {
                   type="submit"
                   size="lg"
                   className="gap-2 cursor-pointer shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
-                  disabled={isCreating || isParsing}
+                  disabled={isCreating || isParsing || isAnalyzing || isAnalyzingText}
                 >
                   {isCreating ? (
                     <>
