@@ -34,57 +34,8 @@ RoundZero is a premium, AI-powered interview preparation platform that helps can
 - pnpm (recommended) or npm
 - PostgreSQL database
 
-### Installation
 
-1. **Clone the repository:**
 
-   ```bash
-   git clone https://github.com/theeaashish/RoundZero.git
-   cd RoundZero
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
-   pnpm install
-   ```
-
-3. **Set up environment variables:**
-   Copy `.env.example` to `.env` and fill in the required values.
-
-   ```bash
-   cp .env.example .env
-   ```
-
-4. **Initialize the database:**
-
-   ```bash
-   pnpm db:push
-   pnpm db:generate
-   ```
-
-5. **Run the development server:**
-
-   ```bash
-   pnpm dev
-   ```
-
-6. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## 🔑 Environment Variables
-
-Make sure to configure the following in your `.env`:
-
-| Variable                   | Description                       |
-| :------------------------- | :-------------------------------- |
-| `DATABASE_URL`             | Your PostgreSQL connection string |
-| `BETTER_AUTH_SECRET`       | Secret for better-auth            |
-| `GEMINI_API_KEY`           | Your Google Gemini API Key        |
-| `DEEPGRAM_API_KEY`         | Your Deepgram API Key             |
-| `GITHUB_CLIENT_ID/SECRET`  | GitHub OAuth credentials          |
-| `GOOGLE_CLIENT_ID/SECRET`  | Google OAuth credentials          |
-| `S3_BUCKET_NAME`           | AWS S3 Bucket Name                |
-| `AWS_ACCESS_KEY_ID/SECRET` | AWS credentials                   |
 
 ## 📂 Project Structure
 
@@ -106,4 +57,3 @@ Make sure to configure the following in your `.env`:
 
 ---
 
-Built with ❤️ by [RoundZero Team]
